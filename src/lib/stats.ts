@@ -119,5 +119,5 @@ export function calculateStats(players: Player[], matches: Match[]): PlayerStats
       worstTeammate: worstT ? { player: worstT.player, matches: worstT.count } : null,
       favoriteVictim: favVic ? { player: favVic.player, winsAgainst: favVic.count } : null,
     };
-  }).sort((a, b) => b.winPercentage - a.winPercentage || b.wins - a.wins); // Sort by win % then gross wins
+  }).sort((a, b) => b.wins - a.wins || b.winPercentage - a.winPercentage); // Sort by gross wins then win %
 }
