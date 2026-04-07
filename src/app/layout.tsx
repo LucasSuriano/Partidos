@@ -8,6 +8,7 @@ const inter = Inter({
 });
 
 import { AppProvider } from "@/context/AppContext";
+import { AuthProvider } from "@/context/AuthContext";
 
 export const metadata: Metadata = {
   title: "Partidos 5v5 - Estadísticas",
@@ -23,9 +24,11 @@ export default function RootLayout({
     <html lang="es" className={inter.variable}>
       <body>
         <main>
-          <AppProvider>
-            {children}
-          </AppProvider>
+          <AuthProvider>
+            <AppProvider>
+              {children}
+            </AppProvider>
+          </AuthProvider>
         </main>
       </body>
     </html>

@@ -1,11 +1,14 @@
 "use client";
 
 import { useAppContext } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import { Match } from '@/types';
 import styles from './MatchHistory.module.css';
 
 export default function MatchHistory() {
   const { matches, players, removeMatch } = useAppContext();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
 
   const getPlayerNames = (ids: string[]) => {
     return ids.map(id => {
@@ -65,13 +68,15 @@ export default function MatchHistory() {
             </div>
           </div>
 
-          <button
-            className={styles.deleteBtn}
-            onClick={() => confirm('¿Estás seguro de eliminar este partido? Se recalcularán las estadísticas.') && removeMatch(match.id)}
-            title="Eliminar partido"
-          >
-            ✕
-          </button>
+          {isAdmin && (
+            <button
+              className={styles.deleteBtn}
+              onClick={() => confirm('¿Estás seguro de eliminar este partido? Se recalcularán las estadísticas.') && removeMatch(match.id)}
+              title="Eliminar partido"
+            >
+              ✕
+            </button>
+          )}
         </div>
       ))}
     </div>
