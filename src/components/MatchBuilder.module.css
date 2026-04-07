@@ -1,0 +1,133 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  animation: fadeIn var(--transition-normal);
+}
+
+.teamsLayout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+@media (max-width: 768px) {
+  .teamsLayout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.teamBox {
+  padding: 1.5rem;
+}
+
+.teamTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--accent-primary);
+}
+
+.playerList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  min-height: 250px;
+}
+
+.unselectedBox {
+  padding: 1.5rem;
+  margin-top: 1rem;
+}
+
+.chip {
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--panel-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.chip:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.chipSelected {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: var(--accent-primary);
+}
+
+.chipAction {
+  background: var(--accent-primary);
+  color: #fff;
+  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.chipActionRemove {
+  background: var(--danger);
+}
+
+.unselectedGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.resultBtn {
+  padding: 1rem 2rem;
+  border-radius: var(--radius-md);
+  font-weight: bold;
+  opacity: 0.5;
+  border: 2px solid transparent;
+  transition: all var(--transition-fast);
+}
+
+.resultBtn:hover {
+  opacity: 0.8;
+}
+
+.resultBtn.active {
+  opacity: 1;
+  border-color: var(--text-primary);
+  transform: scale(1.05);
+}
+
+.btnA { background: var(--accent-primary); color: #fff; }
+.btnDraw { background: var(--warning); color: #fff; }
+.btnB { background: var(--danger); color: #fff; }
+
+.submitBtn {
+  margin-top: 2rem;
+  width: 100%;
+  padding: 1.25rem;
+  font-size: 1.25rem;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-hover));
+  color: white;
+  border-radius: var(--radius-lg);
+  font-weight: 800;
+  box-shadow: 0 8px 24px var(--accent-glow);
+}
+.submitBtn:disabled {
+  background: var(--panel-bg);
+  color: var(--text-secondary);
+  box-shadow: none;
+  cursor: not-allowed;
+}

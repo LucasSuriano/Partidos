@@ -1,0 +1,80 @@
+:root {
+  /* Dark Mode Base */
+  --bg-color: #0b0f19;
+  --panel-bg: rgba(25, 30, 45, 0.7);
+  --panel-border: rgba(255, 255, 255, 0.08);
+  
+  /* Text */
+  --text-primary: #f0fdf4; /* Off-white / light green tint */
+  --text-secondary: #94a3b8;
+  
+  /* Brand accents (Neon green / Football pitch vibe) */
+  --accent-primary: #10b981;
+  --accent-hover: #059669;
+  --accent-glow: rgba(16, 185, 129, 0.4);
+  
+  /* Utilities */
+  --danger: #ef4444;
+  --danger-glow: rgba(239, 68, 68, 0.3);
+  --warning: #f59e0b;
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  
+  /* Transitions */
+  --transition-fast: 0.15s ease-out;
+  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  min-height: 100vh;
+  /* Premium dark gradient */
+  background: radial-gradient(circle at top, #111827 0%, var(--bg-color) 100%);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+}
+
+/* Glassmorphism utility classes generally useful in vanilla CSS */
+.glass-panel {
+  background: var(--panel-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-color);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--panel-border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}

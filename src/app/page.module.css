@@ -1,0 +1,68 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 3rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  background: linear-gradient(to right, var(--text-primary), var(--accent-primary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btnPrimary {
+  background: var(--accent-primary);
+  color: #fff;
+  box-shadow: 0 4px 12px var(--accent-glow);
+}
+
+.btnPrimary:hover {
+  background: var(--accent-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px var(--accent-glow);
+}
+
+.btnSecondary {
+  background: var(--panel-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--panel-border);
+}
+
+.btnSecondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.mainGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}

@@ -1,0 +1,96 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: fadeIn var(--transition-normal);
+}
+
+.tableContainer {
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  min-width: 800px;
+}
+
+.th {
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-bottom: 2px solid var(--panel-border);
+  white-space: nowrap;
+}
+
+.tr {
+  transition: background var(--transition-fast);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.td {
+  padding: 1rem;
+  white-space: nowrap;
+}
+
+.playerName {
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.statPill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.pillWin {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--accent-primary);
+}
+
+.pillLoss {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+}
+
+.pillDraw {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--warning);
+}
+
+.companion {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.85rem;
+}
+
+.companionName {
+  font-weight: bold;
+  color: #fff;
+}
+
+.companionDetail {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.emptyState {
+  padding: 4rem;
+  text-align: center;
+  color: var(--text-secondary);
+}
