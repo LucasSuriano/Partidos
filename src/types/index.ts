@@ -22,7 +22,7 @@ export type PlayerStats = {
   winPercentage: number;
   bestStreak: number;
   worstStreak: number;
-  bestTeammate: { player: Player; matches: number } | null;
-  worstTeammate: { player: Player; matches: number } | null;
-  favoriteVictim: { player: Player; winsAgainst: number } | null;
+  bestTeammate: { players: Player[]; matches: number } | null;
+  worstTeammate: { players: Player[]; matches: number } | null;
+  favoriteVictim: { players: Player[]; winsAgainst: number } | null;
 };

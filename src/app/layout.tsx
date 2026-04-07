@@ -11,7 +11,7 @@ import { AppProvider } from "@/context/AppContext";
 import { AuthProvider } from "@/context/AuthContext";
 
 export const metadata: Metadata = {
-  title: "Partidos 5v5 - Estadísticas",
+  title: "Entiendanla - Estadísticas",
   description: "Registro de resultados y estadísticas de fútbol 5v5.",
 };
 

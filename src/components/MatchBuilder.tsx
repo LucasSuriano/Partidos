@@ -116,21 +116,16 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
             </button>
           </div>
 
-          <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Fecha del Partido</label>
-            <input
-              type="date"
-              value={matchDate}
-              onChange={(e) => setMatchDate(e.target.value)}
-              style={{
-                background: 'rgba(0,0,0,0.2)',
-                border: '1px solid var(--panel-border)',
-                padding: '0.75rem',
-                borderRadius: '8px',
-                color: 'white',
-                fontFamily: 'inherit'
-              }}
-            />
+          <div className={styles.datePickerContainer}>
+            <label className={styles.dateLabel}>Fecha del Partido</label>
+            <div className={styles.inputWrapper}>
+              <input
+                type="date"
+                value={matchDate}
+                onChange={(e) => setMatchDate(e.target.value)}
+                className={styles.dateInput}
+              />
+            </div>
           </div>
 
           <button

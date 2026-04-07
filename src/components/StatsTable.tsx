@@ -10,6 +10,12 @@ export default function StatsTable() {
 
   const stats = useMemo(() => calculateStats(players, matches), [players, matches]);
 
+  const formatCompactNames = (players: any[]) => {
+    if (players.length <= 1) return players[0]?.name || '';
+    if (players.length === 2) return `${players[0].name}, ${players[1].name}`;
+    return `${players[0].name} y ${players.length - 1} más`;
+  };
+
   if (players.length === 0) {
     return (
       <div className={`${styles.container} glass-panel ${styles.emptyState}`}>
@@ -70,7 +76,9 @@ export default function StatsTable() {
                 <td className={styles.td}>
                   {s.bestTeammate ? (
                     <div className={styles.companion}>
-                      <span className={styles.companionName}>{s.bestTeammate.player.name}</span>
+                      <span className={styles.companionName} title={s.bestTeammate.players.map(p => p.name).join(', ')}>
+                        {formatCompactNames(s.bestTeammate.players)}
+                      </span>
                       <span className={styles.companionDetail}>{s.bestTeammate.matches} victorias de compa</span>
                     </div>
                   ) : <span className={styles.companionDetail}>-</span>}
@@ -78,7 +86,9 @@ export default function StatsTable() {
                 <td className={styles.td}>
                   {s.worstTeammate ? (
                     <div className={styles.companion}>
-                      <span className={styles.companionName}>{s.worstTeammate.player.name}</span>
+                      <span className={styles.companionName} title={s.worstTeammate.players.map(p => p.name).join(', ')}>
+                        {formatCompactNames(s.worstTeammate.players)}
+                      </span>
                       <span className={styles.companionDetail}>{s.worstTeammate.matches} derrotas de compa</span>
                     </div>
                   ) : <span className={styles.companionDetail}>-</span>}
@@ -86,7 +96,9 @@ export default function StatsTable() {
                 <td className={styles.td}>
                   {s.favoriteVictim ? (
                     <div className={styles.companion}>
-                      <span className={styles.companionName}>{s.favoriteVictim.player.name}</span>
+                      <span className={styles.companionName} title={s.favoriteVictim.players.map(p => p.name).join(', ')}>
+                        {formatCompactNames(s.favoriteVictim.players)}
+                      </span>
                       <span className={styles.companionDetail}>{s.favoriteVictim.winsAgainst} veces le ganó</span>
                     </div>
                   ) : <span className={styles.companionDetail}>-</span>}

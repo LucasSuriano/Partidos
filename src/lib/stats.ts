@@ -88,25 +88,33 @@ export function calculateStats(players: Player[], matches: Match[]): PlayerStats
     processTeam(teamB, teamBWins, teamAWins, isDraw, teamA);
   });
 
-  const getTopPlayer = (counts: Record<string, number>): { player: Player, count: number } | null => {
-    let topId: string | null = null;
+  const getTopPlayers = (counts: Record<string, number>): { players: Player[], count: number } | null => {
+    let topIds: string[] = [];
     let max = 0;
     Object.entries(counts).forEach(([id, count]) => {
       if (count > max) {
         max = count;
-        topId = id;
+        topIds = [id];
+      } else if (count === max && max > 0) {
+        topIds.push(id);
       }
     });
-    if (!topId) return null;
-    const player = players.find(p => p.id === topId);
-    return player ? { player, count: max } : null;
+    if (topIds.length === 0) return null;
+    
+    const matchedPlayers = topIds
+      .map(id => players.find(p => p.id === id))
+      .filter((p): p is Player => p !== undefined);
+
+    if (matchedPlayers.length === 0) return null;
+
+    return { players: matchedPlayers, count: max };
   };
 
   return players.map(p => {
     const s = statsMap[p.id];
-    const bestT = getTopPlayer(teammateWins[p.id]);
-    const worstT = getTopPlayer(teammateLosses[p.id]);
-    const favVic = getTopPlayer(opponentWins[p.id]);
+    const bestT = getTopPlayers(teammateWins[p.id]);
+    const worstT = getTopPlayers(teammateLosses[p.id]);
+    const favVic = getTopPlayers(opponentWins[p.id]);
 
     const totalResolved = s.wins + s.losses + s.draws;
     const winPct = totalResolved > 0 ? (s.wins / totalResolved) * 100 : 0;
@@ -115,9 +123,9 @@ export function calculateStats(players: Player[], matches: Match[]): PlayerStats
       player: p,
       ...s,
       winPercentage: winPct,
-      bestTeammate: bestT ? { player: bestT.player, matches: bestT.count } : null,
-      worstTeammate: worstT ? { player: worstT.player, matches: worstT.count } : null,
-      favoriteVictim: favVic ? { player: favVic.player, winsAgainst: favVic.count } : null,
+      bestTeammate: bestT ? { players: bestT.players, matches: bestT.count } : null,
+      worstTeammate: worstT ? { players: worstT.players, matches: worstT.count } : null,
+      favoriteVictim: favVic ? { players: favVic.players, winsAgainst: favVic.count } : null,
     };
   }).sort((a, b) => b.wins - a.wins || b.winPercentage - a.winPercentage); // Sort by gross wins then win %
 }

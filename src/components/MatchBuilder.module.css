@@ -42,46 +42,60 @@
 }
 
 .chip {
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.05);
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--panel-border);
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 0.6rem;
   transition: all var(--transition-fast);
   cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  user-select: none;
 }
 
 .chip:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--text-secondary);
+  transform: translateY(-1px);
 }
 
 .chipSelected {
-  background: rgba(16, 185, 129, 0.1);
+  background: rgba(16, 185, 129, 0.08);
   border-color: var(--accent-primary);
+  color: var(--accent-primary);
 }
 
 .chipAction {
   background: var(--accent-primary);
   color: #fff;
-  border-radius: 4px;
-  width: 24px;
-  height: 24px;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
+  font-size: 0.75rem;
+  font-weight: 900;
+  box-shadow: 0 2px 8px var(--accent-glow);
+  transition: transform 0.2s ease;
+}
+
+.chip:hover .chipAction {
+  transform: scale(1.1);
 }
 
 .chipActionRemove {
   background: var(--danger);
+  box-shadow: 0 2px 8px var(--danger-glow);
 }
 
 .unselectedGrid {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.8rem;
 }
 
 .controls {
@@ -114,6 +128,62 @@
 .btnDraw { background: var(--warning); color: #fff; }
 .btnB { background: var(--danger); color: #fff; }
 
+.datePickerContainer {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.dateLabel {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.inputWrapper {
+  width: 100%;
+  max-width: 250px;
+}
+
+.dateInput {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--panel-border);
+  padding: 0.8rem 1.2rem;
+  border-radius: 12px;
+  color: white;
+  font-family: inherit;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  color-scheme: dark;
+  outline: none;
+}
+
+.dateInput:focus, .dateInput:hover {
+  border-color: var(--accent-primary);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 15px var(--accent-glow);
+}
+
+.dateInput::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%2310b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>');
+  padding: 4px;
+  border-radius: 4px;
+  transition: transform 0.2s ease;
+}
+
+.dateInput::-webkit-calendar-picker-indicator:hover {
+  transform: scale(1.15);
+}
+
 .submitBtn {
   margin-top: 2rem;
   width: 100%;
@@ -124,7 +194,15 @@
   border-radius: var(--radius-lg);
   font-weight: 800;
   box-shadow: 0 8px 24px var(--accent-glow);
+  transition: all var(--transition-fast);
 }
+
+.submitBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+  box-shadow: 0 12px 30px var(--accent-glow);
+}
+
 .submitBtn:disabled {
   background: var(--panel-bg);
   color: var(--text-secondary);

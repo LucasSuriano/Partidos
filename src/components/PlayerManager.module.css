@@ -83,3 +83,53 @@
   opacity: 1;
   text-shadow: 0 0 8px var(--danger-glow);
 }
+
+.cardActions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.editBtn {
+  color: var(--accent-primary);
+  font-size: 1.1rem;
+  opacity: 0.5;
+  transition: opacity var(--transition-fast);
+}
+
+.editBtn:hover {
+  opacity: 1;
+  text-shadow: 0 0 8px var(--accent-glow);
+}
+
+.editWrapper {
+  display: flex;
+  width: 100%;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.editInput {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--accent-primary);
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  width: 100%;
+}
+
+.editActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.saveBtn {
+  color: var(--accent-primary);
+  font-weight: bold;
+}
+
+.cancelBtn {
+  color: var(--danger);
+  font-weight: bold;
+}

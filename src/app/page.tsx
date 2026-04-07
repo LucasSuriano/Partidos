@@ -22,44 +22,51 @@ export default function Home() {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h1 className={styles.title}>Partidos 5v5</h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+        <div className={styles.headerTop}>
+          <div className={styles.titleContainer}>
+            <img 
+              src="/img/v987-24a.jpg" 
+              alt="Logo Entiendanla" 
+              className={styles.logoImage} 
+            />
+            <h1 className={styles.title}>Entiendanla</h1>
+          </div>
+          <div className={styles.userSection}>
+            <span className={styles.userInfo}>
               Hola, <strong>{user.username}</strong> ({user.role})
             </span>
-            <button onClick={logout} style={{ background: 'transparent', border: '1px solid var(--danger)', color: 'var(--danger)', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer' }}>
+            <button onClick={logout} className={styles.logoutBtn}>
               Salir
             </button>
           </div>
         </div>
         <div className={styles.actions}>
           <button 
-            className={view === 'STATS' ? styles.btnPrimary : styles.btnSecondary} 
+            className={view === 'STATS' ? styles.btnSecondaryActive : styles.btnSecondary} 
             onClick={() => setView('STATS')}
           >
             Estadísticas
           </button>
           {isAdmin && (
             <button 
-              className={view === 'PLAYERS' ? styles.btnPrimary : styles.btnSecondary}
+              className={view === 'PLAYERS' ? styles.btnSecondaryActive : styles.btnSecondary}
               onClick={() => setView('PLAYERS')}
             >
               Jugadores
             </button>
           )}
           <button 
-            className={view === 'HISTORY' ? styles.btnPrimary : styles.btnSecondary}
+            className={view === 'HISTORY' ? styles.btnSecondaryActive : styles.btnSecondary}
             onClick={() => setView('HISTORY')}
           >
             Historial
           </button>
           {isAdmin && (
             <button 
-              className={view === 'NEW_MATCH' ? styles.btnPrimary : styles.btnSecondary}
+              className={view === 'NEW_MATCH' ? styles.btnSpecialActive : styles.btnSpecial}
               onClick={() => setView('NEW_MATCH')}
             >
-              + Registrar Partido
+              Registrar Partido
             </button>
           )}
         </div>

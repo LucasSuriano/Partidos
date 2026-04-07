@@ -9,6 +9,7 @@ interface AppContextProps {
   matches: Match[];
   addPlayer: (name: string) => Promise<void>;
   removePlayer: (id: string) => Promise<void>;
+  updatePlayer: (id: string, newName: string) => Promise<void>;
   addMatch: (date: string, teamA: string[], teamB: string[], result: MatchResult) => Promise<void>;
   removeMatch: (id: string) => Promise<void>;
 }
@@ -62,6 +63,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await supabase.from('players').delete().eq('id', id);
   };
 
+  const updatePlayer = async (id: string, newName: string) => {
+    // Optimistic update
+    setPlayers(prev => prev.map(p => p.id === id ? { ...p, name: newName } : p));
+    
+    await supabase.from('players').update({ name: newName }).eq('id', id);
+  };
+
   const addMatch = async (date: string, teamA: string[], teamB: string[], result: MatchResult) => {
     const newMatch: Match = { id: crypto.randomUUID(), date, teamA, teamB, result };
     // Optimistic update
@@ -86,7 +94,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   if (!isLoaded) return null; // Prevent hydration mismatch by rendering only on client
 
   return (
-    <AppContext.Provider value={{ players, matches, addPlayer, removePlayer, addMatch, removeMatch }}>
+    <AppContext.Provider value={{ players, matches, addPlayer, removePlayer, updatePlayer, addMatch, removeMatch }}>
       {children}
     </AppContext.Provider>
   );

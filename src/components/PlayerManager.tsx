@@ -5,8 +5,10 @@ import { useAppContext } from '@/context/AppContext';
 import styles from './PlayerManager.module.css';
 
 export default function PlayerManager() {
-  const { players, addPlayer, removePlayer } = useAppContext();
+  const { players, addPlayer, removePlayer, updatePlayer } = useAppContext();
   const [name, setName] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -14,6 +16,23 @@ export default function PlayerManager() {
       addPlayer(name.trim());
       setName('');
     }
+  };
+
+  const handleStartEdit = (player: any) => {
+    setEditingId(player.id);
+    setEditName(player.name);
+  };
+
+  const handleSaveEdit = async (id: string) => {
+    if (editName.trim()) {
+      await updatePlayer(id, editName.trim());
+      setEditingId(null);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditName('');
   };
 
   return (
@@ -25,7 +44,7 @@ export default function PlayerManager() {
           type="text" 
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Nombre del jugador"
+          placeholder="Nombre del nuevo jugador"
           className={styles.input}
         />
         <button type="submit" disabled={!name.trim()} className={styles.btn}>
@@ -36,10 +55,37 @@ export default function PlayerManager() {
       <div className={styles.playerList}>
         {players.map(player => (
           <div key={player.id} className={styles.playerCard}>
-            <span>{player.name}</span>
-            <button onClick={() => removePlayer(player.id)} className={styles.deleteBtn} title="Eliminar">
-              ✕
-            </button>
+            {editingId === player.id ? (
+              <div className={styles.editWrapper}>
+                <input 
+                  type="text" 
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className={styles.editInput}
+                  autoFocus
+                />
+                <div className={styles.editActions}>
+                  <button onClick={() => handleSaveEdit(player.id)} className={styles.saveBtn} title="Guardar">
+                    ✓
+                  </button>
+                  <button onClick={handleCancelEdit} className={styles.cancelBtn} title="Cancelar">
+                    ✕
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <span>{player.name}</span>
+                <div className={styles.cardActions}>
+                  <button onClick={() => handleStartEdit(player)} className={styles.editBtn} title="Editar">
+                    ✎
+                  </button>
+                  <button onClick={() => removePlayer(player.id)} className={styles.deleteBtn} title="Eliminar">
+                    ✕
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         ))}
         {players.length === 0 && (
