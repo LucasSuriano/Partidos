@@ -94,3 +94,21 @@
   text-align: center;
   color: var(--text-secondary);
 }
+
+.reportButton {
+  background: transparent;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-left: 8px;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  opacity: 0.6;
+}
+
+.reportButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  opacity: 1;
+  transform: scale(1.1);
+}

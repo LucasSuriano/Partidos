@@ -25,4 +25,20 @@ export type PlayerStats = {
   bestTeammate: { players: Player[]; matches: number } | null;
   worstTeammate: { players: Player[]; matches: number } | null;
   favoriteVictim: { players: Player[]; winsAgainst: number } | null;
+  currentStreak: { type: 'WIN' | 'LOSS' | 'DRAW' | null, count: number };
+};
+
+export type RelationStats = {
+  player: Player;
+  wins: number;
+  losses: number;
+  draws: number;
+  total: number;
+  winPercentage: number;
+};
+
+export type PlayerReport = {
+  player: Player;
+  teammates: RelationStats[];
+  opponents: RelationStats[];
 };

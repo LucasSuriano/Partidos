@@ -1,4 +1,4 @@
-import { Match, Player, PlayerStats } from '../types';
+import { Match, Player, PlayerStats, PlayerReport, RelationStats } from '../types';
 
 export function calculateStats(players: Player[], matches: Match[]): PlayerStats[] {
   const statsMap: Record<string, Omit<PlayerStats, 'player'>> = {};
@@ -16,6 +16,7 @@ export function calculateStats(players: Player[], matches: Match[]): PlayerStats
       bestTeammate: null,
       worstTeammate: null,
       favoriteVictim: null,
+      currentStreak: { type: null, count: 0 },
     };
   });
 
@@ -126,6 +127,74 @@ export function calculateStats(players: Player[], matches: Match[]): PlayerStats
       bestTeammate: bestT ? { players: bestT.players, matches: bestT.count } : null,
       worstTeammate: worstT ? { players: worstT.players, matches: worstT.count } : null,
       favoriteVictim: favVic ? { players: favVic.players, winsAgainst: favVic.count } : null,
+      currentStreak: currentStreaks[p.id],
     };
   }).sort((a, b) => b.wins - a.wins || b.winPercentage - a.winPercentage); // Sort by gross wins then win %
+}
+
+export function getPlayerReport(playerId: string, players: Player[], matches: Match[]): PlayerReport {
+  const player = players.find(p => p.id === playerId);
+  if (!player) throw new Error('Player not found');
+
+  const teammateStats: Record<string, Omit<RelationStats, 'player' | 'winPercentage'>> = {};
+  const opponentStats: Record<string, Omit<RelationStats, 'player' | 'winPercentage'>> = {};
+
+  players.forEach(p => {
+    if (p.id !== playerId) {
+      teammateStats[p.id] = { wins: 0, losses: 0, draws: 0, total: 0 };
+      opponentStats[p.id] = { wins: 0, losses: 0, draws: 0, total: 0 };
+    }
+  });
+
+  matches.forEach(match => {
+    const isPlayerInTeamA = match.teamA.includes(playerId);
+    const isPlayerInTeamB = match.teamB.includes(playerId);
+
+    if (!isPlayerInTeamA && !isPlayerInTeamB) return;
+
+    const myTeam = isPlayerInTeamA ? match.teamA : match.teamB;
+    const opponentTeam = isPlayerInTeamA ? match.teamB : match.teamA;
+    
+    const isWin = (isPlayerInTeamA && match.result === 'A_WIN') || (isPlayerInTeamB && match.result === 'B_WIN');
+    const isLoss = (isPlayerInTeamA && match.result === 'B_WIN') || (isPlayerInTeamB && match.result === 'A_WIN');
+    const isDraw = match.result === 'DRAW';
+
+    myTeam.forEach(tid => {
+      if (tid !== playerId && teammateStats[tid]) {
+        teammateStats[tid].total += 1;
+        if (isWin) teammateStats[tid].wins += 1;
+        if (isLoss) teammateStats[tid].losses += 1;
+        if (isDraw) teammateStats[tid].draws += 1;
+      }
+    });
+
+    opponentTeam.forEach(oid => {
+      if (opponentStats[oid]) {
+        opponentStats[oid].total += 1;
+        if (isWin) opponentStats[oid].wins += 1;
+        if (isLoss) opponentStats[oid].losses += 1;
+        if (isDraw) opponentStats[oid].draws += 1;
+      }
+    });
+  });
+
+  const formatStats = (statsMap: Record<string, any>): RelationStats[] => {
+    return Object.entries(statsMap)
+      .map(([id, s]) => {
+        const p = players.find(player => player.id === id)!;
+        return {
+          player: p,
+          ...s,
+          winPercentage: s.total > 0 ? (s.wins / s.total) * 100 : 0
+        };
+      })
+      .filter(s => s.total > 0)
+      .sort((a, b) => b.total - a.total || b.winPercentage - a.winPercentage);
+  };
+
+  return {
+    player,
+    teammates: formatStats(teammateStats),
+    opponents: formatStats(opponentStats),
+  };
 }

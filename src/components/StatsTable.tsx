@@ -1,12 +1,14 @@
 "use client";
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { calculateStats } from '@/lib/stats';
 import styles from './StatsTable.module.css';
+import PlayerReportModal from './PlayerReportModal';
 
 export default function StatsTable() {
   const { players, matches } = useAppContext();
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
   const stats = useMemo(() => calculateStats(players, matches), [players, matches]);
 
@@ -37,6 +39,7 @@ export default function StatsTable() {
               <th className={styles.th}>% Victoria</th>
               <th className={styles.th}>Mejor Racha</th>
               <th className={styles.th}>Peor Racha</th>
+              <th className={styles.th}>Racha Actual</th>
               <th className={styles.th}>Mejor Compa</th>
               <th className={styles.th}>Peor Compa</th>
               <th className={styles.th}>Víctima Fav.</th>
@@ -48,6 +51,13 @@ export default function StatsTable() {
                 <td className={styles.td}>
                   <div className={styles.playerName}>
                     {index + 1}. {s.player.name}
+                    <button 
+                      className={styles.reportButton} 
+                      onClick={() => setSelectedPlayerId(s.player.id)}
+                      title="Ver reporte detallado"
+                    >
+                      📊
+                    </button>
                   </div>
                 </td>
                 <td className={styles.td}>{s.matchesPlayed}</td>
@@ -72,6 +82,24 @@ export default function StatsTable() {
                   <div style={{ color: 'var(--danger)', fontWeight: 'bold' }}>
                     {s.worstStreak > 0 ? `${s.worstStreak} 💔` : '-'}
                   </div>
+                </td>
+                <td className={styles.td}>
+                  {s.currentStreak.count > 0 && s.currentStreak.type !== 'DRAW' ? (
+                    <div style={{ 
+                      color: s.currentStreak.type === 'WIN' ? 'var(--accent-primary)' : 'var(--danger)', 
+                      fontWeight: 'bold',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '4px'
+                    }}>
+                      {s.currentStreak.count}
+                      {s.currentStreak.type === 'WIN' && s.currentStreak.count >= 3 && <span>🔥</span>}
+                      {s.currentStreak.type === 'LOSS' && s.currentStreak.count >= 3 && <span>🍬</span>}
+                    </div>
+                  ) : (
+                    <div style={{ color: 'var(--text-secondary)' }}>-</div>
+                  )}
                 </td>
                 <td className={styles.td}>
                   {s.bestTeammate ? (
@@ -108,6 +136,12 @@ export default function StatsTable() {
           </tbody>
         </table>
       </div>
+      {selectedPlayerId && (
+        <PlayerReportModal 
+          playerId={selectedPlayerId} 
+          onClose={() => setSelectedPlayerId(null)} 
+        />
+      )}
     </div>
   );
 }
