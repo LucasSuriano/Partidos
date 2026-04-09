@@ -19,11 +19,10 @@ export default function MatchHistory() {
 
   const formatDate = (isoString: string) => {
     const date = new Date(isoString);
-    return date.toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const year = date.getUTCFullYear();
+    return `${day}/${month}/${year}`;
   };
 
   const sortedMatches = [...matches].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -47,7 +46,7 @@ export default function MatchHistory() {
 
               <div className={styles.team}>
                 <div className={styles.teamName}>
-                  Equipo Verde
+                  Equipo Ganador
                   {match.result === 'A_WIN' && <span className={`${styles.outcome} ${styles.outcomeWin}`}>Ganador</span>}
                   {match.result === 'DRAW' && <span className={`${styles.outcome} ${styles.outcomeDraw}`}>Empate</span>}
                 </div>
@@ -60,7 +59,7 @@ export default function MatchHistory() {
                 <div className={styles.teamName} style={{ color: 'var(--danger)' }}>
                   {match.result === 'DRAW' && <span className={`${styles.outcome} ${styles.outcomeDraw}`}>Empate</span>}
                   {match.result === 'B_WIN' && <span className={`${styles.outcome} ${styles.outcomeWin}`}>Ganador</span>}
-                  Equipo Rojo
+                  Equipo Perdedor
                 </div>
                 <div className={styles.playerNames}>{getPlayerNames(match.teamB)}</div>
               </div>

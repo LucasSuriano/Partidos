@@ -2,15 +2,15 @@
 
 import { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
-import { Player, MatchResult } from '@/types';
+import { Player } from '@/types';
 import styles from './MatchBuilder.module.css';
+import DatePicker from './DatePicker';
 
 export default function MatchBuilder({ onComplete }: { onComplete: () => void }) {
   const { players, addMatch } = useAppContext();
 
   const [teamA, setTeamA] = useState<Player[]>([]);
   const [teamB, setTeamB] = useState<Player[]>([]);
-  const [result, setResult] = useState<MatchResult | null>(null);
   const [matchDate, setMatchDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
   const availablePlayers = players.filter(
@@ -28,16 +28,16 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
   };
 
   const handleSubmit = () => {
-    if (teamA.length !== 5 || teamB.length !== 5 || !result || !matchDate) return;
+    if (teamA.length !== 5 || teamB.length !== 5 || !matchDate) return;
 
-    // Convert current local date from input "YYYY-MM-DD" to full ISO string to keep sortability format
+    // El Equipo Ganador (A) siempre gana. Convertir fecha local YYYY-MM-DD a ISO.
     const fullDate = new Date(`${matchDate}T12:00:00Z`).toISOString();
 
     addMatch(
       fullDate,
       teamA.map(p => p.id),
       teamB.map(p => p.id),
-      result
+      'A_WIN'
     );
     onComplete();
   };
@@ -46,10 +46,20 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
 
   return (
     <div className={styles.container}>
+
+      {/* Fecha arriba */}
+      <div className={`${styles.unselectedBox} glass-panel`}>
+        <div className={styles.datePickerContainer}>
+          <label className={styles.dateLabel}>Fecha del Partido</label>
+          <DatePicker value={matchDate} onChange={setMatchDate} />
+        </div>
+      </div>
+
+      {/* Equipos */}
       <div className={styles.teamsLayout}>
         {/* Team A */}
         <div className={`${styles.teamBox} glass-panel`}>
-          <h3 className={styles.teamTitle}>Equipo Verde ({teamA.length}/5)</h3>
+          <h3 className={styles.teamTitle}>Equipo Ganador ({teamA.length}/5)</h3>
           <div className={styles.playerList}>
             {teamA.map(p => (
               <div key={p.id} className={`${styles.chip} ${styles.chipSelected}`}>
@@ -71,7 +81,7 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
 
         {/* Team B */}
         <div className={`${styles.teamBox} glass-panel`}>
-          <h3 className={styles.teamTitle} style={{ color: 'var(--danger)' }}>Equipo Rojo ({teamB.length}/5)</h3>
+          <h3 className={styles.teamTitle} style={{ color: 'var(--danger)' }}>Equipo Perdedor ({teamB.length}/5)</h3>
           <div className={styles.playerList}>
             {teamB.map(p => (
               <div key={p.id} className={`${styles.chip} ${styles.chipSelected}`}>
@@ -92,52 +102,15 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
         </div>
       </div>
 
+      {/* Botón guardar */}
       {isComplete ? (
-        <div className={`${styles.unselectedBox} glass-panel`}>
-          <h3 style={{ textAlign: 'center', marginBottom: '1rem' }}>Resultado del Partido</h3>
-          <div className={styles.controls}>
-            <button
-              className={`${styles.resultBtn} ${styles.btnA} ${result === 'A_WIN' ? styles.active : ''}`}
-              onClick={() => setResult('A_WIN')}
-            >
-              Ganó equipo verde
-            </button>
-            <button
-              className={`${styles.resultBtn} ${styles.btnDraw} ${result === 'DRAW' ? styles.active : ''}`}
-              onClick={() => setResult('DRAW')}
-            >
-              Empate
-            </button>
-            <button
-              className={`${styles.resultBtn} ${styles.btnB} ${result === 'B_WIN' ? styles.active : ''}`}
-              onClick={() => setResult('B_WIN')}
-            >
-              Ganó equipo rojo
-            </button>
-          </div>
-
-          <div className={styles.datePickerContainer}>
-            <label className={styles.dateLabel}>Fecha del Partido</label>
-            <div className={styles.inputWrapper}>
-              <input
-                type="date"
-                value={matchDate}
-                onChange={(e) => setMatchDate(e.target.value)}
-                className={styles.dateInput}
-              />
-            </div>
-          </div>
-
-          <button
-            className={styles.submitBtn}
-            disabled={!result}
-            onClick={handleSubmit}
-          >
-            Guardar Partido
-          </button>
-        </div>
+        <button className={styles.submitBtn} onClick={handleSubmit}>
+          Guardar Partido
+        </button>
       ) : (
-        <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>Selecciona 5 jugadores por equipo para continuar.</p>
+        <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
+          Selecciona 5 jugadores por equipo para continuar.
+        </p>
       )}
 
     </div>
