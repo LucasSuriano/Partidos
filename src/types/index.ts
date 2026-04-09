@@ -44,4 +44,22 @@ export type PlayerReport = {
   bestTeammate: { players: Player[]; matches: number } | null;
   worstTeammate: { players: Player[]; matches: number } | null;
   favoriteVictim: { players: Player[]; winsAgainst: number } | null;
+  nemesis: { players: Player[]; lossesAgainst: number } | null;
+  // Estadísticas generales del jugador
+  matchesPlayed: number;
+  wins: number;
+  losses: number;
+  draws: number;
+  winPercentage: number;
+  bestStreak: number;
+  currentStreak: { type: 'WIN' | 'LOSS' | 'DRAW' | null; count: number };
+  // Presencia
+  presencePercentage: number; // % de partidos del total en que participó
+  totalMatchesInHistory: number;
+  // Ranking
+  rank: number; // posición en la tabla general
+  totalPlayers: number;
+  // Como Equipo A vs Equipo B
+  teamARecord: { wins: number; losses: number; draws: number; total: number };
+  teamBRecord: { wins: number; losses: number; draws: number; total: number };
 };

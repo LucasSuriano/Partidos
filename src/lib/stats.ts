@@ -3,7 +3,6 @@ import { Match, Player, PlayerStats, PlayerReport, RelationStats } from '../type
 export function calculateStats(players: Player[], matches: Match[]): PlayerStats[] {
   const statsMap: Record<string, Omit<PlayerStats, 'player'>> = {};
 
-  // Initialize stats for all players
   players.forEach(p => {
     statsMap[p.id] = {
       matchesPlayed: 0,
@@ -23,7 +22,6 @@ export function calculateStats(players: Player[], matches: Match[]): PlayerStats
   const teammateWins: Record<string, Record<string, number>> = {};
   const teammateLosses: Record<string, Record<string, number>> = {};
   const opponentWins: Record<string, Record<string, number>> = {};
-  
   const currentStreaks: Record<string, { type: 'WIN' | 'LOSS' | 'DRAW' | null, count: number }> = {};
 
   players.forEach(p => {
@@ -33,7 +31,7 @@ export function calculateStats(players: Player[], matches: Match[]): PlayerStats
     currentStreaks[p.id] = { type: null, count: 0 };
   });
 
-  const sortedMatches = [...matches].sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const sortedMatches = [...matches].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   sortedMatches.forEach(match => {
     const teamA = match.teamA;
@@ -56,7 +54,7 @@ export function calculateStats(players: Player[], matches: Match[]): PlayerStats
           streak.type = resultType;
           streak.count = 1;
         }
-        
+
         if (isWin && streak.count > statsMap[playerId].bestStreak) {
           statsMap[playerId].bestStreak = streak.count;
         }
@@ -64,7 +62,6 @@ export function calculateStats(players: Player[], matches: Match[]): PlayerStats
           statsMap[playerId].worstStreak = streak.count;
         }
 
-        // Record teammates
         team.forEach(teammateId => {
           if (playerId !== teammateId) {
             if (isWin) teammateWins[playerId][teammateId] = (teammateWins[playerId][teammateId] || 0) + 1;
@@ -72,7 +69,6 @@ export function calculateStats(players: Player[], matches: Match[]): PlayerStats
           }
         });
 
-        // Record opponents
         if (isWin) {
           opponents.forEach(opponentId => {
             opponentWins[playerId][opponentId] = (opponentWins[playerId][opponentId] || 0) + 1;
@@ -93,21 +89,12 @@ export function calculateStats(players: Player[], matches: Match[]): PlayerStats
     let topIds: string[] = [];
     let max = 0;
     Object.entries(counts).forEach(([id, count]) => {
-      if (count > max) {
-        max = count;
-        topIds = [id];
-      } else if (count === max && max > 0) {
-        topIds.push(id);
-      }
+      if (count > max) { max = count; topIds = [id]; }
+      else if (count === max && max > 0) topIds.push(id);
     });
     if (topIds.length === 0) return null;
-    
-    const matchedPlayers = topIds
-      .map(id => players.find(p => p.id === id))
-      .filter((p): p is Player => p !== undefined);
-
+    const matchedPlayers = topIds.map(id => players.find(p => p.id === id)).filter((p): p is Player => p !== undefined);
     if (matchedPlayers.length === 0) return null;
-
     return { players: matchedPlayers, count: max };
   };
 
@@ -116,7 +103,6 @@ export function calculateStats(players: Player[], matches: Match[]): PlayerStats
     const bestT = getTopPlayers(teammateWins[p.id]);
     const worstT = getTopPlayers(teammateLosses[p.id]);
     const favVic = getTopPlayers(opponentWins[p.id]);
-
     const totalResolved = s.wins + s.losses + s.draws;
     const winPct = totalResolved > 0 ? (s.wins / totalResolved) * 100 : 0;
 
@@ -129,7 +115,7 @@ export function calculateStats(players: Player[], matches: Match[]): PlayerStats
       favoriteVictim: favVic ? { players: favVic.players, winsAgainst: favVic.count } : null,
       currentStreak: currentStreaks[p.id],
     };
-  }).sort((a, b) => b.wins - a.wins || b.winPercentage - a.winPercentage); // Sort by gross wins then win %
+  }).sort((a, b) => b.wins - a.wins || b.winPercentage - a.winPercentage);
 }
 
 export function getPlayerReport(playerId: string, players: Player[], matches: Match[]): PlayerReport {
@@ -146,18 +132,48 @@ export function getPlayerReport(playerId: string, players: Player[], matches: Ma
     }
   });
 
-  matches.forEach(match => {
+  let pWins = 0, pLosses = 0, pDraws = 0, pBestStreak = 0;
+  let streak = { type: null as 'WIN' | 'LOSS' | 'DRAW' | null, count: 0 };
+  const teamARecord = { wins: 0, losses: 0, draws: 0, total: 0 };
+  const teamBRecord = { wins: 0, losses: 0, draws: 0, total: 0 };
+
+  const sortedMatches = [...matches].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  sortedMatches.forEach(match => {
     const isPlayerInTeamA = match.teamA.includes(playerId);
     const isPlayerInTeamB = match.teamB.includes(playerId);
-
     if (!isPlayerInTeamA && !isPlayerInTeamB) return;
 
     const myTeam = isPlayerInTeamA ? match.teamA : match.teamB;
     const opponentTeam = isPlayerInTeamA ? match.teamB : match.teamA;
-    
+
     const isWin = (isPlayerInTeamA && match.result === 'A_WIN') || (isPlayerInTeamB && match.result === 'B_WIN');
     const isLoss = (isPlayerInTeamA && match.result === 'B_WIN') || (isPlayerInTeamB && match.result === 'A_WIN');
     const isDraw = match.result === 'DRAW';
+
+    if (isWin) pWins++;
+    if (isLoss) pLosses++;
+    if (isDraw) pDraws++;
+
+    const resultType = isWin ? 'WIN' : (isLoss ? 'LOSS' : 'DRAW');
+    if (streak.type === resultType) {
+      streak.count++;
+    } else {
+      streak = { type: resultType, count: 1 };
+    }
+    if (isWin && streak.count > pBestStreak) pBestStreak = streak.count;
+
+    if (isPlayerInTeamA) {
+      teamARecord.total++;
+      if (isWin) teamARecord.wins++;
+      if (isLoss) teamARecord.losses++;
+      if (isDraw) teamARecord.draws++;
+    } else {
+      teamBRecord.total++;
+      if (isWin) teamBRecord.wins++;
+      if (isLoss) teamBRecord.losses++;
+      if (isDraw) teamBRecord.draws++;
+    }
 
     myTeam.forEach(tid => {
       if (tid !== playerId && teammateStats[tid]) {
@@ -182,11 +198,7 @@ export function getPlayerReport(playerId: string, players: Player[], matches: Ma
     return Object.entries(statsMap)
       .map(([id, s]) => {
         const p = players.find(player => player.id === id)!;
-        return {
-          player: p,
-          ...s,
-          winPercentage: s.total > 0 ? (s.wins / s.total) * 100 : 0
-        };
+        return { player: p, ...s, winPercentage: s.total > 0 ? (s.wins / s.total) * 100 : 0 };
       })
       .filter(s => s.total > 0)
       .sort((a, b) => b.total - a.total || b.winPercentage - a.winPercentage);
@@ -199,12 +211,8 @@ export function getPlayerReport(playerId: string, players: Player[], matches: Ma
     let top: Player[] = [];
     let max = 0;
     arr.forEach(s => {
-      if (s[key] > max) {
-        max = s[key];
-        top = [s.player];
-      } else if (s[key] === max && max > 0) {
-        top.push(s.player);
-      }
+      if (s[key] > max) { max = s[key]; top = [s.player]; }
+      else if (s[key] === max && max > 0) top.push(s.player);
     });
     return top.length > 0 ? { players: top, count: max } : null;
   };
@@ -212,6 +220,14 @@ export function getPlayerReport(playerId: string, players: Player[], matches: Ma
   const bestT = getTop(teammates, 'wins');
   const worstT = getTop(teammates, 'losses');
   const favVic = getTop(opponents, 'wins');
+  const nemesisTop = getTop(opponents, 'losses');
+
+  const matchesPlayed = pWins + pLosses + pDraws;
+  const winPercentage = matchesPlayed > 0 ? (pWins / matchesPlayed) * 100 : 0;
+
+  const allStats = calculateStats(players, matches);
+  const rank = allStats.findIndex(s => s.player.id === playerId) + 1;
+  const presencePercentage = matches.length > 0 ? (matchesPlayed / matches.length) * 100 : 0;
 
   return {
     player,
@@ -220,5 +236,19 @@ export function getPlayerReport(playerId: string, players: Player[], matches: Ma
     bestTeammate: bestT ? { players: bestT.players, matches: bestT.count } : null,
     worstTeammate: worstT ? { players: worstT.players, matches: worstT.count } : null,
     favoriteVictim: favVic ? { players: favVic.players, winsAgainst: favVic.count } : null,
+    nemesis: nemesisTop ? { players: nemesisTop.players, lossesAgainst: nemesisTop.count } : null,
+    matchesPlayed,
+    wins: pWins,
+    losses: pLosses,
+    draws: pDraws,
+    winPercentage,
+    bestStreak: pBestStreak,
+    currentStreak: { type: streak.type, count: streak.count },
+    presencePercentage,
+    totalMatchesInHistory: matches.length,
+    rank,
+    totalPlayers: players.length,
+    teamARecord,
+    teamBRecord,
   };
 }
