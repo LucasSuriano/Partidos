@@ -64,7 +64,14 @@ export default function PlayerManager() {
       </form>
 
       <div className={styles.playerList}>
-        {players.map(player => (
+        {[...players]
+          .sort((a, b) => {
+            const countA = matches.filter(m => m.teamA.includes(a.id) || m.teamB.includes(a.id)).length;
+            const countB = matches.filter(m => m.teamA.includes(b.id) || m.teamB.includes(b.id)).length;
+            if (countB !== countA) return countB - countA;
+            return a.name.localeCompare(b.name);
+          })
+          .map(player => (
           <div key={player.id} className={styles.playerCard}>
             {editingId === player.id ? (
               <div className={styles.editWrapper}>

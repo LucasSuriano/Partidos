@@ -110,7 +110,8 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
     .sort((a, b) => {
       const attendanceA = matches.filter(m => m.teamA.includes(a.id) || m.teamB.includes(a.id)).length;
       const attendanceB = matches.filter(m => m.teamA.includes(b.id) || m.teamB.includes(b.id)).length;
-      return attendanceB - attendanceA; // Descendente (más asistencias primero)
+      if (attendanceB !== attendanceA) return attendanceB - attendanceA;
+      return a.name.localeCompare(b.name);
     });
 
   const addToTeam = (team: 'A' | 'B', player: Player) => {
