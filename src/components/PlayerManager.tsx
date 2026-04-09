@@ -5,7 +5,7 @@ import { useAppContext } from '@/context/AppContext';
 import styles from './PlayerManager.module.css';
 
 export default function PlayerManager() {
-  const { players, addPlayer, removePlayer, updatePlayer } = useAppContext();
+  const { players, matches, addPlayer, removePlayer, updatePlayer } = useAppContext();
   const [name, setName] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
@@ -33,6 +33,17 @@ export default function PlayerManager() {
   const handleCancelEdit = () => {
     setEditingId(null);
     setEditName('');
+  };
+
+  const handleDelete = (id: string, playerName: string) => {
+    const hasMatches = matches.some(m => m.teamA.includes(id) || m.teamB.includes(id));
+    if (hasMatches) {
+      alert(`No se puede eliminar a ${playerName} porque ya tiene partidos registrados.`);
+      return;
+    }
+    if (confirm(`¿Estás seguro de que deseas eliminar a ${playerName}?`)) {
+      removePlayer(id);
+    }
   };
 
   return (
@@ -80,7 +91,18 @@ export default function PlayerManager() {
                   <button onClick={() => handleStartEdit(player)} className={styles.editBtn} title="Editar">
                     ✎
                   </button>
-                  <button onClick={() => removePlayer(player.id)} className={styles.deleteBtn} title="Eliminar">
+                  <button 
+                    onClick={() => handleDelete(player.id, player.name)} 
+                    className={styles.deleteBtn} 
+                    title={matches.some(m => m.teamA.includes(player.id) || m.teamB.includes(player.id)) 
+                      ? "No se puede eliminar: tiene partidos registrados" 
+                      : "Eliminar jugador"
+                    }
+                    style={{ 
+                      opacity: matches.some(m => m.teamA.includes(player.id) || m.teamB.includes(player.id)) ? 0.2 : 0.5,
+                      cursor: matches.some(m => m.teamA.includes(player.id) || m.teamB.includes(player.id)) ? 'not-allowed' : 'pointer'
+                    }}
+                  >
                     ✕
                   </button>
                 </div>
