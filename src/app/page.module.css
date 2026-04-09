@@ -127,3 +127,66 @@
   grid-template-columns: 1fr;
   gap: 2rem;
 }
+
+/* ══════════════════════════════
+   MOBILE (≤ 768px)
+══════════════════════════════ */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem 0.85rem;
+  }
+
+  .header {
+    margin-bottom: 1.25rem;
+  }
+
+  .headerTop {
+    margin-bottom: 0.75rem;
+  }
+
+  .logoImage {
+    width: 36px;
+    height: 36px;
+  }
+
+  .title {
+    font-size: 1.8rem;
+  }
+
+  /* Ocultar el texto "Hola, X (admin)" — solo mostrar el botón Salir */
+  .userInfo {
+    display: none;
+  }
+
+  .userSection {
+    padding: 0.35rem 0.6rem;
+    gap: 0;
+  }
+
+  .logoutBtn {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.8rem;
+  }
+
+  /* Nav con scroll horizontal sin wrap */
+  .actions {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.25rem;
+    gap: 0;
+    /* ocultar scrollbar pero mantener scroll */
+    scrollbar-width: none;
+  }
+  .actions::-webkit-scrollbar {
+    display: none;
+  }
+
+  .btnSecondary, .btnSpecial,
+  .btnSecondaryActive, .btnSpecialActive {
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+}
+

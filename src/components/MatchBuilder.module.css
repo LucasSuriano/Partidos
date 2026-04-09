@@ -1,3 +1,4 @@
+/* ── Layout ── */
 .container {
   display: flex;
   flex-direction: column;
@@ -17,119 +18,325 @@
   }
 }
 
+/* ── Team box ── */
 .teamBox {
   padding: 1.5rem;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.teamBoxCompleteGreen {
+  border-color: var(--accent-primary) !important;
+  box-shadow: 0 0 24px var(--accent-glow), inset 0 0 40px rgba(16, 185, 129, 0.04);
+  animation: pulseGreen 2.5s ease-in-out infinite;
+}
+
+.teamBoxCompleteRed {
+  border-color: var(--danger) !important;
+  box-shadow: 0 0 24px var(--danger-glow), inset 0 0 40px rgba(239, 68, 68, 0.04);
+  animation: pulseRed 2.5s ease-in-out infinite;
+}
+
+@keyframes pulseGreen {
+  0%, 100% { box-shadow: 0 0 16px var(--accent-glow); }
+  50%       { box-shadow: 0 0 32px var(--accent-glow); }
+}
+
+@keyframes pulseRed {
+  0%, 100% { box-shadow: 0 0 16px var(--danger-glow); }
+  50%       { box-shadow: 0 0 32px var(--danger-glow); }
+}
+
+/* ── Team header ── */
+.teamHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
 }
 
 .teamTitle {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
+  font-size: 1.15rem;
+  font-weight: 700;
   color: var(--accent-primary);
-}
-
-.playerList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
-  min-height: 250px;
-}
-
-.unselectedBox {
-  padding: 1.5rem;
-  margin-top: 1rem;
-}
-
-.chip {
-  padding: 0.4rem 0.8rem;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--panel-border);
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  transition: all var(--transition-fast);
-  cursor: pointer;
+  gap: 0.5rem;
+}
+
+.teamTitleRed {
+  color: var(--danger);
+}
+
+.checkmark {
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.counter {
   font-size: 0.85rem;
-  font-weight: 500;
-  user-select: none;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  border: 1px solid var(--panel-border);
+  transition: all 0.3s;
 }
 
-.chip:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: var(--text-secondary);
-  transform: translateY(-1px);
-}
-
-.chipSelected {
-  background: rgba(16, 185, 129, 0.08);
+.counterFull {
+  background: rgba(16, 185, 129, 0.12);
   border-color: var(--accent-primary);
   color: var(--accent-primary);
 }
 
-.chipAction {
-  background: var(--accent-primary);
-  color: #fff;
+/* ── Progress bar ── */
+.progressTrack {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  margin-bottom: 1.25rem;
+  overflow: hidden;
+}
+
+.progressBar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-hover));
+  border-radius: 4px;
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+.progressBarRed {
+  background: linear-gradient(90deg, var(--danger), #f87171);
+  box-shadow: 0 0 8px var(--danger-glow);
+}
+
+/* ── Slots ── */
+.slotList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.slot {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.slotEmpty {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 10px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  opacity: 0.4;
+}
+
+.slotFilled {
+  background: rgba(16, 185, 129, 0.07);
+  border-color: rgba(16, 185, 129, 0.25);
+  animation: slideIn 0.2s ease;
+}
+
+.slotFilledRed {
+  background: rgba(239, 68, 68, 0.07);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.slotNumber {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  min-width: 16px;
+  text-align: center;
+  opacity: 0.6;
+}
+
+.slotName {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.slotPlaceholder {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  flex: 1;
+}
+
+.removeBtn {
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  width: 20px;
-  height: 20px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: var(--danger);
+  font-size: 0.65rem;
+  font-weight: 900;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
-  font-weight: 900;
-  box-shadow: 0 2px 8px var(--accent-glow);
-  transition: transform 0.2s ease;
+  cursor: pointer;
+  transition: all 0.15s;
+  opacity: 0.6;
 }
 
-.chip:hover .chipAction {
+.removeBtn:hover {
+  background: var(--danger);
+  color: white;
+  opacity: 1;
   transform: scale(1.1);
 }
 
-.chipActionRemove {
-  background: var(--danger);
-  box-shadow: 0 2px 8px var(--danger-glow);
+/* ── Divider ── */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.25rem 0 0.75rem;
 }
 
-.unselectedGrid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.8rem;
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--panel-border);
 }
 
-.controls {
+.dividerLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+/* ── Available players list ── */
+.availableList {
   display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.availableList::-webkit-scrollbar {
+  width: 4px;
+}
+.availableList::-webkit-scrollbar-track { background: transparent; }
+.availableList::-webkit-scrollbar-thumb {
+  background: var(--panel-border);
+  border-radius: 4px;
+}
+
+.availableRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: rgba(255,255,255,0.02);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+  width: 100%;
+}
+
+.availableRow:hover {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.availableRowRed:hover {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.availableName {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: color 0.15s;
+}
+
+.availableRow:hover .availableName {
+  color: var(--text-primary);
+}
+
+.addBtn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: var(--accent-primary);
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1;
+  display: flex;
+  align-items: center;
   justify-content: center;
-  gap: 1rem;
-  margin-top: 2rem;
+  transition: all 0.15s;
+  flex-shrink: 0;
 }
 
-.resultBtn {
-  padding: 1rem 2rem;
-  border-radius: var(--radius-md);
-  font-weight: bold;
-  opacity: 0.5;
-  border: 2px solid transparent;
-  transition: all var(--transition-fast);
+.availableRow:hover .addBtn {
+  background: var(--accent-primary);
+  color: #0a1f1a;
+  transform: scale(1.1);
 }
 
-.resultBtn:hover {
+.addBtnRed {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: var(--danger);
+}
+
+.availableRowRed:hover .addBtnRed {
+  background: var(--danger);
+  color: white;
+  transform: scale(1.1);
+}
+
+/* ── Complete message ── */
+.completeMsg {
+  margin-top: 1rem;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   opacity: 0.8;
 }
 
-.resultBtn.active {
-  opacity: 1;
-  border-color: var(--text-primary);
-  transform: scale(1.05);
+.completeMsgRed {
+  color: var(--danger);
 }
 
-.btnA { background: var(--accent-primary); color: #fff; }
-.btnDraw { background: var(--warning); color: #fff; }
-.btnB { background: var(--danger); color: #fff; }
+/* ── Date picker section ── */
+.datePanelBox {
+  padding: 1.25rem 1.5rem;
+}
 
 .datePickerContainer {
-  margin-top: 1.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -137,97 +344,106 @@
 }
 
 .dateLabel {
-  font-size: 0.95rem;
+  font-size: 0.8rem;
   color: var(--text-secondary);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.inputWrapper {
-  width: 100%;
-  max-width: 250px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.dateDisplay {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--panel-border);
-  padding: 0.8rem 1.4rem;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  min-width: 200px;
-}
-
-.dateDisplay:hover {
-  border-color: var(--accent-primary);
-  background: rgba(255, 255, 255, 0.05);
-  box-shadow: 0 0 15px var(--accent-glow);
-}
-
-.dateText {
-  font-size: 1.15rem;
   font-weight: 700;
-  color: white;
-  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
-.dateIcon {
-  font-size: 1.1rem;
-}
-
-.dateInputHidden {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
-  width: 100%;
-  height: 100%;
-}
-
-.dateInputHidden::-webkit-calendar-picker-indicator {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
-}
-
-
-
-
+/* ── Submit ── */
 .submitBtn {
-  margin-top: 2rem;
   width: 100%;
   padding: 1.25rem;
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   background: linear-gradient(135deg, var(--accent-primary), var(--accent-hover));
-  color: white;
+  color: #0a1f1a;
   border-radius: var(--radius-lg);
   font-weight: 800;
   box-shadow: 0 8px 24px var(--accent-glow);
   transition: all var(--transition-fast);
+  letter-spacing: 0.02em;
 }
 
-.submitBtn:hover:not(:disabled) {
+.submitBtn:hover {
   transform: translateY(-2px);
-  filter: brightness(1.1);
-  box-shadow: 0 12px 30px var(--accent-glow);
+  filter: brightness(1.08);
+  box-shadow: 0 12px 32px var(--accent-glow);
 }
 
-.submitBtn:disabled {
-  background: var(--panel-bg);
+.hint {
+  text-align: center;
   color: var(--text-secondary);
-  box-shadow: none;
-  cursor: not-allowed;
+  font-size: 0.9rem;
 }
+
+/* ══════════════════════════════
+   MOBILE (≤ 768px)
+══════════════════════════════ */
+@media (max-width: 768px) {
+  /* Menos gap entre secciones en pantalla chica */
+  .container {
+    gap: 1.25rem;
+  }
+
+  /* --- Touch targets de jugadores disponibles --- */
+  .availableRow {
+    min-height: 48px;
+    padding: 0.7rem 0.9rem;
+  }
+
+  .availableName {
+    font-size: 0.95rem;
+  }
+
+  /* Botones de añadir/quitar más grandes */
+  .addBtn,
+  .addBtnRed {
+    width: 34px;
+    height: 34px;
+    font-size: 1.15rem;
+  }
+
+  .removeBtn {
+    width: 30px;
+    height: 30px;
+    font-size: 0.8rem;
+  }
+
+  /* Sin altura máxima en móvil —
+     el usuario hace scroll en la página, no en un sub-contenedor */
+  .availableList {
+    max-height: none;
+    overflow-y: visible;
+    padding-right: 0;
+  }
+
+  /* Slots un poco más altos */
+  .slot,
+  .slotEmpty {
+    min-height: 44px;
+    padding: 0.6rem 0.8rem;
+  }
+
+  .slotName {
+    font-size: 0.95rem;
+  }
+
+  /* Botón guardar sticky en la parte inferior */
+  .submitBtn {
+    position: sticky;
+    bottom: 1rem;
+    z-index: 50;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 20px var(--accent-glow);
+  }
+
+  /* Date panel más compacto */
+  .datePanelBox {
+    padding: 1rem;
+  }
+
+  .teamBox {
+    padding: 1rem;
+  }
+}
+

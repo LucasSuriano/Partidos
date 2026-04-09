@@ -103,7 +103,10 @@ export default function DatePicker({ value, onChange }: Props) {
       </button>
 
       {open && (
-        <div className={styles.calendar}>
+        <>
+          {/* Overlay para cerrar en móvil */}
+          <div className={styles.overlay} onClick={() => setOpen(false)} />
+          <div className={styles.calendar}>
           {/* Header */}
           <div className={styles.header}>
             <button type="button" className={styles.navBtn} onClick={prevMonth}>‹</button>
@@ -143,7 +146,8 @@ export default function DatePicker({ value, onChange }: Props) {
               Hoy
             </button>
           </div>
-        </div>
+          </div>
+        </>
       )}
     </div>
   );

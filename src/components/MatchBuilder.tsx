@@ -6,6 +6,98 @@ import { Player } from '@/types';
 import styles from './MatchBuilder.module.css';
 import DatePicker from './DatePicker';
 
+const TEAM_SIZE = 5;
+
+interface TeamPanelProps {
+  label: string;
+  team: Player[];
+  availablePlayers: Player[];
+  variant: 'green' | 'red';
+  onAdd: (player: Player) => void;
+  onRemove: (playerId: string) => void;
+}
+
+function TeamPanel({ label, team, availablePlayers, variant, onAdd, onRemove }: TeamPanelProps) {
+  const full = team.length === TEAM_SIZE;
+  const progress = team.length / TEAM_SIZE;
+
+  return (
+    <div className={`${styles.teamBox} glass-panel ${full ? (variant === 'green' ? styles.teamBoxCompleteGreen : styles.teamBoxCompleteRed) : ''}`}>
+
+      {/* Header */}
+      <div className={styles.teamHeader}>
+        <h3 className={`${styles.teamTitle} ${variant === 'red' ? styles.teamTitleRed : ''}`}>
+          {full && <span className={styles.checkmark}>✓</span>}
+          {label}
+        </h3>
+        <span className={`${styles.counter} ${full ? styles.counterFull : ''}`}>
+          {team.length}/{TEAM_SIZE}
+        </span>
+      </div>
+
+      {/* Barra de progreso */}
+      <div className={styles.progressTrack}>
+        <div
+          className={`${styles.progressBar} ${variant === 'red' ? styles.progressBarRed : ''}`}
+          style={{ width: `${progress * 100}%` }}
+        />
+      </div>
+
+      {/* Slots de jugadores seleccionados */}
+      <div className={styles.slotList}>
+        {Array.from({ length: TEAM_SIZE }).map((_, i) => {
+          const player = team[i];
+          return player ? (
+            <div key={player.id} className={`${styles.slot} ${styles.slotFilled} ${variant === 'red' ? styles.slotFilledRed : ''}`}>
+              <span className={styles.slotNumber}>{i + 1}</span>
+              <span className={styles.slotName}>{player.name}</span>
+              <button
+                className={styles.removeBtn}
+                onClick={() => onRemove(player.id)}
+                title="Quitar jugador"
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <div key={`empty-${i}`} className={styles.slotEmpty}>
+              <span className={styles.slotNumber}>{i + 1}</span>
+              <span className={styles.slotPlaceholder}>Vacío</span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Separador y lista de disponibles */}
+      {!full && availablePlayers.length > 0 && (
+        <>
+          <div className={styles.divider}>
+            <span className={styles.dividerLabel}>Disponibles</span>
+          </div>
+          <div className={styles.availableList}>
+            {availablePlayers.map(p => (
+              <button
+                key={p.id}
+                className={`${styles.availableRow} ${variant === 'red' ? styles.availableRowRed : ''}`}
+                onClick={() => onAdd(p)}
+              >
+                <span className={styles.availableName}>{p.name}</span>
+                <span className={`${styles.addBtn} ${variant === 'red' ? styles.addBtnRed : ''}`}>+</span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      {full && (
+        <div className={`${styles.completeMsg} ${variant === 'red' ? styles.completeMsgRed : ''}`}>
+          ¡Equipo completo!
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function MatchBuilder({ onComplete }: { onComplete: () => void }) {
   const { players, addMatch } = useAppContext();
 
@@ -18,8 +110,8 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
   );
 
   const addToTeam = (team: 'A' | 'B', player: Player) => {
-    if (team === 'A' && teamA.length < 5) setTeamA(prev => [...prev, player]);
-    if (team === 'B' && teamB.length < 5) setTeamB(prev => [...prev, player]);
+    if (team === 'A' && teamA.length < TEAM_SIZE) setTeamA(prev => [...prev, player]);
+    if (team === 'B' && teamB.length < TEAM_SIZE) setTeamB(prev => [...prev, player]);
   };
 
   const removeFromTeam = (team: 'A' | 'B', playerId: string) => {
@@ -28,27 +120,19 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
   };
 
   const handleSubmit = () => {
-    if (teamA.length !== 5 || teamB.length !== 5 || !matchDate) return;
-
-    // El Equipo Ganador (A) siempre gana. Convertir fecha local YYYY-MM-DD a ISO.
+    if (teamA.length !== TEAM_SIZE || teamB.length !== TEAM_SIZE || !matchDate) return;
     const fullDate = new Date(`${matchDate}T12:00:00Z`).toISOString();
-
-    addMatch(
-      fullDate,
-      teamA.map(p => p.id),
-      teamB.map(p => p.id),
-      'A_WIN'
-    );
+    addMatch(fullDate, teamA.map(p => p.id), teamB.map(p => p.id), 'A_WIN');
     onComplete();
   };
 
-  const isComplete = teamA.length === 5 && teamB.length === 5;
+  const isComplete = teamA.length === TEAM_SIZE && teamB.length === TEAM_SIZE;
 
   return (
     <div className={styles.container}>
 
       {/* Fecha arriba */}
-      <div className={`${styles.unselectedBox} glass-panel`}>
+      <div className={`${styles.datePanelBox} glass-panel`}>
         <div className={styles.datePickerContainer}>
           <label className={styles.dateLabel}>Fecha del Partido</label>
           <DatePicker value={matchDate} onChange={setMatchDate} />
@@ -57,49 +141,22 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
 
       {/* Equipos */}
       <div className={styles.teamsLayout}>
-        {/* Team A */}
-        <div className={`${styles.teamBox} glass-panel`}>
-          <h3 className={styles.teamTitle}>Equipo Ganador ({teamA.length}/5)</h3>
-          <div className={styles.playerList}>
-            {teamA.map(p => (
-              <div key={p.id} className={`${styles.chip} ${styles.chipSelected}`}>
-                {p.name}
-                <button className={`${styles.chipAction} ${styles.chipActionRemove}`} onClick={() => removeFromTeam('A', p.id)}>-</button>
-              </div>
-            ))}
-          </div>
-          {teamA.length < 5 && availablePlayers.length > 0 && (
-            <div className={styles.unselectedGrid}>
-              {availablePlayers.map(p => (
-                <button key={p.id} className={styles.chip} onClick={() => addToTeam('A', p)}>
-                  {p.name} <span className={styles.chipAction}>+</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Team B */}
-        <div className={`${styles.teamBox} glass-panel`}>
-          <h3 className={styles.teamTitle} style={{ color: 'var(--danger)' }}>Equipo Perdedor ({teamB.length}/5)</h3>
-          <div className={styles.playerList}>
-            {teamB.map(p => (
-              <div key={p.id} className={`${styles.chip} ${styles.chipSelected}`}>
-                {p.name}
-                <button className={`${styles.chipAction} ${styles.chipActionRemove}`} onClick={() => removeFromTeam('B', p.id)}>-</button>
-              </div>
-            ))}
-          </div>
-          {teamB.length < 5 && availablePlayers.length > 0 && (
-            <div className={styles.unselectedGrid}>
-              {availablePlayers.map(p => (
-                <button key={p.id} className={styles.chip} onClick={() => addToTeam('B', p)}>
-                  {p.name} <span className={styles.chipAction} style={{ background: 'var(--danger)' }}>+</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <TeamPanel
+          label="Equipo Ganador"
+          team={teamA}
+          availablePlayers={availablePlayers}
+          variant="green"
+          onAdd={(p) => addToTeam('A', p)}
+          onRemove={(id) => removeFromTeam('A', id)}
+        />
+        <TeamPanel
+          label="Equipo Perdedor"
+          team={teamB}
+          availablePlayers={availablePlayers}
+          variant="red"
+          onAdd={(p) => addToTeam('B', p)}
+          onRemove={(id) => removeFromTeam('B', id)}
+        />
       </div>
 
       {/* Botón guardar */}
@@ -108,8 +165,8 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
           Guardar Partido
         </button>
       ) : (
-        <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
-          Selecciona 5 jugadores por equipo para continuar.
+        <p className={styles.hint}>
+          Selecciona {TEAM_SIZE} jugadores por equipo para continuar.
         </p>
       )}
 
