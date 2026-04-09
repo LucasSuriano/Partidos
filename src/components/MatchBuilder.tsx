@@ -99,15 +99,19 @@ function TeamPanel({ label, team, availablePlayers, variant, onAdd, onRemove }: 
 }
 
 export default function MatchBuilder({ onComplete }: { onComplete: () => void }) {
-  const { players, addMatch } = useAppContext();
+  const { players, matches, addMatch } = useAppContext();
 
   const [teamA, setTeamA] = useState<Player[]>([]);
   const [teamB, setTeamB] = useState<Player[]>([]);
   const [matchDate, setMatchDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
-  const availablePlayers = players.filter(
-    p => !teamA.find(a => a.id === p.id) && !teamB.find(b => b.id === p.id)
-  );
+  const availablePlayers = players
+    .filter(p => !teamA.find(a => a.id === p.id) && !teamB.find(b => b.id === p.id))
+    .sort((a, b) => {
+      const attendanceA = matches.filter(m => m.teamA.includes(a.id) || m.teamB.includes(a.id)).length;
+      const attendanceB = matches.filter(m => m.teamA.includes(b.id) || m.teamB.includes(b.id)).length;
+      return attendanceB - attendanceA; // Descendente (más asistencias primero)
+    });
 
   const addToTeam = (team: 'A' | 'B', player: Player) => {
     if (team === 'A' && teamA.length < TEAM_SIZE) setTeamA(prev => [...prev, player]);

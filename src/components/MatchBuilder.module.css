@@ -228,10 +228,10 @@
 
 /* ── Available players list ── */
 .availableList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  max-height: 240px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  max-height: 320px;
   overflow-y: auto;
   padding-right: 0.25rem;
 }
@@ -247,15 +247,17 @@
 
 .availableRow {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  padding: 0.5rem 0.8rem;
-  border-radius: 8px;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.8rem 0.4rem;
+  border-radius: 12px;
   border: 1px solid transparent;
   background: rgba(255,255,255,0.02);
   cursor: pointer;
   transition: all 0.15s;
-  text-align: left;
+  text-align: center;
   width: 100%;
 }
 
@@ -270,10 +272,14 @@
 }
 
 .availableName {
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: 0.8rem;
+  font-weight: 600;
   color: var(--text-secondary);
   transition: color 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .availableRow:hover .availableName {
@@ -410,9 +416,10 @@
     font-size: 0.8rem;
   }
 
-  /* Sin altura máxima en móvil —
-     el usuario hace scroll en la página, no en un sub-contenedor */
+  /* En móvil mantenemos 3 columnas pero ajustamos el gap */
   .availableList {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
     max-height: none;
     overflow-y: visible;
     padding-right: 0;
