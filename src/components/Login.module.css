@@ -1,114 +1,301 @@
+/* ── Page wrapper ── */
 .wrapper {
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
   width: 100vw;
-  background: var(--bg-main);
+  background: radial-gradient(ellipse at 30% 20%, hsl(145 40% 8%) 0%, hsl(220 30% 6%) 50%, hsl(220 25% 4%) 100%);
+  overflow: hidden;
   padding: 1rem;
 }
 
-.loginBox {
+/* ── Animated background blobs ── */
+.bgBlob1,
+.bgBlob2,
+.bgBlob3 {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.18;
+  pointer-events: none;
+  animation: blobFloat linear infinite alternate;
+}
+
+.bgBlob1 {
+  width: 480px;
+  height: 480px;
+  background: radial-gradient(circle, hsl(145 70% 35%), transparent 70%);
+  top: -120px;
+  left: -100px;
+  animation-duration: 12s;
+}
+
+.bgBlob2 {
+  width: 360px;
+  height: 360px;
+  background: radial-gradient(circle, hsl(200 80% 40%), transparent 70%);
+  bottom: -80px;
+  right: -80px;
+  animation-duration: 16s;
+  animation-delay: -4s;
+}
+
+.bgBlob3 {
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle, hsl(145 60% 20%), transparent 70%);
+  top: 50%;
+  left: 60%;
+  animation-duration: 20s;
+  animation-delay: -8s;
+}
+
+@keyframes blobFloat {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(30px, 20px) scale(1.08); }
+}
+
+/* ── Login card ── */
+.card {
+  position: relative;
+  z-index: 1;
   width: 100%;
-  max-width: 400px;
-  padding: 2.5rem;
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  max-width: 420px;
+  background: rgba(12, 17, 30, 0.75);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 2.5rem 2.25rem;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(16, 185, 129, 0.05) inset;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.75rem;
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.header {
-  text-align: center;
-}
-
-.title {
-  font-size: 2rem;
-  font-weight: 800;
-  background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  margin-bottom: 0.5rem;
-}
-
-.subtitle {
-  color: var(--text-secondary);
-  font-size: 0.95rem;
-}
-
-.formContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.errorBanner {
-  background-color: rgba(239, 68, 68, 0.1);
-  color: var(--danger);
-  padding: 0.75rem;
-  border-radius: 8px;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  font-size: 0.9rem;
-  text-align: center;
+.card[data-error="true"] {
   animation: shake 0.4s ease;
 }
 
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(28px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes shake {
+  0%   { transform: translateX(0); }
+  20%  { transform: translateX(-6px); }
+  40%  { transform: translateX(6px); }
+  60%  { transform: translateX(-4px); }
+  80%  { transform: translateX(4px); }
+  100% { transform: translateX(0); }
+}
+
+/* ── Brand section ── */
+.brandSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  text-align: center;
+}
+
+.logoWrap {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  border: 2px solid var(--accent-primary);
+  box-shadow: 0 0 24px rgba(16, 185, 129, 0.35), 0 0 60px rgba(16, 185, 129, 0.1);
+  overflow: hidden;
+  background: white;
+}
+
+.logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.appName {
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  background: linear-gradient(135deg, var(--accent-primary) 30%, hsl(160 80% 65%));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin: 0;
+}
+
+.tagline {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+/* ── Form ── */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+/* ── Error banner ── */
+.errorBanner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+  padding: 0.7rem 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  font-size: 0.875rem;
+  font-weight: 500;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Input group ── */
 .inputGroup {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
 }
 
-.inputGroup label {
-  font-size: 0.85rem;
+.label {
+  font-size: 0.8rem;
+  font-weight: 600;
   color: var(--text-secondary);
-  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 
-.inputField {
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inputIcon {
+  position: absolute;
+  left: 0.9rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  transition: color 0.2s;
+}
+
+.input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-primary);
-  padding: 0.8rem 1rem;
-  border-radius: 10px;
-  font-size: 1rem;
+  padding: 0.82rem 2.8rem; /* icon space both sides */
+  border-radius: 12px;
+  font-size: 0.95rem;
   outline: none;
   transition: all 0.2s;
 }
 
-.inputField:focus {
+.input::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.input:focus {
   border-color: var(--accent-primary);
-  background-color: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
 }
 
-.loginBtn {
-  background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary));
-  color: white;
+.input:focus + .inputIcon,
+.inputWrapper:focus-within .inputIcon {
+  color: var(--accent-primary);
+}
+
+/* Eye toggle */
+.eyeBtn {
+  position: absolute;
+  right: 0.8rem;
+  background: transparent;
   border: none;
-  padding: 0.9rem;
-  border-radius: 10px;
-  font-size: 1rem;
-  font-weight: 600;
+  color: var(--text-secondary);
   cursor: pointer;
-  margin-top: 0.5rem;
-  transition: opacity 0.2s;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color 0.15s;
 }
 
-.loginBtn:hover {
-  opacity: 0.9;
+.eyeBtn:hover {
+  color: var(--text-primary);
 }
 
-.loginBtn:active {
+/* ── Submit button ── */
+.submitBtn {
+  margin-top: 0.4rem;
+  width: 100%;
+  padding: 0.9rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, var(--accent-primary) 0%, hsl(160 80% 38%) 100%);
+  color: #051a12;
+  box-shadow: 0 4px 24px rgba(16, 185, 129, 0.35);
+  transition: all 0.2s;
+}
+
+.submitBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(16, 185, 129, 0.45);
+  filter: brightness(1.05);
+}
+
+.submitBtn:active:not(:disabled) {
   transform: scale(0.98);
 }
 
-@keyframes shake {
-  0% { transform: translateX(0); }
-  25% { transform: translateX(5px); }
-  50% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
-  100% { transform: translateX(0); }
+.submitBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Loading spinner */
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(5, 26, 18, 0.4);
+  border-top-color: #051a12;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Footer ── */
+.footer {
+  text-align: center;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.18);
+  margin: 0;
+  letter-spacing: 0.03em;
 }
