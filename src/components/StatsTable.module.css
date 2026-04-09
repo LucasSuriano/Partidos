@@ -1,3 +1,4 @@
+/* ── Container ── */
 .container {
   display: flex;
   flex-direction: column;
@@ -5,96 +6,197 @@
   animation: fadeIn var(--transition-normal);
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Table wrapper ── */
 .tableContainer {
   overflow-x: auto;
   border-radius: var(--radius-md);
-  background: var(--panel-bg);
   border: 1px solid var(--panel-border);
+  background: var(--panel-bg);
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  min-width: 800px;
+  min-width: 820px;
+}
+
+/* ── Sticky header ── */
+.stickyHead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .th {
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  font-weight: 600;
+  padding: 0.9rem 1rem;
+  background: rgba(15, 20, 35, 0.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-weight: 700;
+  font-size: 0.78rem;
   color: var(--text-secondary);
   border-bottom: 2px solid var(--panel-border);
   white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
+/* ── Rows ── */
 .tr {
-  transition: background var(--transition-fast);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition: background var(--transition-fast), transform 0.15s;
+  animation: rowIn 0.3s ease both;
+}
+
+@keyframes rowIn {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
 .tr:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.04) !important;
 }
 
+/* Zebra stripe */
+.trEven {
+  background: rgba(255, 255, 255, 0.015);
+}
+
+/* ── Podio top 3 ── */
+.podioGold {
+  background: rgba(234, 179, 8, 0.07) !important;
+  border-left: 3px solid rgba(234, 179, 8, 0.6);
+}
+.podioGold:hover { background: rgba(234, 179, 8, 0.11) !important; }
+
+.podioSilver {
+  background: rgba(148, 163, 184, 0.06) !important;
+  border-left: 3px solid rgba(148, 163, 184, 0.5);
+}
+.podioSilver:hover { background: rgba(148, 163, 184, 0.1) !important; }
+
+.podioBronze {
+  background: rgba(180, 113, 60, 0.07) !important;
+  border-left: 3px solid rgba(180, 113, 60, 0.5);
+}
+.podioBronze:hover { background: rgba(180, 113, 60, 0.11) !important; }
+
+/* ── Cells ── */
 .td {
-  padding: 1rem;
+  padding: 0.85rem 1rem;
   white-space: nowrap;
+  vertical-align: middle;
 }
 
+/* ── Player name ── */
 .playerName {
-  font-weight: bold;
-  font-size: 1.1rem;
+  font-weight: 700;
+  font-size: 1rem;
   color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
+.rankBadge {
+  font-size: 1rem;
+  min-width: 28px;
+  display: inline-block;
+}
+
+/* ── PJ with activity dot ── */
+.pjCell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pjNumber {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.pjDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Stat pills ── */
 .statPill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
-.pillWin {
-  background: rgba(16, 185, 129, 0.1);
-  color: var(--accent-primary);
-}
+.pillWin  { background: rgba(16, 185, 129, 0.12); color: var(--accent-primary); }
+.pillLoss { background: rgba(239, 68, 68, 0.12);  color: var(--danger); }
+.pillDraw { background: rgba(245, 158, 11, 0.12); color: var(--warning); }
 
-.pillLoss {
-  background: rgba(239, 68, 68, 0.1);
-  color: var(--danger);
-}
-
-.pillDraw {
-  background: rgba(245, 158, 11, 0.1);
-  color: var(--warning);
-}
-
-.companion {
+/* ── Win percentage with progress bar ── */
+.winPctCell {
   display: flex;
   flex-direction: column;
-  font-size: 0.85rem;
+  gap: 4px;
+  min-width: 72px;
 }
 
-.companionName {
-  font-weight: bold;
-  color: #fff;
+.winPctText {
+  font-weight: 700;
+  font-size: 0.9rem;
 }
 
-.companionDetail {
-  color: var(--text-secondary);
+.winPctTrack {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.winPctBar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Streak cell ── */
+.streakCell {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 700;
+}
+
+.streakCount {
+  font-size: 1rem;
+}
+
+.streakIcons {
+  display: flex;
+  gap: 1px;
   font-size: 0.75rem;
 }
 
+/* ── Empty state ── */
 .emptyState {
   padding: 4rem;
   text-align: center;
   color: var(--text-secondary);
 }
 
+/* ── Report button ── */
 .reportButton {
   background: rgba(16, 185, 129, 0.1);
   color: var(--accent-primary);
@@ -114,6 +216,6 @@
 .reportButton:hover {
   background: var(--accent-primary);
   color: #0a1f1a;
-  box-shadow: 0 0 12px var(--accent-glow);
+  box-shadow: 0 0 14px var(--accent-glow);
   transform: translateY(-1px);
 }
