@@ -41,8 +41,8 @@ export default function PlayerReportModal({ playerId, onClose }: PlayerReportMod
             const rowColor = item.winPercentage === 100
               ? 'rgba(16,185,129,0.06)'
               : item.winPercentage === 0
-              ? 'rgba(239,68,68,0.06)'
-              : 'transparent';
+                ? 'rgba(239,68,68,0.06)'
+                : 'transparent';
             return (
               <tr key={item.player.id} style={{ background: rowColor }}>
                 <td className={styles.td}>
@@ -137,7 +137,7 @@ export default function PlayerReportModal({ playerId, onClose }: PlayerReportMod
             <span className={styles.kpiValue} style={{
               color: report.currentStreak.type === 'WIN' ? 'var(--accent-primary)'
                 : report.currentStreak.type === 'LOSS' ? 'var(--danger)'
-                : 'var(--text-secondary)'
+                  : 'var(--text-secondary)'
             }}>
               {report.currentStreak.count > 0 && report.currentStreak.type !== 'DRAW'
                 ? `${report.currentStreak.count} ${report.currentStreak.type === 'WIN' ? 'V' : 'D'}`
@@ -149,7 +149,7 @@ export default function PlayerReportModal({ playerId, onClose }: PlayerReportMod
         {/* ── Summary cards row 1: compa + nemesis ── */}
         <div className={styles.summaryCards}>
           <div className={styles.summaryCard}>
-            <span className={styles.summaryLabel}>Mejor Compa</span>
+            <span className={styles.summaryLabel}>Mejor Compañero</span>
             <div className={styles.summaryContent}>
               <span className={styles.summaryValue}>
                 {report.bestTeammate ? report.bestTeammate.players.map(p => p.name).join(', ') : '-'}
@@ -159,7 +159,7 @@ export default function PlayerReportModal({ playerId, onClose }: PlayerReportMod
           </div>
 
           <div className={styles.summaryCard}>
-            <span className={styles.summaryLabel}>Peor Compa</span>
+            <span className={styles.summaryLabel}>Peor Compañero</span>
             <div className={styles.summaryContent}>
               <span className={styles.summaryValue}>
                 {report.worstTeammate ? report.worstTeammate.players.map(p => p.name).join(', ') : '-'}
