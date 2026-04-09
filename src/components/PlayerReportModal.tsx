@@ -79,6 +79,44 @@ export default function PlayerReportModal({ playerId, onClose }: PlayerReportMod
           </button>
         </div>
 
+        <div className={styles.summaryCards}>
+          <div className={styles.summaryCard}>
+            <span className={styles.summaryLabel}>Mejor Compa</span>
+            <div className={styles.summaryContent}>
+              <span className={styles.summaryValue}>
+                {report.bestTeammate ? report.bestTeammate.players.map(p => p.name).join(', ') : '-'}
+              </span>
+              {report.bestTeammate && (
+                <span className={styles.summaryDetail}>{report.bestTeammate.matches} victorias de compa</span>
+              )}
+            </div>
+          </div>
+
+          <div className={styles.summaryCard}>
+            <span className={styles.summaryLabel}>Peor Compa</span>
+            <div className={styles.summaryContent}>
+              <span className={styles.summaryValue}>
+                {report.worstTeammate ? report.worstTeammate.players.map(p => p.name).join(', ') : '-'}
+              </span>
+              {report.worstTeammate && (
+                <span className={styles.summaryDetail}>{report.worstTeammate.matches} derrotas de compa</span>
+              )}
+            </div>
+          </div>
+
+          <div className={styles.summaryCard}>
+            <span className={styles.summaryLabel}>Víctima Fav.</span>
+            <div className={styles.summaryContent}>
+              <span className={styles.summaryValue}>
+                {report.favoriteVictim ? report.favoriteVictim.players.map(p => p.name).join(', ') : '-'}
+              </span>
+              {report.favoriteVictim && (
+                <span className={styles.summaryDetail}>{report.favoriteVictim.winsAgainst} veces le ganó</span>
+              )}
+            </div>
+          </div>
+        </div>
+
         <div className={styles.sections}>
           <div className={styles.section}>
             <h3>Como Compañeros</h3>

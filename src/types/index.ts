@@ -41,4 +41,7 @@ export type PlayerReport = {
   player: Player;
   teammates: RelationStats[];
   opponents: RelationStats[];
+  bestTeammate: { players: Player[]; matches: number } | null;
+  worstTeammate: { players: Player[]; matches: number } | null;
+  favoriteVictim: { players: Player[]; winsAgainst: number } | null;
 };

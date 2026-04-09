@@ -192,9 +192,33 @@ export function getPlayerReport(playerId: string, players: Player[], matches: Ma
       .sort((a, b) => b.total - a.total || b.winPercentage - a.winPercentage);
   };
 
+  const teammates = formatStats(teammateStats);
+  const opponents = formatStats(opponentStats);
+
+  const getTop = (arr: RelationStats[], key: 'wins' | 'losses'): { players: Player[], count: number } | null => {
+    let top: Player[] = [];
+    let max = 0;
+    arr.forEach(s => {
+      if (s[key] > max) {
+        max = s[key];
+        top = [s.player];
+      } else if (s[key] === max && max > 0) {
+        top.push(s.player);
+      }
+    });
+    return top.length > 0 ? { players: top, count: max } : null;
+  };
+
+  const bestT = getTop(teammates, 'wins');
+  const worstT = getTop(teammates, 'losses');
+  const favVic = getTop(opponents, 'wins');
+
   return {
     player,
-    teammates: formatStats(teammateStats),
-    opponents: formatStats(opponentStats),
+    teammates,
+    opponents,
+    bestTeammate: bestT ? { players: bestT.players, matches: bestT.count } : null,
+    worstTeammate: worstT ? { players: worstT.players, matches: worstT.count } : null,
+    favoriteVictim: favVic ? { players: favVic.players, winsAgainst: favVic.count } : null,
   };
 }
