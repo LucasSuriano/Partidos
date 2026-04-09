@@ -2,80 +2,150 @@
 
 import { useAppContext } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
-import { Match } from '@/types';
 import styles from './MatchHistory.module.css';
+
+const MESES_CORTOS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+const MESES_LARGOS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
 export default function MatchHistory() {
   const { matches, players, removeMatch } = useAppContext();
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
 
-  const getPlayerNames = (ids: string[]) => {
-    return ids.map(id => {
-      const p = players.find(player => player.id === id);
-      return p ? p.name : 'Desconocido';
-    }).join(', ');
+  const getPlayers = (ids: string[]) =>
+    ids.map(id => players.find(p => p.id === id)?.name ?? 'Desconocido');
+
+  const formatDateLabel = (isoString: string) => {
+    const d = new Date(isoString);
+    const dia = DIAS[d.getUTCDay()];
+    const num = d.getUTCDate();
+    const mes = MESES_CORTOS[d.getUTCMonth()];
+    const año = d.getUTCFullYear();
+    return `${dia} ${num} ${mes}. ${año}`;
   };
 
-  const formatDate = (isoString: string) => {
-    const date = new Date(isoString);
-    const day = String(date.getUTCDate()).padStart(2, '0');
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const year = date.getUTCFullYear();
-    return `${day}/${month}/${year}`;
+  const getMonthKey = (isoString: string) => {
+    const d = new Date(isoString);
+    return `${MESES_LARGOS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
   };
 
-  const sortedMatches = [...matches].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const sortedMatches = [...matches].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+
+  // Agrupar por mes
+  const groupedMatches: { monthLabel: string; entries: typeof sortedMatches }[] = [];
+  sortedMatches.forEach(match => {
+    const label = getMonthKey(match.date);
+    const last = groupedMatches[groupedMatches.length - 1];
+    if (last && last.monthLabel === label) {
+      last.entries.push(match);
+    } else {
+      groupedMatches.push({ monthLabel: label, entries: [match] });
+    }
+  });
+
+  // Número correlativo total (más reciente = mayor número)
+  const totalMatches = sortedMatches.length;
 
   if (matches.length === 0) {
     return (
       <div className={`${styles.container} glass-panel ${styles.emptyState}`}>
+        <span className={styles.emptyIcon}>⚽</span>
         <h2>No se han jugado partidos aún</h2>
         <p>Registra un partido para que aparezca aquí el historial.</p>
       </div>
     );
   }
 
+  let matchCounter = totalMatches;
+
   return (
     <div className={styles.container}>
-      {sortedMatches.map(match => (
-        <div key={match.id} className={styles.matchCard}>
-          <div style={{ flex: 1 }}>
-            <div className={styles.date}>{formatDate(match.date)}</div>
-            <div className={styles.teamsLayout}>
-
-              <div className={styles.team}>
-                <div className={styles.teamName}>
-                  Equipo Ganador
-                  {match.result === 'A_WIN' && <span className={`${styles.outcome} ${styles.outcomeWin}`}>Ganador</span>}
-                  {match.result === 'DRAW' && <span className={`${styles.outcome} ${styles.outcomeDraw}`}>Empate</span>}
-                </div>
-                <div className={styles.playerNames}>{getPlayerNames(match.teamA)}</div>
-              </div>
-
-              <div className={styles.vs}>VS</div>
-
-              <div className={styles.team} style={{ textAlign: 'right' }}>
-                <div className={styles.teamName} style={{ color: 'var(--danger)' }}>
-                  {match.result === 'DRAW' && <span className={`${styles.outcome} ${styles.outcomeDraw}`}>Empate</span>}
-                  {match.result === 'B_WIN' && <span className={`${styles.outcome} ${styles.outcomeWin}`}>Ganador</span>}
-                  Equipo Perdedor
-                </div>
-                <div className={styles.playerNames}>{getPlayerNames(match.teamB)}</div>
-              </div>
-
-            </div>
+      {groupedMatches.map(({ monthLabel, entries }) => (
+        <div key={monthLabel} className={styles.monthGroup}>
+          {/* ── Separador de mes ── */}
+          <div className={styles.monthDivider}>
+            <span className={styles.monthDividerLine} />
+            <span className={styles.monthLabel}>📅 {monthLabel}</span>
+            <span className={styles.monthDividerLine} />
           </div>
 
-          {isAdmin && (
-            <button
-              className={styles.deleteBtn}
-              onClick={() => confirm('¿Estás seguro de eliminar este partido? Se recalcularán las estadísticas.') && removeMatch(match.id)}
-              title="Eliminar partido"
-            >
-              ✕
-            </button>
-          )}
+          {entries.map((match, i) => {
+            const num = matchCounter--;
+            const teamAPlayers = getPlayers(match.teamA);
+            const teamBPlayers = getPlayers(match.teamB);
+
+            return (
+              <div
+                key={match.id}
+                className={styles.matchCard}
+                style={{ animationDelay: `${i * 0.06}s` }}
+              >
+                {/* Tinte de fondo split */}
+                <div className={styles.splitBgGreen} />
+                <div className={styles.splitBgRed} />
+
+                <div className={styles.cardInner}>
+                  {/* Cabecera */}
+                  <div className={styles.cardHeader}>
+                    <div className={styles.matchNumber}>Partido #{num}</div>
+                    <div className={styles.dateLabel}>{formatDateLabel(match.date)}</div>
+                    {isAdmin && (
+                      <button
+                        className={styles.deleteBtn}
+                        onClick={() =>
+                          confirm('¿Estás seguro de eliminar este partido?') &&
+                          removeMatch(match.id)
+                        }
+                        title="Eliminar partido"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Cuerpo: equipos */}
+                  <div className={styles.teamsRow}>
+                    {/* Equipo Ganador */}
+                    <div className={styles.teamSide}>
+                      <div className={styles.teamLabel}>
+                        <span className={styles.teamNameGreen}>Equipo Ganador</span>
+                      </div>
+                      <div className={styles.chips}>
+                        {teamAPlayers.map((name, idx) => (
+                          <span key={idx} className={`${styles.chip} ${styles.chipGreen}`}>
+                            {name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* VS central */}
+                    <div className={styles.vsSeparator}>
+                      <span className={styles.vsIcon}>⚽</span>
+                      <span className={styles.vsText}>VS</span>
+                    </div>
+
+                    {/* Equipo Perdedor */}
+                    <div className={`${styles.teamSide} ${styles.teamSideRight}`}>
+                      <div className={`${styles.teamLabel} ${styles.teamLabelRight}`}>
+                        <span className={styles.teamNameRed}>Equipo Perdedor</span>
+                      </div>
+                      <div className={`${styles.chips} ${styles.chipsRight}`}>
+                        {teamBPlayers.map((name, idx) => (
+                          <span key={idx} className={`${styles.chip} ${styles.chipRed}`}>
+                            {name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       ))}
     </div>
