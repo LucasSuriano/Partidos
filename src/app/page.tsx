@@ -6,15 +6,17 @@ import StatsTable from '@/components/StatsTable';
 import MatchBuilder from '@/components/MatchBuilder';
 import PlayerManager from '@/components/PlayerManager';
 import MatchHistory from '@/components/MatchHistory';
+import TeamSimulator from '@/components/TeamSimulator';
 import { useAuth } from '@/context/AuthContext';
 import Login from '@/components/Login';
 
 const NAV_ITEMS = [
-  { id: 'STATS',   label: '📊 Estadísticas' },
-  { id: 'HISTORY', label: '🗂️ Historial' },
+  { id: 'STATS',      label: '📊 Estadísticas' },
+  { id: 'HISTORY',   label: '🗂️ Historial' },
+  { id: 'SIMULATOR', label: '⚽ Simulación' },
 ] as const;
 
-type View = 'STATS' | 'NEW_MATCH' | 'PLAYERS' | 'HISTORY';
+type View = 'STATS' | 'NEW_MATCH' | 'PLAYERS' | 'HISTORY' | 'SIMULATOR';
 
 function getInitials(username: string) {
   return username.slice(0, 2).toUpperCase();
@@ -119,6 +121,7 @@ export default function Home() {
       <main className={styles.mainContent}>
         {view === 'STATS'     && <StatsTable />}
         {view === 'HISTORY'   && <MatchHistory />}
+        {view === 'SIMULATOR' && <TeamSimulator />}
         {view === 'NEW_MATCH' && isAdmin && <MatchBuilder onComplete={() => setView('STATS')} />}
         {view === 'PLAYERS'   && isAdmin && <PlayerManager />}
       </main>
