@@ -23,7 +23,6 @@
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  min-width: 820px;
 }
 
 /* ── Sticky header ── */
@@ -219,3 +218,42 @@
   box-shadow: 0 0 14px var(--accent-glow);
   transform: translateY(-1px);
 }
+
+/* ── Mobile: hide secondary columns ── */
+@media (max-width: 640px) {
+  /* Hide: Mejor Racha (5), Peor Racha (6), Racha Actual (7) */
+  .table th:nth-child(5),
+  .table td:nth-child(5),
+  .table th:nth-child(6),
+  .table td:nth-child(6),
+  .table th:nth-child(7),
+  .table td:nth-child(7) {
+    display: none;
+  }
+
+  .th, .td {
+    padding: 0.6rem 0.45rem;
+    font-size: 0.8rem;
+  }
+
+  .playerName {
+    font-size: 0.85rem;
+  }
+
+  .rankBadge {
+    font-size: 0.85rem;
+    min-width: 22px;
+  }
+
+  .reportButton {
+    font-size: 0.7rem;
+    padding: 0.28rem 0.45rem;
+    gap: 3px;
+  }
+
+  /* Reduce win percentage bar width */
+  .winPctCell {
+    min-width: 52px;
+  }
+}
+

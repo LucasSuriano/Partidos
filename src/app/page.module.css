@@ -208,33 +208,43 @@
    MOBILE (≤ 768px)
 ────────────────────────────── */
 @media (max-width: 768px) {
+  /* Two-row header: brand+user top, nav bottom */
+  .header {
+    border-bottom: none;
+  }
+
   .headerInner {
-    padding: 0 1rem;
-    height: 56px;
-    gap: 0.75rem;
+    flex-wrap: wrap;
+    height: auto;
+    padding: 0.6rem 1rem 0;
+    gap: 0;
+    align-items: center;
+  }
+
+  /* Row 1: brand takes remaining space */
+  .brand {
+    flex: 1;
   }
 
   .title {
-    font-size: 1.2rem;
+    font-size: 1.15rem;
   }
 
   .logoImage {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
   }
 
-  .nav {
-    overflow-x: auto;
-    scrollbar-width: none;
-    flex: 1;
-    gap: 0.15rem;
+  /* Row 1: user section stays right */
+  .username, .roleBadge {
+    display: none;
   }
 
-  .nav::-webkit-scrollbar { display: none; }
-
-  .navTab {
-    font-size: 0.78rem;
-    padding: 0.35rem 0.65rem;
+  .avatarChip {
+    padding: 0.25rem;
+    border-radius: 50%;
+    background: transparent;
+    border-color: transparent;
   }
 
   .registerLabel {
@@ -245,15 +255,28 @@
     padding: 0.45rem 0.7rem;
   }
 
-  .username, .roleBadge {
-    display: none;
+  /* Row 2: nav spans full width */
+  .nav {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    gap: 0.2rem;
+    padding: 0.5rem 0 0.6rem;
+    margin-top: 0.4rem;
+    border-top: 1px solid rgba(255,255,255,0.07);
+    justify-content: flex-start;
+    flex: unset;
   }
 
-  .avatarChip {
-    padding: 0.25rem;
-    border-radius: 50%;
-    background: transparent;
-    border-color: transparent;
+  .nav::-webkit-scrollbar { display: none; }
+
+  .navTab {
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 0.42rem 0.9rem;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .mainContent {
