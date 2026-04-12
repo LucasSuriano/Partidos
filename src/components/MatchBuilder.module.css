@@ -383,6 +383,148 @@
   font-size: 0.9rem;
 }
 
+/* ── Result Picker ── */
+.resultPicker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  animation: slideIn 0.3s ease;
+}
+
+.resultPickerLabel {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.resultOptions {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .resultOptions {
+    flex-direction: column;
+  }
+}
+
+.resultOption {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.resultOption:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.resultOptionIcon {
+  font-size: 1.5rem;
+}
+
+.resultOptionText {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.resultOptionActiveGreen {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.15);
+}
+.resultOptionActiveGreen .resultOptionText { color: var(--accent-primary); }
+
+.resultOptionActiveRed {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: var(--danger);
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.15);
+}
+.resultOptionActiveRed .resultOptionText { color: var(--danger); }
+
+.resultOptionActiveDraw {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: #f59e0b; /* Amber 500 */
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.15);
+}
+.resultOptionActiveDraw .resultOptionText { color: #f59e0b; }
+
+/* ── Draw Variant Styles ── */
+.teamBoxCompleteDraw {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 24px rgba(245, 158, 11, 0.2), inset 0 0 40px rgba(245, 158, 11, 0.04);
+  animation: pulseDraw 2.5s ease-in-out infinite;
+}
+
+@keyframes pulseDraw {
+  0%, 100% { box-shadow: 0 0 16px rgba(245, 158, 11, 0.3); }
+  50%       { box-shadow: 0 0 32px rgba(245, 158, 11, 0.5); }
+}
+
+.teamTitleDraw {
+  color: #fbd38d; /* Amber 200 */
+}
+
+.counterFullDraw {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: #f59e0b;
+  color: #f59e0b;
+}
+
+.progressBarDraw {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+}
+
+.slotFilledDraw {
+  background: rgba(245, 158, 11, 0.07);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+.availableRowDraw:hover {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+.addBtnDraw {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #f59e0b;
+}
+
+.availableRowDraw:hover .addBtnDraw {
+  background: #f59e0b;
+  color: #1a202c; /* dark color */
+  transform: scale(1.1);
+}
+
+.completeMsgDraw {
+  color: #fbd38d;
+}
+
+.submitBtnDraw {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.3);
+}
+
+.submitBtnDraw:hover {
+  box-shadow: 0 12px 32px rgba(245, 158, 11, 0.5);
+}
+
 /* ══════════════════════════════
    MOBILE (≤ 768px)
 ══════════════════════════════ */

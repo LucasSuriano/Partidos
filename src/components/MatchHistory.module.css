@@ -62,17 +62,45 @@
 }
 
 /* Tinte split de fondo */
-.splitBgGreen {
+.splitBgGreenLeft {
   position: absolute;
   inset: 0 50% 0 0;
   background: rgba(16, 185, 129, 0.035);
   pointer-events: none;
 }
 
-.splitBgRed {
+.splitBgRedLeft {
+  position: absolute;
+  inset: 0 50% 0 0;
+  background: rgba(239, 68, 68, 0.035);
+  pointer-events: none;
+}
+
+.splitBgAmberLeft {
+  position: absolute;
+  inset: 0 50% 0 0;
+  background: rgba(245, 158, 11, 0.035);
+  pointer-events: none;
+}
+
+.splitBgGreenRight {
+  position: absolute;
+  inset: 0 0 0 50%;
+  background: rgba(16, 185, 129, 0.035);
+  pointer-events: none;
+}
+
+.splitBgRedRight {
   position: absolute;
   inset: 0 0 0 50%;
   background: rgba(239, 68, 68, 0.035);
+  pointer-events: none;
+}
+
+.splitBgAmberRight {
+  position: absolute;
+  inset: 0 0 0 50%;
+  background: rgba(245, 158, 11, 0.035);
   pointer-events: none;
 }
 
@@ -172,6 +200,12 @@
   color: var(--danger);
 }
 
+.teamNameAmber {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #f59e0b;
+}
+
 .badgeWin {
   font-size: 0.68rem;
   font-weight: 700;
@@ -222,6 +256,12 @@
 .chipRed {
   background: rgba(239, 68, 68, 0.08);
   border: 1px solid rgba(239, 68, 68, 0.2);
+  color: var(--text-primary);
+}
+
+.chipAmber {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.2);
   color: var(--text-primary);
 }
 

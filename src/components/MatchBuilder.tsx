@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
-import { Player } from '@/types';
+import { Player, MatchResult } from '@/types';
 import styles from './MatchBuilder.module.css';
 import DatePicker from './DatePicker';
 
@@ -12,7 +12,7 @@ interface TeamPanelProps {
   label: string;
   team: Player[];
   availablePlayers: Player[];
-  variant: 'green' | 'red';
+  variant: 'green' | 'red' | 'draw';
   onAdd: (player: Player) => void;
   onRemove: (playerId: string) => void;
 }
@@ -20,17 +20,19 @@ interface TeamPanelProps {
 function TeamPanel({ label, team, availablePlayers, variant, onAdd, onRemove }: TeamPanelProps) {
   const full = team.length === TEAM_SIZE;
   const progress = team.length / TEAM_SIZE;
+  const isDraw = variant === 'draw';
+  const isRed = variant === 'red';
 
   return (
-    <div className={`${styles.teamBox} glass-panel ${full ? (variant === 'green' ? styles.teamBoxCompleteGreen : styles.teamBoxCompleteRed) : ''}`}>
+    <div className={`${styles.teamBox} glass-panel ${full ? (isDraw ? styles.teamBoxCompleteDraw : isRed ? styles.teamBoxCompleteRed : styles.teamBoxCompleteGreen) : ''}`}>
 
       {/* Header */}
       <div className={styles.teamHeader}>
-        <h3 className={`${styles.teamTitle} ${variant === 'red' ? styles.teamTitleRed : ''}`}>
+        <h3 className={`${styles.teamTitle} ${isRed ? styles.teamTitleRed : ''} ${isDraw ? styles.teamTitleDraw : ''}`}>
           {full && <span className={styles.checkmark}>✓</span>}
           {label}
         </h3>
-        <span className={`${styles.counter} ${full ? styles.counterFull : ''}`}>
+        <span className={`${styles.counter} ${full ? (isDraw ? styles.counterFullDraw : styles.counterFull) : ''}`}>
           {team.length}/{TEAM_SIZE}
         </span>
       </div>
@@ -38,7 +40,7 @@ function TeamPanel({ label, team, availablePlayers, variant, onAdd, onRemove }: 
       {/* Barra de progreso */}
       <div className={styles.progressTrack}>
         <div
-          className={`${styles.progressBar} ${variant === 'red' ? styles.progressBarRed : ''}`}
+          className={`${styles.progressBar} ${isRed ? styles.progressBarRed : ''} ${isDraw ? styles.progressBarDraw : ''}`}
           style={{ width: `${progress * 100}%` }}
         />
       </div>
@@ -48,7 +50,7 @@ function TeamPanel({ label, team, availablePlayers, variant, onAdd, onRemove }: 
         {Array.from({ length: TEAM_SIZE }).map((_, i) => {
           const player = team[i];
           return player ? (
-            <div key={player.id} className={`${styles.slot} ${styles.slotFilled} ${variant === 'red' ? styles.slotFilledRed : ''}`}>
+            <div key={player.id} className={`${styles.slot} ${styles.slotFilled} ${isRed ? styles.slotFilledRed : ''} ${isDraw ? styles.slotFilledDraw : ''}`}>
               <span className={styles.slotNumber}>{i + 1}</span>
               <span className={styles.slotName}>{player.name}</span>
               <button
@@ -78,11 +80,11 @@ function TeamPanel({ label, team, availablePlayers, variant, onAdd, onRemove }: 
             {availablePlayers.map(p => (
               <button
                 key={p.id}
-                className={`${styles.availableRow} ${variant === 'red' ? styles.availableRowRed : ''}`}
+                className={`${styles.availableRow} ${isRed ? styles.availableRowRed : ''} ${isDraw ? styles.availableRowDraw : ''}`}
                 onClick={() => onAdd(p)}
               >
                 <span className={styles.availableName}>{p.name}</span>
-                <span className={`${styles.addBtn} ${variant === 'red' ? styles.addBtnRed : ''}`}>+</span>
+                <span className={`${styles.addBtn} ${isRed ? styles.addBtnRed : ''} ${isDraw ? styles.addBtnDraw : ''}`}>+</span>
               </button>
             ))}
           </div>
@@ -90,7 +92,7 @@ function TeamPanel({ label, team, availablePlayers, variant, onAdd, onRemove }: 
       )}
 
       {full && (
-        <div className={`${styles.completeMsg} ${variant === 'red' ? styles.completeMsgRed : ''}`}>
+        <div className={`${styles.completeMsg} ${isRed ? styles.completeMsgRed : ''} ${isDraw ? styles.completeMsgDraw : ''}`}>
           ¡Equipo completo!
         </div>
       )}
@@ -104,6 +106,9 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
   const [teamA, setTeamA] = useState<Player[]>([]);
   const [teamB, setTeamB] = useState<Player[]>([]);
   const [matchDate, setMatchDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [result, setResult] = useState<MatchResult>('A_WIN');
+
+  const isDraw = result === 'DRAW';
 
   const availablePlayers = players
     .filter(p => !teamA.find(a => a.id === p.id) && !teamB.find(b => b.id === p.id))
@@ -127,11 +132,17 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
   const handleSubmit = () => {
     if (teamA.length !== TEAM_SIZE || teamB.length !== TEAM_SIZE || !matchDate) return;
     const fullDate = new Date(`${matchDate}T12:00:00Z`).toISOString();
-    addMatch(fullDate, teamA.map(p => p.id), teamB.map(p => p.id), 'A_WIN');
+    addMatch(fullDate, teamA.map(p => p.id), teamB.map(p => p.id), result);
     onComplete();
   };
 
   const isComplete = teamA.length === TEAM_SIZE && teamB.length === TEAM_SIZE;
+
+  // Labels y variantes dinámicos según resultado
+  const labelA = isDraw ? 'Equipo A' : result === 'A_WIN' ? 'Equipo Ganador' : 'Equipo Perdedor';
+  const labelB = isDraw ? 'Equipo B' : result === 'B_WIN' ? 'Equipo Ganador' : 'Equipo Perdedor';
+  const variantA: 'green' | 'red' | 'draw' = isDraw ? 'draw' : result === 'A_WIN' ? 'green' : 'red';
+  const variantB: 'green' | 'red' | 'draw' = isDraw ? 'draw' : result === 'B_WIN' ? 'green' : 'red';
 
   return (
     <div className={styles.container}>
@@ -144,21 +155,51 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
         </div>
       </div>
 
+      {/* Selector de resultado — visible cuando ambos equipos están completos */}
+      {isComplete && (
+        <div className={`${styles.resultPicker} glass-panel`}>
+          <span className={styles.resultPickerLabel}>¿Cómo terminó el partido?</span>
+          <div className={styles.resultOptions}>
+            <button
+              className={`${styles.resultOption} ${result === 'A_WIN' ? styles.resultOptionActiveGreen : ''}`}
+              onClick={() => setResult('A_WIN')}
+            >
+              <span className={styles.resultOptionIcon}>🟢</span>
+              <span className={styles.resultOptionText}>Gana Equipo A</span>
+            </button>
+            <button
+              className={`${styles.resultOption} ${result === 'DRAW' ? styles.resultOptionActiveDraw : ''}`}
+              onClick={() => setResult('DRAW')}
+            >
+              <span className={styles.resultOptionIcon}>🤝</span>
+              <span className={styles.resultOptionText}>Empate</span>
+            </button>
+            <button
+              className={`${styles.resultOption} ${result === 'B_WIN' ? styles.resultOptionActiveRed : ''}`}
+              onClick={() => setResult('B_WIN')}
+            >
+              <span className={styles.resultOptionIcon}>🔴</span>
+              <span className={styles.resultOptionText}>Gana Equipo B</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Equipos */}
       <div className={styles.teamsLayout}>
         <TeamPanel
-          label="Equipo Ganador"
+          label={labelA}
           team={teamA}
           availablePlayers={availablePlayers}
-          variant="green"
+          variant={variantA}
           onAdd={(p) => addToTeam('A', p)}
           onRemove={(id) => removeFromTeam('A', id)}
         />
         <TeamPanel
-          label="Equipo Perdedor"
+          label={labelB}
           team={teamB}
           availablePlayers={availablePlayers}
-          variant="red"
+          variant={variantB}
           onAdd={(p) => addToTeam('B', p)}
           onRemove={(id) => removeFromTeam('B', id)}
         />
@@ -166,8 +207,11 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
 
       {/* Botón guardar */}
       {isComplete ? (
-        <button className={styles.submitBtn} onClick={handleSubmit}>
-          Guardar Partido
+        <button
+          className={`${styles.submitBtn} ${isDraw ? styles.submitBtnDraw : ''}`}
+          onClick={handleSubmit}
+        >
+          {isDraw ? '🤝 Guardar Empate' : '⚽ Guardar Partido'}
         </button>
       ) : (
         <p className={styles.hint}>

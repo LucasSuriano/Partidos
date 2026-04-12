@@ -77,6 +77,13 @@ export default function MatchHistory() {
             const teamAPlayers = getPlayers(match.teamA);
             const teamBPlayers = getPlayers(match.teamB);
 
+            const isDraw = match.result === 'DRAW';
+            const labelA = isDraw ? 'Empate' : match.result === 'A_WIN' ? 'Equipo Ganador' : 'Equipo Perdedor';
+            const labelB = isDraw ? 'Empate' : match.result === 'B_WIN' ? 'Equipo Ganador' : 'Equipo Perdedor';
+            
+            const teamAColor = isDraw ? 'Amber' : match.result === 'A_WIN' ? 'Green' : 'Red';
+            const teamBColor = isDraw ? 'Amber' : match.result === 'B_WIN' ? 'Green' : 'Red';
+
             return (
               <div
                 key={match.id}
@@ -84,8 +91,8 @@ export default function MatchHistory() {
                 style={{ animationDelay: `${i * 0.06}s` }}
               >
                 {/* Tinte de fondo split */}
-                <div className={styles.splitBgGreen} />
-                <div className={styles.splitBgRed} />
+                <div className={styles[`splitBg${teamAColor}Left`]} />
+                <div className={styles[`splitBg${teamBColor}Right`]} />
 
                 <div className={styles.cardInner}>
                   {/* Cabecera */}
@@ -108,14 +115,14 @@ export default function MatchHistory() {
 
                   {/* Cuerpo: equipos */}
                   <div className={styles.teamsRow}>
-                    {/* Equipo Ganador */}
+                    {/* Equipo A */}
                     <div className={styles.teamSide}>
                       <div className={styles.teamLabel}>
-                        <span className={styles.teamNameGreen}>Equipo Ganador</span>
+                        <span className={styles[`teamName${teamAColor}`]}>{labelA}</span>
                       </div>
                       <div className={styles.chips}>
                         {teamAPlayers.map((name, idx) => (
-                          <span key={idx} className={`${styles.chip} ${styles.chipGreen}`}>
+                          <span key={idx} className={`${styles.chip} ${styles[`chip${teamAColor}`]}`}>
                             {name}
                           </span>
                         ))}
@@ -128,14 +135,14 @@ export default function MatchHistory() {
                       <span className={styles.vsText}>VS</span>
                     </div>
 
-                    {/* Equipo Perdedor */}
+                    {/* Equipo B */}
                     <div className={`${styles.teamSide} ${styles.teamSideRight}`}>
                       <div className={`${styles.teamLabel} ${styles.teamLabelRight}`}>
-                        <span className={styles.teamNameRed}>Equipo Perdedor</span>
+                        <span className={styles[`teamName${teamBColor}`]}>{labelB}</span>
                       </div>
                       <div className={`${styles.chips} ${styles.chipsRight}`}>
                         {teamBPlayers.map((name, idx) => (
-                          <span key={idx} className={`${styles.chip} ${styles.chipRed}`}>
+                          <span key={idx} className={`${styles.chip} ${styles[`chip${teamBColor}`]}`}>
                             {name}
                           </span>
                         ))}
