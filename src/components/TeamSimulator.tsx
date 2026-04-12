@@ -324,11 +324,241 @@ function generateExplanation(
 // COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ─────────────────────────────────────────────────────────────────────────────
+// MANUAL BUILDER — sub-component
+// ─────────────────────────────────────────────────────────────────────────────
+
+const MANUAL_TEAM_SIZE = 5;
+
+function ManualBuilder({ allStats, pairMap, onReset }: {
+  allStats: PlayerStats[];
+  pairMap: Map<string, PairStats>;
+  onReset: () => void;
+}) {
+  const [teamA, setTeamA] = useState<PlayerStats[]>([]);
+  const [teamB, setTeamB] = useState<PlayerStats[]>([]);
+  const [revealed, setRevealed] = useState(false);
+
+  const assignedIds = useMemo(
+    () => new Set([...teamA.map(p => p.player.id), ...teamB.map(p => p.player.id)]),
+    [teamA, teamB]
+  );
+
+  const available = useMemo(
+    () => allStats.filter(s => !assignedIds.has(s.player.id)),
+    [allStats, assignedIds]
+  );
+
+  const addTo = (team: 'A' | 'B', s: PlayerStats) => {
+    if (revealed) return;
+    if (team === 'A' && teamA.length < MANUAL_TEAM_SIZE) setTeamA(prev => [...prev, s]);
+    if (team === 'B' && teamB.length < MANUAL_TEAM_SIZE) setTeamB(prev => [...prev, s]);
+  };
+
+  const removeFrom = (team: 'A' | 'B', id: string) => {
+    if (revealed) return;
+    if (team === 'A') setTeamA(prev => prev.filter(p => p.player.id !== id));
+    if (team === 'B') setTeamB(prev => prev.filter(p => p.player.id !== id));
+  };
+
+  const isComplete = teamA.length === MANUAL_TEAM_SIZE && teamB.length === MANUAL_TEAM_SIZE;
+
+  // Use parent pairMap for the analysis (it contains all match history)
+  const notablePairs = useMemo(() => {
+    if (!revealed || !isComplete) return { internal: [], clashes: [] };
+    return getNotablePairs(teamA, teamB, pairMap, new Map(allStats.map(s => [s.player.id, s.player])));
+  }, [revealed, isComplete, teamA, teamB, pairMap, allStats]);
+
+  const explanation = useMemo(() => {
+    if (!revealed || !isComplete) return [];
+    return generateExplanation(teamA, teamB, pairMap);
+  }, [revealed, isComplete, teamA, teamB, pairMap]);
+
+  return (
+    <>
+      {!revealed && (
+        <>
+          {/* ── Team panels ── */}
+          <div className={styles.manualLayout}>
+            {/* Team A panel */}
+            <ManualTeamPanel
+              label="Equipo A"
+              color="green"
+              team={teamA}
+              available={available}
+              onAdd={(s) => addTo('A', s)}
+              onRemove={(id) => removeFrom('A', id)}
+            />
+            {/* Team B panel */}
+            <ManualTeamPanel
+              label="Equipo B"
+              color="blue"
+              team={teamB}
+              available={available}
+              onAdd={(s) => addTo('B', s)}
+              onRemove={(id) => removeFrom('B', id)}
+            />
+          </div>
+
+          <div className={styles.simulateWrapper}>
+            <button
+              className={styles.simulateBtn}
+              onClick={() => setRevealed(true)}
+              disabled={!isComplete}
+            >
+              {!isComplete
+                ? `Faltan jugadores (A: ${teamA.length}/5 · B: ${teamB.length}/5)`
+                : '📊 Ver Análisis'}
+            </button>
+          </div>
+        </>
+      )}
+
+      {revealed && isComplete && (
+        <div className={styles.resultSection}>
+          <div className={styles.teamsGrid}>
+            <TeamCard label="Equipo A" color="green" players={teamA} pairMap={pairMap} />
+            <div className={styles.vsDivider}><span className={styles.vsText}>VS</span></div>
+            <TeamCard label="Equipo B" color="blue" players={teamB} pairMap={pairMap} />
+          </div>
+
+          {(notablePairs.internal.length > 0 || notablePairs.clashes.length > 0) && (
+            <div className={styles.pairsSection}>
+              <h3 className={styles.pairsSectionTitle}>🔍 Análisis Individual entre Jugadores</h3>
+              {notablePairs.internal.length > 0 && (
+                <div className={styles.pairsGroup}>
+                  <span className={styles.pairsGroupLabel}>Compañeros destacados (dentro del mismo equipo)</span>
+                  <div className={styles.pairsGrid}>
+                    {notablePairs.internal.map((pair, i) => <PairCard key={i} pair={pair} />)}
+                  </div>
+                </div>
+              )}
+              {notablePairs.clashes.length > 0 && (
+                <div className={styles.pairsGroup}>
+                  <span className={styles.pairsGroupLabel}>Duelos históricos (equipos enfrentados)</span>
+                  <div className={styles.pairsGrid}>
+                    {notablePairs.clashes.map((pair, i) => <PairCard key={i} pair={pair} />)}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className={styles.explanationBox}>
+            <h3 className={styles.explanationTitle}>📋 Análisis de los equipos</h3>
+            <ul className={styles.explanationList}>
+              {explanation.map((line, i) => (
+                <li key={i} className={styles.explanationItem}>{line}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div className={styles.resetWrapper}>
+            <button className={styles.resetBtn} onClick={() => { setTeamA([]); setTeamB([]); setRevealed(false); }}>
+              ✏️ Rehacer equipos
+            </button>
+            <button className={styles.resetBtn} onClick={onReset}>
+              🔄 Nueva Simulación
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+function ManualTeamPanel({ label, color, team, available, onAdd, onRemove }: {
+  label: string;
+  color: 'green' | 'blue';
+  team: PlayerStats[];
+  available: PlayerStats[];
+  onAdd: (s: PlayerStats) => void;
+  onRemove: (id: string) => void;
+}) {
+  const full = team.length === MANUAL_TEAM_SIZE;
+  const isGreen = color === 'green';
+
+  return (
+    <div className={`${styles.manualTeamBox} ${isGreen ? styles.manualTeamGreen : styles.manualTeamBlue}`}>
+      <div className={styles.manualTeamHeader}>
+        <span className={styles.teamIcon}>{isGreen ? '🟢' : '🔵'}</span>
+        <h3 className={styles.manualTeamTitle}>{label}</h3>
+        <span className={`${styles.counter} ${full ? styles.counterFull : ''}`}>
+          {team.length}/{MANUAL_TEAM_SIZE}
+        </span>
+      </div>
+
+      {/* Progress bar */}
+      <div className={styles.manualProgressTrack}>
+        <div
+          className={`${styles.manualProgressBar} ${isGreen ? styles.manualProgressGreen : styles.manualProgressBlue}`}
+          style={{ width: `${(team.length / MANUAL_TEAM_SIZE) * 100}%` }}
+        />
+      </div>
+
+      {/* Current team roster */}
+      <div className={styles.manualRoster}>
+        {team.map((s, i) => (
+          <div key={s.player.id} className={styles.manualRosterSlot}>
+            <span className={styles.manualRosterNum}>{i + 1}</span>
+            <span className={styles.manualRosterName}>{s.player.name}</span>
+            <span className={styles.manualRosterStat}>{s.winPercentage.toFixed(0)}%</span>
+            <button className={styles.manualRemoveBtn} onClick={() => onRemove(s.player.id)}>✕</button>
+          </div>
+        ))}
+        {Array.from({ length: MANUAL_TEAM_SIZE - team.length }).map((_, i) => (
+          <div key={`empty-${i}`} className={styles.manualRosterEmpty}>
+            <span className={styles.manualRosterNum}>{team.length + i + 1}</span>
+            <span className={styles.manualRosterPlaceholder}>Vacío</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Available players */}
+      {!full && available.length > 0 && (
+        <>
+          <div className={styles.manualDivider}>
+            <span className={styles.manualDividerLabel}>Agregar jugador</span>
+          </div>
+          <div className={styles.manualAvailableList}>
+            {available.map(s => (
+              <button
+                key={s.player.id}
+                className={`${styles.manualAvailableRow} ${isGreen ? styles.manualAvailableGreen : styles.manualAvailableBlue}`}
+                onClick={() => onAdd(s)}
+              >
+                <span className={styles.manualAvailableName}>{s.player.name}</span>
+                <span className={styles.manualAvailableStat}>{s.winPercentage.toFixed(0)}%</span>
+                <span className={`${styles.manualAddBtn} ${isGreen ? styles.manualAddGreen : styles.manualAddBlue}`}>+</span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      {full && (
+        <div className={`${styles.manualCompleteMsg} ${isGreen ? styles.manualCompleteMsgGreen : styles.manualCompleteMsgBlue}`}>
+          ¡Equipo completo!
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
+
+type SimMode = null | 'auto' | 'manual';
+
 export default function TeamSimulator() {
   const { players, matches } = useAppContext();
   const allStats = useMemo(() => calculateStats(players, matches), [players, matches]);
   const playerById = useMemo(() => new Map(players.map(p => [p.id, p])), [players]);
 
+  const [mode, setMode] = useState<SimMode>(null);
+
+  // ── AUTO mode state ──
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [simulated, setSimulated] = useState(false);
 
@@ -347,7 +577,6 @@ export default function TeamSimulator() {
     [allStats, selected]
   );
 
-  // Pairwise stats, computed only for the selected players
   const pairMap = useMemo(
     () => computePairwise(Array.from(selected), matches),
     [selected, matches]
@@ -369,7 +598,18 @@ export default function TeamSimulator() {
   }, [result, pairMap, playerById]);
 
   const handleSimulate = () => { if (selected.size === 10) setSimulated(true); };
-  const handleReset    = () => { setSelected(new Set()); setSimulated(false); };
+
+  // Full pair map for manual mode (all players, all history)
+  const fullPairMap = useMemo(
+    () => computePairwise(players.map(p => p.id), matches),
+    [players, matches]
+  );
+
+  const handleReset = () => {
+    setMode(null);
+    setSelected(new Set());
+    setSimulated(false);
+  };
 
   if (players.length === 0) {
     return (
@@ -385,15 +625,54 @@ export default function TeamSimulator() {
     <div className={styles.container}>
       <div className={styles.pageHeader}>
         <h1 className={styles.pageTitle}>⚽ Simulación de Equipos</h1>
-        <p className={styles.pageSubtitle}>
-          Elegí exactamente <strong>10 jugadores</strong>. El algoritmo usa estadísticas
-          individuales, porcentaje de victorias <em>jugando juntos</em> y head-to-head
-          histórico para armar los equipos más equilibrados.
-        </p>
+        {!mode && (
+          <p className={styles.pageSubtitle}>
+            Elegí cómo querés armar los equipos para el partido.
+          </p>
+        )}
       </div>
 
-      {/* ── Player picker ── */}
-      {!simulated && (
+      {/* ── Mode picker ── */}
+      {!mode && (
+        <div className={styles.modePicker}>
+          <button
+            className={`${styles.modeCard} ${styles.modeCardAuto}`}
+            onClick={() => setMode('auto')}
+          >
+            <span className={styles.modeIcon}>🤖</span>
+            <span className={styles.modeTitle}>Automático</span>
+            <span className={styles.modeDesc}>
+              Seleccionás 10 jugadores y el algoritmo forma los equipos más equilibrados usando estadísticas, química histórica y head-to-head.
+            </span>
+          </button>
+
+          <button
+            className={`${styles.modeCard} ${styles.modeCardManual}`}
+            onClick={() => setMode('manual')}
+          >
+            <span className={styles.modeIcon}>✋</span>
+            <span className={styles.modeTitle}>Manual</span>
+            <span className={styles.modeDesc}>
+              Armás vos mismo los dos equipos eligiendo qué jugador va en cada lado. Después podés ver el análisis estadístico.
+            </span>
+          </button>
+        </div>
+      )}
+
+      {/* ── Back button ── */}
+      {mode && (
+        <div className={styles.modeBackRow}>
+          <button className={styles.modeBackBtn} onClick={handleReset}>
+            ← Cambiar modo
+          </button>
+          <span className={styles.modeBadge}>
+            {mode === 'auto' ? '🤖 Automático' : '✋ Manual'}
+          </span>
+        </div>
+      )}
+
+      {/* ── AUTO mode ── */}
+      {mode === 'auto' && !simulated && (
         <div className={styles.pickerSection}>
           <div className={styles.pickerHeader}>
             <span className={styles.pickerLabel}>Jugadores seleccionados</span>
@@ -445,47 +724,36 @@ export default function TeamSimulator() {
         </div>
       )}
 
-      {/* ── Result ── */}
-      {simulated && result && (
+      {mode === 'auto' && simulated && result && (
         <div className={styles.resultSection}>
-
-          {/* Teams */}
           <div className={styles.teamsGrid}>
             <TeamCard label="Equipo A" color="green" players={result.teamA} pairMap={pairMap} />
             <div className={styles.vsDivider}><span className={styles.vsText}>VS</span></div>
             <TeamCard label="Equipo B" color="blue"  players={result.teamB} pairMap={pairMap} />
           </div>
 
-          {/* Individual analysis — notable pairs */}
           {(notablePairs.internal.length > 0 || notablePairs.clashes.length > 0) && (
             <div className={styles.pairsSection}>
               <h3 className={styles.pairsSectionTitle}>🔍 Análisis Individual entre Jugadores</h3>
-
               {notablePairs.internal.length > 0 && (
                 <div className={styles.pairsGroup}>
                   <span className={styles.pairsGroupLabel}>Compañeros destacados (dentro del mismo equipo)</span>
                   <div className={styles.pairsGrid}>
-                    {notablePairs.internal.map((pair, i) => (
-                      <PairCard key={i} pair={pair} />
-                    ))}
+                    {notablePairs.internal.map((pair, i) => <PairCard key={i} pair={pair} />)}
                   </div>
                 </div>
               )}
-
               {notablePairs.clashes.length > 0 && (
                 <div className={styles.pairsGroup}>
                   <span className={styles.pairsGroupLabel}>Duelos históricos (equipos enfrentados)</span>
                   <div className={styles.pairsGrid}>
-                    {notablePairs.clashes.map((pair, i) => (
-                      <PairCard key={i} pair={pair} />
-                    ))}
+                    {notablePairs.clashes.map((pair, i) => <PairCard key={i} pair={pair} />)}
                   </div>
                 </div>
               )}
             </div>
           )}
 
-          {/* Explanation */}
           <div className={styles.explanationBox}>
             <h3 className={styles.explanationTitle}>🧠 Por qué se armaron así los equipos</h3>
             <ul className={styles.explanationList}>
@@ -496,9 +764,19 @@ export default function TeamSimulator() {
           </div>
 
           <div className={styles.resetWrapper}>
+            <button className={styles.resetBtn} onClick={() => { setSelected(new Set()); setSimulated(false); }}>✏️ Reelegir jugadores</button>
             <button className={styles.resetBtn} onClick={handleReset}>🔄 Nueva Simulación</button>
           </div>
         </div>
+      )}
+
+      {/* ── MANUAL mode ── */}
+      {mode === 'manual' && (
+        <ManualBuilder
+          allStats={allStats}
+          pairMap={fullPairMap}
+          onReset={handleReset}
+        />
       )}
     </div>
   );
