@@ -116,9 +116,9 @@ export default function PlayerReportModal({ playerId, onClose }: PlayerReportMod
                       <div key={badgeId} className={styles.badgeHex} style={{ animationDelay: `${index * 0.1}s` }} title={`${badgeDef.description} (${count} votos)`}>
                         <div className={styles.badgeHexIconWrapper}>
                           <span className={styles.badgeHexIcon}>{badgeDef.icon}</span>
-                          <span className={styles.badgeVoteCount}>{count}</span>
                         </div>
                         <span className={styles.badgeHexLabel}>{badgeDef.label}</span>
+                        <span className={styles.badgeVoteCountText}>{count} {count === 1 ? 'voto' : 'votos'}</span>
                       </div>
                     );
                   })}
