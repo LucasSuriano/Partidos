@@ -120,7 +120,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Optimistic update
     setMatches(prev => [...prev, newMatch]);
     
-    await supabase.from('matches').insert([{
+    const { error } = await supabase.from('matches').insert([{
       id: newMatch.id,
       date: newMatch.date,
       team_a: newMatch.teamA,
@@ -129,6 +129,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       score_a: newMatch.scoreA,
       score_b: newMatch.scoreB
     }]);
+
+    if (error) {
+      console.error("Supabase insert error:", error);
+      alert("Error al guardar el partido en la base de datos: " + error.message);
+    }
   };
 
   const removeMatch = async (id: string) => {
@@ -142,11 +147,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Optimistic update
     setMatches(prev => prev.map(m => m.id === id ? { ...m, result, scoreA, scoreB } : m));
     
-    await supabase.from('matches').update({
+    const { error } = await supabase.from('matches').update({
       result,
       score_a: scoreA ?? null,
       score_b: scoreB ?? null
     }).eq('id', id);
+
+    if (error) {
+      console.error("Supabase update error:", error);
+      alert("Error al actualizar los goles en la base de datos: " + error.message);
+    }
   };
 
   if (!isLoaded) return null; // Prevent hydration mismatch by rendering only on client
