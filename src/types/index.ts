@@ -45,6 +45,8 @@ export type Match = {
   teamA: string[]; // array of player IDs
   teamB: string[]; // array of player IDs
   result: MatchResult;
+  scoreA?: number | null;
+  scoreB?: number | null;
 };
 
 export type PlayerStats = {

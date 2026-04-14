@@ -11,8 +11,9 @@ interface AppContextProps {
   removePlayer: (id: string) => Promise<void>;
   updatePlayer: (id: string, newName: string) => Promise<void>;
   updatePlayerBadges: (id: string, badges: string[]) => Promise<void>;
-  addMatch: (date: string, teamA: string[], teamB: string[], result: MatchResult) => Promise<void>;
+  addMatch: (date: string, teamA: string[], teamB: string[], result: MatchResult, scoreA?: number, scoreB?: number) => Promise<void>;
   removeMatch: (id: string) => Promise<void>;
+  updateMatchResult: (id: string, result: MatchResult, scoreA?: number, scoreB?: number) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextProps | undefined>(undefined);
@@ -57,7 +58,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           date: m.date,
           teamA: m.team_a,
           teamB: m.team_b,
-          result: m.result as MatchResult
+          result: m.result as MatchResult,
+          scoreA: m.score_a,
+          scoreB: m.score_b
         }));
         setMatches(formattedMatches);
       }
@@ -105,8 +108,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const addMatch = async (date: string, teamA: string[], teamB: string[], result: MatchResult) => {
-    const newMatch: Match = { id: crypto.randomUUID(), date, teamA, teamB, result };
+  const addMatch = async (date: string, teamA: string[], teamB: string[], result: MatchResult, scoreA?: number, scoreB?: number) => {
+    const newMatch: Match = { id: crypto.randomUUID(), date, teamA, teamB, result, scoreA, scoreB };
     // Optimistic update
     setMatches(prev => [...prev, newMatch]);
     
@@ -115,7 +118,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       date: newMatch.date,
       team_a: newMatch.teamA,
       team_b: newMatch.teamB,
-      result: newMatch.result
+      result: newMatch.result,
+      score_a: newMatch.scoreA,
+      score_b: newMatch.scoreB
     }]);
   };
 
@@ -126,10 +131,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await supabase.from('matches').delete().eq('id', id);
   };
 
+  const updateMatchResult = async (id: string, result: MatchResult, scoreA?: number, scoreB?: number) => {
+    // Optimistic update
+    setMatches(prev => prev.map(m => m.id === id ? { ...m, result, scoreA, scoreB } : m));
+    
+    await supabase.from('matches').update({
+      result,
+      score_a: scoreA ?? null,
+      score_b: scoreB ?? null
+    }).eq('id', id);
+  };
+
   if (!isLoaded) return null; // Prevent hydration mismatch by rendering only on client
 
   return (
-    <AppContext.Provider value={{ players, matches, addPlayer, removePlayer, updatePlayer, updatePlayerBadges, addMatch, removeMatch }}>
+    <AppContext.Provider value={{ players, matches, addPlayer, removePlayer, updatePlayer, updatePlayerBadges, addMatch, removeMatch, updateMatchResult }}>
       {children}
     </AppContext.Provider>
   );

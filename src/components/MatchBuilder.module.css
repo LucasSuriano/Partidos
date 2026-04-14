@@ -463,6 +463,68 @@
 }
 .resultOptionActiveDraw .resultOptionText { color: #f59e0b; }
 
+/* ── Score Inputs (Optional) ── */
+.scoreSection {
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.scoreLabel {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+
+.scoreInputsWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.scoreInputBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.scoreTeamName {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.scoreInput {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  font-weight: 800;
+  text-align: center;
+  width: 60px;
+  height: 50px;
+  transition: all 0.2s;
+}
+
+.scoreInput:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+}
+
+.scoreSeparator {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--text-secondary);
+}
+
 /* ── Draw Variant Styles ── */
 .teamBoxCompleteDraw {
   border-color: #f59e0b !important;

@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
+import { Match, MatchResult } from '@/types';
 import styles from './MatchHistory.module.css';
 
 const MESES_CORTOS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
@@ -9,9 +11,32 @@ const MESES_LARGOS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Ju
 const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
 export default function MatchHistory() {
-  const { matches, players, removeMatch } = useAppContext();
+  const { matches, players, removeMatch, updateMatchResult } = useAppContext();
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
+
+  const [editingMatchId, setEditingMatchId] = useState<string | null>(null);
+  const [editResult, setEditResult] = useState<MatchResult>('A_WIN');
+  const [editScoreA, setEditScoreA] = useState<string>('');
+  const [editScoreB, setEditScoreB] = useState<string>('');
+
+  const handleEditClick = (match: Match) => {
+    setEditingMatchId(match.id);
+    setEditResult(match.result);
+    setEditScoreA(match.scoreA != null ? match.scoreA.toString() : '');
+    setEditScoreB(match.scoreB != null ? match.scoreB.toString() : '');
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingMatchId) return;
+    let parsedA: number | undefined = parseInt(editScoreA, 10);
+    let parsedB: number | undefined = parseInt(editScoreB, 10);
+    if (isNaN(parsedA)) parsedA = undefined;
+    if (isNaN(parsedB)) parsedB = undefined;
+    
+    await updateMatchResult(editingMatchId, editResult, parsedA, parsedB);
+    setEditingMatchId(null);
+  };
 
   const getPlayers = (ids: string[]) =>
     ids.map(id => players.find(p => p.id === id)?.name ?? 'Desconocido');
@@ -100,55 +125,89 @@ export default function MatchHistory() {
                     <div className={styles.matchNumber}>Partido #{num}</div>
                     <div className={styles.dateLabel}>{formatDateLabel(match.date)}</div>
                     {isAdmin && (
-                      <button
-                        className={styles.deleteBtn}
-                        onClick={() =>
-                          confirm('¿Estás seguro de eliminar este partido?') &&
-                          removeMatch(match.id)
-                        }
-                        title="Eliminar partido"
-                      >
-                        ✕
-                      </button>
+                      <div className={styles.adminActions}>
+                        <button
+                          className={styles.editBtn}
+                          onClick={() => handleEditClick(match)}
+                          title="Editar resultado"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          className={styles.deleteBtn}
+                          onClick={() =>
+                            confirm('¿Estás seguro de eliminar este partido?') &&
+                            removeMatch(match.id)
+                          }
+                          title="Eliminar partido"
+                        >
+                          ✕
+                        </button>
+                      </div>
                     )}
                   </div>
 
-                  {/* Cuerpo: equipos */}
-                  <div className={styles.teamsRow}>
-                    {/* Equipo A */}
-                    <div className={styles.teamSide}>
-                      <div className={styles.teamLabel}>
-                        <span className={styles[`teamName${teamAColor}`]}>{labelA}</span>
+                  {/* Cuerpo: equipos o Edición */}
+                  {editingMatchId === match.id ? (
+                    <div className={styles.editPanel}>
+                      <div className={styles.editResultOptions}>
+                        <button className={`${styles.editOption} ${editResult === 'A_WIN' ? styles.editOptionActiveGreen : ''}`} onClick={() => setEditResult('A_WIN')}>Ganó Eq. A</button>
+                        <button className={`${styles.editOption} ${editResult === 'DRAW' ? styles.editOptionActiveDraw : ''}`} onClick={() => setEditResult('DRAW')}>Empate</button>
+                        <button className={`${styles.editOption} ${editResult === 'B_WIN' ? styles.editOptionActiveRed : ''}`} onClick={() => setEditResult('B_WIN')}>Ganó Eq. B</button>
                       </div>
-                      <div className={styles.chips}>
-                        {teamAPlayers.map((name, idx) => (
-                          <span key={idx} className={`${styles.chip} ${styles[`chip${teamAColor}`]}`}>
-                            {name}
-                          </span>
-                        ))}
+                      <div className={styles.editScores}>
+                        <input type="number" min="0" value={editScoreA} onChange={e => setEditScoreA(e.target.value)} placeholder="Goles A" className={styles.editInput} />
+                        <span>-</span>
+                        <input type="number" min="0" value={editScoreB} onChange={e => setEditScoreB(e.target.value)} placeholder="Goles B" className={styles.editInput} />
+                      </div>
+                      <div className={styles.editActions}>
+                        <button onClick={handleSaveEdit} className={styles.saveEditBtn}>Guardar</button>
+                        <button onClick={() => setEditingMatchId(null)} className={styles.cancelEditBtn}>Cancelar</button>
                       </div>
                     </div>
+                  ) : (
+                    <div className={styles.teamsRow}>
+                      {/* Equipo A */}
+                      <div className={styles.teamSide}>
+                        <div className={styles.teamLabel}>
+                          <span className={styles[`teamName${teamAColor}`]}>{labelA}</span>
+                        </div>
+                        <div className={styles.chips}>
+                          {teamAPlayers.map((name, idx) => (
+                            <span key={idx} className={`${styles.chip} ${styles[`chip${teamAColor}`]}`}>
+                              {name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
 
-                    {/* VS central */}
-                    <div className={styles.vsSeparator}>
-                      <span className={styles.vsIcon}>⚽</span>
-                      <span className={styles.vsText}>VS</span>
-                    </div>
+                      {/* VS central o Score */}
+                      {match.scoreA != null && match.scoreB != null ? (
+                        <div className={styles.scorePill}>
+                          {match.scoreA} - {match.scoreB}
+                        </div>
+                      ) : (
+                        <div className={styles.vsSeparator}>
+                          <span className={styles.vsIcon}>⚽</span>
+                          <span className={styles.vsText}>VS</span>
+                        </div>
+                      )}
 
-                    {/* Equipo B */}
-                    <div className={`${styles.teamSide} ${styles.teamSideRight}`}>
-                      <div className={`${styles.teamLabel} ${styles.teamLabelRight}`}>
-                        <span className={styles[`teamName${teamBColor}`]}>{labelB}</span>
-                      </div>
-                      <div className={`${styles.chips} ${styles.chipsRight}`}>
-                        {teamBPlayers.map((name, idx) => (
-                          <span key={idx} className={`${styles.chip} ${styles[`chip${teamBColor}`]}`}>
-                            {name}
-                          </span>
-                        ))}
+                      {/* Equipo B */}
+                      <div className={`${styles.teamSide} ${styles.teamSideRight}`}>
+                        <div className={`${styles.teamLabel} ${styles.teamLabelRight}`}>
+                          <span className={styles[`teamName${teamBColor}`]}>{labelB}</span>
+                        </div>
+                        <div className={`${styles.chips} ${styles.chipsRight}`}>
+                          {teamBPlayers.map((name, idx) => (
+                            <span key={idx} className={`${styles.chip} ${styles[`chip${teamBColor}`]}`}>
+                              {name}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             );

@@ -142,8 +142,14 @@
   text-align: center;
 }
 
+.adminActions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.editBtn,
 .deleteBtn {
-  color: var(--danger);
   font-size: 0.8rem;
   padding: 0.3rem 0.5rem;
   border-radius: 6px;
@@ -152,9 +158,115 @@
   flex-shrink: 0;
 }
 
+.editBtn {
+  color: var(--warning);
+}
+
+.deleteBtn {
+  color: var(--danger);
+}
+
+.editBtn:hover {
+  opacity: 1;
+  background: rgba(245, 158, 11, 0.12);
+}
+
 .deleteBtn:hover {
   opacity: 1;
   background: rgba(239, 68, 68, 0.12);
+}
+
+/* ── Edit Panel ── */
+.editPanel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 0;
+  animation: slideIn 0.2s ease;
+}
+
+.editResultOptions {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.editOption {
+  flex: 1;
+  padding: 0.6rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.editOptionActiveGreen {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.editOptionActiveRed {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.editOptionActiveDraw {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: #f59e0b;
+  color: #f59e0b;
+}
+
+.editScores {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: var(--text-secondary);
+}
+
+.editInput {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  padding: 0.5rem;
+  width: 60px;
+  text-align: center;
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.editInput:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+.editActions {
+  display: flex;
+  gap: 1rem;
+}
+
+.saveEditBtn {
+  background: var(--accent-primary);
+  color: #0a1f1a;
+  padding: 0.5rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.cancelEditBtn {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  padding: 0.5rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.9rem;
 }
 
 /* ── Teams row ── */
@@ -297,6 +409,30 @@
   font-weight: 800;
   color: var(--text-secondary);
   letter-spacing: 0.05em;
+}
+
+/* ── Score Pill ── */
+.scorePill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.9rem;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--panel-border);
+  border-radius: 20px;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: 0.05em;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  align-self: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.matchCard:hover .scorePill {
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 6px 16px rgba(255, 255, 255, 0.08);
 }
 
 /* ── Empty state ── */

@@ -107,6 +107,8 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
   const [teamB, setTeamB] = useState<Player[]>([]);
   const [matchDate, setMatchDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [result, setResult] = useState<MatchResult>('A_WIN');
+  const [scoreA, setScoreA] = useState<string>('');
+  const [scoreB, setScoreB] = useState<string>('');
 
   const isDraw = result === 'DRAW';
 
@@ -132,7 +134,13 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
   const handleSubmit = () => {
     if (teamA.length !== TEAM_SIZE || teamB.length !== TEAM_SIZE || !matchDate) return;
     const fullDate = new Date(`${matchDate}T12:00:00Z`).toISOString();
-    addMatch(fullDate, teamA.map(p => p.id), teamB.map(p => p.id), result);
+    
+    let parsedScoreA: number | undefined = parseInt(scoreA, 10);
+    let parsedScoreB: number | undefined = parseInt(scoreB, 10);
+    if (isNaN(parsedScoreA)) parsedScoreA = undefined;
+    if (isNaN(parsedScoreB)) parsedScoreB = undefined;
+
+    addMatch(fullDate, teamA.map(p => p.id), teamB.map(p => p.id), result, parsedScoreA, parsedScoreB);
     onComplete();
   };
 
@@ -181,6 +189,36 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
               <span className={styles.resultOptionIcon}>🔴</span>
               <span className={styles.resultOptionText}>Gana Equipo B</span>
             </button>
+          </div>
+
+          {/* Opcional: Goles */}
+          <div className={styles.scoreSection}>
+            <span className={styles.scoreLabel}>Goles (Opcional)</span>
+            <div className={styles.scoreInputsWrapper}>
+              <div className={styles.scoreInputBox}>
+                <span className={styles.scoreTeamName}>Eq. A</span>
+                <input 
+                  type="number" 
+                  min="0" 
+                  className={styles.scoreInput} 
+                  value={scoreA} 
+                  onChange={e => setScoreA(e.target.value)} 
+                  placeholder="-"
+                />
+              </div>
+              <span className={styles.scoreSeparator}>-</span>
+              <div className={styles.scoreInputBox}>
+                <span className={styles.scoreTeamName}>Eq. B</span>
+                <input 
+                  type="number" 
+                  min="0" 
+                  className={styles.scoreInput} 
+                  value={scoreB} 
+                  onChange={e => setScoreB(e.target.value)} 
+                  placeholder="-"
+                />
+              </div>
+            </div>
           </div>
         </div>
       )}
