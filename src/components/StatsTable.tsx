@@ -15,8 +15,86 @@ export default function StatsTable() {
   const { players, matches } = useAppContext();
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
+  type SortField = 'name' | 'badge' | 'matchesPlayed' | 'wins' | 'winPercentage' | 'bestStreak' | 'worstStreak' | 'currentStreak';
+  const [sortField, setSortField] = useState<SortField | null>(null);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
   const stats = useMemo(() => calculateStats(players, matches), [players, matches]);
+
+  const enrichedStats = useMemo(() => {
+    return stats.map((s, index) => {
+      let badgeLabel = '';
+      let badgeIcon = '';
+      if (s.player.badges && s.player.badges.length > 0) {
+        const badgeCounts: Record<string, number> = {};
+        s.player.badges.forEach(b => {
+          badgeCounts[b.badgeId] = (badgeCounts[b.badgeId] || 0) + 1;
+        });
+        const mostVotedBadgeId = Object.keys(badgeCounts).reduce((a, b) => badgeCounts[a] > badgeCounts[b] ? a : b);
+        const badgeDef = PREDEFINED_BADGES.find(b => b.id === mostVotedBadgeId);
+        if (badgeDef) {
+          badgeLabel = badgeDef.label;
+          badgeIcon = badgeDef.icon;
+        }
+      }
+      return {
+        ...s,
+        originalRank: index,
+        badgeLabel,
+        badgeIcon
+      };
+    });
+  }, [stats]);
+
+  const sortedStats = useMemo(() => {
+    if (!sortField) return enrichedStats;
+
+    return [...enrichedStats].sort((a, b) => {
+      let valA: string | number;
+      let valB: string | number;
+
+      switch (sortField) {
+        case 'name': valA = a.player.name.toLowerCase(); valB = b.player.name.toLowerCase(); break;
+        case 'badge': valA = a.badgeLabel.toLowerCase(); valB = b.badgeLabel.toLowerCase(); break;
+        case 'matchesPlayed': valA = a.matchesPlayed; valB = b.matchesPlayed; break;
+        case 'wins': valA = a.wins; valB = b.wins; break;
+        case 'winPercentage': valA = a.winPercentage; valB = b.winPercentage; break;
+        case 'bestStreak': valA = a.bestStreak; valB = b.bestStreak; break;
+        case 'worstStreak': valA = a.worstStreak; valB = b.worstStreak; break;
+        case 'currentStreak':
+          valA = a.currentStreak.type === 'WIN' ? a.currentStreak.count : a.currentStreak.type === 'LOSS' ? -a.currentStreak.count : 0;
+          valB = b.currentStreak.type === 'WIN' ? b.currentStreak.count : b.currentStreak.type === 'LOSS' ? -b.currentStreak.count : 0;
+          break;
+        default: return 0;
+      }
+
+      if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+      if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [enrichedStats, sortField, sortOrder]);
+
   const maxMatches = useMemo(() => Math.max(...stats.map(s => s.matchesPlayed), 1), [stats]);
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder(field === 'name' || field === 'badge' ? 'asc' : 'desc');
+    }
+  };
+
+  const renderSortHeader = (label: string, field: SortField) => (
+    <th className={styles.th} onClick={() => handleSort(field)} style={{ cursor: 'pointer', userSelect: 'none' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+        {label}
+        <span style={{ fontSize: '0.8rem', opacity: sortField === field ? 1 : 0.3 }}>
+          {sortField === field ? (sortOrder === 'asc' ? '↑' : '↓') : '↕'}
+        </span>
+      </div>
+    </th>
+  );
 
   if (players.length === 0) {
     return (
@@ -33,21 +111,21 @@ export default function StatsTable() {
         <table className={styles.table}>
           <thead className={styles.stickyHead}>
             <tr>
-              <th className={styles.th}>Jugador</th>
-              <th className={styles.th}>Perfil</th>
-              <th className={styles.th}>PJ</th>
-              <th className={styles.th}>G - E - P</th>
-              <th className={styles.th}>% Victoria</th>
-              <th className={styles.th}>Mejor Racha</th>
-              <th className={styles.th}>Peor Racha</th>
-              <th className={styles.th}>Racha Actual</th>
-              <th className={styles.th} style={{ textAlign: 'center' }}>Estadísticas Individuales</th>
+              {renderSortHeader('Jugador', 'name')}
+              {renderSortHeader('Perfil', 'badge')}
+              {renderSortHeader('PJ', 'matchesPlayed')}
+              {renderSortHeader('G - E - P', 'wins')}
+              {renderSortHeader('% Victoria', 'winPercentage')}
+              {renderSortHeader('Mejor Racha', 'bestStreak')}
+              {renderSortHeader('Peor Racha', 'worstStreak')}
+              {renderSortHeader('Racha Actual', 'currentStreak')}
+              <th className={styles.th} style={{ textAlign: 'center' }}>Estadísticas</th>
             </tr>
           </thead>
           <tbody>
-            {stats.map((s, index) => {
-              const isPodio = index < 3;
-              const podioClass = isPodio ? styles[PODIO_CLASSES[index] as keyof typeof styles] : '';
+            {sortedStats.map((s, index) => {
+              const isPodio = s.originalRank < 3;
+              const podioClass = isPodio ? styles[PODIO_CLASSES[s.originalRank] as keyof typeof styles] : '';
               const isEven = index % 2 === 1;
 
               return (
@@ -61,7 +139,7 @@ export default function StatsTable() {
                   <td className={styles.td}>
                     <div className={styles.playerName}>
                       <span className={styles.rankBadge}>
-                        {isPodio ? PODIO_ICONS[index] : `${index + 1}.`}
+                        {isPodio ? PODIO_ICONS[s.originalRank] : `${s.originalRank + 1}.`}
                       </span>
                       {s.player.name}
                     </div>
@@ -69,26 +147,14 @@ export default function StatsTable() {
 
                   {/* Perfil (Most voted badge) */}
                   <td className={styles.td}>
-                    {(() => {
-                      if (!s.player.badges || s.player.badges.length === 0) return <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>-</span>;
-                      
-                      const badgeCounts: Record<string, number> = {};
-                      s.player.badges.forEach(b => {
-                        badgeCounts[b.badgeId] = (badgeCounts[b.badgeId] || 0) + 1;
-                      });
-
-                      const mostVotedBadgeId = Object.keys(badgeCounts).reduce((a, b) => badgeCounts[a] > badgeCounts[b] ? a : b);
-                      const badgeDef = PREDEFINED_BADGES.find(b => b.id === mostVotedBadgeId);
-                      
-                      if (!badgeDef) return <span style={{ color: 'var(--text-secondary)' }}>-</span>;
-                      
-                      return (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} title={`${badgeDef.label} (${badgeCounts[mostVotedBadgeId]} votos)`}>
-                          <span style={{ fontSize: '1.2rem' }}>{badgeDef.icon}</span>
-                          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{badgeDef.label}</span>
-                        </div>
-                      );
-                    })()}
+                    {s.badgeLabel ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} title={`${s.badgeLabel}`}>
+                        <span style={{ fontSize: '1.2rem' }}>{s.badgeIcon}</span>
+                        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{s.badgeLabel}</span>
+                      </div>
+                    ) : (
+                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>-</span>
+                    )}
                   </td>
 
                   {/* PJ con indicador de actividad */}
@@ -102,8 +168,8 @@ export default function StatsTable() {
                           background: s.matchesPlayed / maxMatches > 0.7
                             ? 'var(--accent-primary)'
                             : s.matchesPlayed / maxMatches > 0.4
-                            ? 'var(--warning)'
-                            : 'var(--text-secondary)'
+                              ? 'var(--warning)'
+                              : 'var(--text-secondary)'
                         }}
                       />
                     </div>
@@ -124,8 +190,8 @@ export default function StatsTable() {
                       <span className={styles.winPctText} style={{
                         color: s.winPercentage >= 60 ? 'var(--accent-primary)'
                           : s.winPercentage >= 50 ? '#86efac'
-                          : s.winPercentage >= 35 ? 'var(--warning)'
-                          : 'var(--danger)'
+                            : s.winPercentage >= 35 ? 'var(--warning)'
+                              : 'var(--danger)'
                       }}>
                         {s.winPercentage.toFixed(1)}%
                       </span>
@@ -136,8 +202,8 @@ export default function StatsTable() {
                             width: `${s.winPercentage}%`,
                             background: s.winPercentage >= 60 ? 'var(--accent-primary)'
                               : s.winPercentage >= 50 ? '#86efac'
-                              : s.winPercentage >= 35 ? 'var(--warning)'
-                              : 'var(--danger)'
+                                : s.winPercentage >= 35 ? 'var(--warning)'
+                                  : 'var(--danger)'
                           }}
                         />
                       </div>
