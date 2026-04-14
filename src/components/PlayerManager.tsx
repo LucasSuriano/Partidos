@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { calculateStats } from '@/lib/stats';
+import { PREDEFINED_BADGES } from '@/types';
 import styles from './PlayerManager.module.css';
 
 // Generate a consistent hue from a name string
@@ -19,12 +20,13 @@ function getInitials(name: string): string {
 }
 
 export default function PlayerManager() {
-  const { players, matches, addPlayer, removePlayer, updatePlayer } = useAppContext();
+  const { players, matches, addPlayer, removePlayer, updatePlayer, updatePlayerBadges } = useAppContext();
   const [name, setName] = useState('');
   const [search, setSearch] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [managingBadgesFor, setManagingBadgesFor] = useState<{ id: string, name: string, badges: string[] } | null>(null);
 
   const stats = useMemo(() => calculateStats(players, matches), [players, matches]);
   const maxMatches = useMemo(() => Math.max(...stats.map(s => s.matchesPlayed), 1), [stats]);
@@ -61,6 +63,23 @@ export default function PlayerManager() {
   const handleConfirmDelete = (id: string) => {
     removePlayer(id);
     setConfirmDeleteId(null);
+  };
+
+  const handleToggleBadge = (badgeId: string) => {
+    if (!managingBadgesFor) return;
+    const current = managingBadgesFor.badges;
+    const next = current.includes(badgeId)
+      ? current.filter(b => b !== badgeId)
+      : [...current, badgeId];
+    setManagingBadgesFor({ ...managingBadgesFor, badges: next });
+  };
+
+  const handleSaveBadges = async () => {
+    if (!managingBadgesFor) return;
+    if (updatePlayerBadges) {
+      await updatePlayerBadges(managingBadgesFor.id, managingBadgesFor.badges);
+    }
+    setManagingBadgesFor(null);
   };
 
   // Sort: matches played desc, then alphabetical
@@ -234,6 +253,16 @@ export default function PlayerManager() {
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                       </svg>
                     </button>
+                    <button 
+                      onClick={() => setManagingBadgesFor({ id: player.id, name: player.name, badges: player.badges || [] })} 
+                      className={styles.badgeBtn} 
+                      title="Gestionar insignias"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path d="M12 15l-2 5l9-9l-9-9l2 5h-12v8h12z" />
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                      </svg>
+                    </button>
                     <button
                       onClick={() => handleDeleteClick(player.id)}
                       className={styles.deleteBtn}
@@ -261,6 +290,40 @@ export default function PlayerManager() {
           <p style={{ color: 'var(--text-secondary)' }}>No hay jugadores registrados.</p>
         )}
       </div>
+
+      {/* ── Badges Modal ── */}
+      {managingBadgesFor && (
+        <div className={styles.badgesModalOverlay} onClick={handleSaveBadges}>
+          <div className={styles.badgesModal} onClick={e => e.stopPropagation()}>
+            <div className={styles.badgesHeader}>
+              <div>
+                <h3 className={styles.badgesTitle}>Insignias</h3>
+                <p className={styles.badgesSubtitle}>{managingBadgesFor.name}</p>
+              </div>
+              <button className={styles.badgesCloseBtn} onClick={handleSaveBadges}>
+                ✕
+              </button>
+            </div>
+            
+            <div className={styles.badgesList}>
+              {PREDEFINED_BADGES.map(badge => {
+                const isSelected = managingBadgesFor.badges.includes(badge.id);
+                return (
+                  <div 
+                    key={badge.id}
+                    className={`${styles.badgeItem} ${isSelected ? styles.badgeItemSelected : ''}`}
+                    onClick={() => handleToggleBadge(badge.id)}
+                  >
+                    <span className={styles.badgeIcon}>{badge.icon}</span>
+                    <span className={styles.badgeName}>{badge.label}</span>
+                    <span className={styles.badgeDesc}>{badge.description}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -287,6 +287,24 @@
   border-color: var(--accent-primary);
 }
 
+.badgeBtn {
+  color: var(--warning);
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.15);
+  border-radius: 7px;
+  padding: 5px 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.badgeBtn:hover {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: var(--warning);
+}
+
 .deleteBtn {
   color: var(--danger);
   background: rgba(239, 68, 68, 0.07);
@@ -421,4 +439,128 @@
   color: var(--text-secondary);
   font-size: 0.9rem;
   grid-column: 1 / -1;
+}
+
+/* ── Badges Modal ── */
+.badgesModalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.badgesModal {
+  background: var(--bg-dark);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+  animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.badgesHeader {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--panel-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.badgesTitle {
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.badgesSubtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.badgesCloseBtn {
+  background: rgba(255,255,255,0.05);
+  border: none;
+  color: var(--text-secondary);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--panel-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.badgesCloseBtn:hover {
+  background: rgba(255,255,255,0.1);
+  color: white;
+}
+
+.badgesList {
+  padding: 1.25rem 1.5rem;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.85rem;
+}
+
+.badgeItem {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-md);
+  padding: 1rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  gap: 0.5rem;
+}
+
+.badgeItem:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.15);
+}
+
+.badgeItemSelected {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: var(--accent-primary);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+}
+
+.badgeIcon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.badgeName {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.badgeDesc {
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  line-height: 1.2;
 }
