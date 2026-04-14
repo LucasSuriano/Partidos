@@ -1,7 +1,12 @@
+export type PlayerBadgeVote = {
+  badgeId: string;
+  userId: string;
+};
+
 export type Player = {
   id: string;
   name: string;
-  badges?: string[];
+  badges?: PlayerBadgeVote[];
 };
 
 export const PREDEFINED_BADGES = [

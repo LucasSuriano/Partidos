@@ -10,7 +10,7 @@ interface AppContextProps {
   addPlayer: (name: string) => Promise<void>;
   removePlayer: (id: string) => Promise<void>;
   updatePlayer: (id: string, newName: string) => Promise<void>;
-  updatePlayerBadges: (id: string, badges: string[]) => Promise<void>;
+  togglePlayerBadge: (playerId: string, badgeId: string, userId: string) => Promise<void>;
   addMatch: (date: string, teamA: string[], teamB: string[], result: MatchResult, scoreA?: number, scoreB?: number) => Promise<void>;
   removeMatch: (id: string) => Promise<void>;
   updateMatchResult: (id: string, result: MatchResult, scoreA?: number, scoreB?: number) => Promise<void>;
@@ -38,11 +38,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       if (playersData) {
         const formattedPlayers: Player[] = playersData.map(p => {
-          const pBadges = badgesData ? badgesData.filter(b => b.player_id === p.id).map(b => b.badge_id) : [];
+          const pBadges = badgesData 
+            ? badgesData.filter(b => b.player_id === p.id).map(b => ({ badgeId: b.badge_id, userId: b.user_id })) 
+            : [];
           return {
             id: p.id,
             name: p.name,
-            badges: p.badges || pBadges // backward compat / default
+            badges: pBadges
           };
         });
         setPlayers(formattedPlayers);
@@ -92,19 +94,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await supabase.from('players').update({ name: newName }).eq('id', id);
   };
 
-  const updatePlayerBadges = async (id: string, badges: string[]) => {
-    // Optimistic update
-    setPlayers(prev => prev.map(p => p.id === id ? { ...p, badges } : p));
-    
-    // First remove all existing badges for the player
-    const { error: delError } = await supabase.from('player_badges').delete().eq('player_id', id);
-    if (delError) console.error("Error deleting old badges", delError);
+  const togglePlayerBadge = async (playerId: string, badgeId: string, userId: string) => {
+    const player = players.find(p => p.id === playerId);
+    if (!player) return;
 
-    // Then insert the new ones if any
-    if (badges.length > 0) {
-      const inserts = badges.map(badge_id => ({ player_id: id, badge_id }));
-      const { error: insError } = await supabase.from('player_badges').insert(inserts);
-      if (insError) console.error("Error inserting new badges", insError);
+    const existingBadges = player.badges || [];
+    const hasVoted = existingBadges.some(b => b.badgeId === badgeId && b.userId === userId);
+
+    const newBadges = hasVoted
+      ? existingBadges.filter(b => !(b.badgeId === badgeId && b.userId === userId))
+      : [...existingBadges, { badgeId, userId }];
+
+    // Optimistic update
+    setPlayers(prev => prev.map(p => p.id === playerId ? { ...p, badges: newBadges } : p));
+    
+    if (hasVoted) {
+      await supabase.from('player_badges').delete().match({ player_id: playerId, badge_id: badgeId, user_id: userId });
+    } else {
+      await supabase.from('player_badges').insert([{ player_id: playerId, badge_id: badgeId, user_id: userId }]);
     }
   };
 
@@ -145,7 +152,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   if (!isLoaded) return null; // Prevent hydration mismatch by rendering only on client
 
   return (
-    <AppContext.Provider value={{ players, matches, addPlayer, removePlayer, updatePlayer, updatePlayerBadges, addMatch, removeMatch, updateMatchResult }}>
+    <AppContext.Provider value={{ players, matches, addPlayer, removePlayer, updatePlayer, togglePlayerBadge, addMatch, removeMatch, updateMatchResult }}>
       {children}
     </AppContext.Provider>
   );

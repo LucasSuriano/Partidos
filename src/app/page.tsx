@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { id: 'STATS',      label: '📊 Estadísticas' },
   { id: 'HISTORY',   label: '🗂️ Historial' },
   { id: 'SIMULATOR', label: '⚽ Simulación' },
+  { id: 'PLAYERS',   label: '👥 Jugadores' },
 ] as const;
 
 type View = 'STATS' | 'NEW_MATCH' | 'PLAYERS' | 'HISTORY' | 'SIMULATOR';
@@ -65,14 +66,6 @@ export default function Home() {
                 {item.label}
               </button>
             ))}
-            {isAdmin && (
-              <button
-                className={`${styles.navTab} ${view === 'PLAYERS' ? styles.navTabActive : ''}`}
-                onClick={() => setView('PLAYERS')}
-              >
-                👥 Jugadores
-              </button>
-            )}
           </nav>
 
           {/* Right section */}
@@ -123,7 +116,7 @@ export default function Home() {
         {view === 'HISTORY'   && <MatchHistory />}
         {view === 'SIMULATOR' && <TeamSimulator />}
         {view === 'NEW_MATCH' && isAdmin && <MatchBuilder onComplete={() => setView('STATS')} />}
-        {view === 'PLAYERS'   && isAdmin && <PlayerManager />}
+        {view === 'PLAYERS'   && <PlayerManager />}
       </main>
     </div>
   );

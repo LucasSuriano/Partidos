@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import { calculateStats } from '@/lib/stats';
 import { PREDEFINED_BADGES } from '@/types';
 import styles from './PlayerManager.module.css';
@@ -20,13 +21,18 @@ function getInitials(name: string): string {
 }
 
 export default function PlayerManager() {
-  const { players, matches, addPlayer, removePlayer, updatePlayer, updatePlayerBadges } = useAppContext();
+  const { players, matches, addPlayer, removePlayer, updatePlayer, togglePlayerBadge } = useAppContext();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+
   const [name, setName] = useState('');
   const [search, setSearch] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [managingBadgesFor, setManagingBadgesFor] = useState<{ id: string, name: string, badges: string[] } | null>(null);
+  
+  const [managingBadgesForId, setManagingBadgesForId] = useState<string | null>(null);
+  const managingBadgesFor = useMemo(() => players.find(p => p.id === managingBadgesForId) || null, [players, managingBadgesForId]);
 
   const stats = useMemo(() => calculateStats(players, matches), [players, matches]);
   const maxMatches = useMemo(() => Math.max(...stats.map(s => s.matchesPlayed), 1), [stats]);
@@ -65,21 +71,15 @@ export default function PlayerManager() {
     setConfirmDeleteId(null);
   };
 
-  const handleToggleBadge = (badgeId: string) => {
-    if (!managingBadgesFor) return;
-    const current = managingBadgesFor.badges;
-    const next = current.includes(badgeId)
-      ? current.filter(b => b !== badgeId)
-      : [...current, badgeId];
-    setManagingBadgesFor({ ...managingBadgesFor, badges: next });
+  const handleToggleBadge = async (badgeId: string) => {
+    if (!managingBadgesForId || !user) return;
+    if (togglePlayerBadge) {
+      await togglePlayerBadge(managingBadgesForId, badgeId, user.username);
+    }
   };
 
-  const handleSaveBadges = async () => {
-    if (!managingBadgesFor) return;
-    if (updatePlayerBadges) {
-      await updatePlayerBadges(managingBadgesFor.id, managingBadgesFor.badges);
-    }
-    setManagingBadgesFor(null);
+  const handleCloseBadges = () => {
+    setManagingBadgesForId(null);
   };
 
   // Sort: matches played desc, then alphabetical
@@ -117,19 +117,21 @@ export default function PlayerManager() {
         </div>
       </div>
 
-      {/* ── Add form ── */}
-      <form onSubmit={handleAdd} className={`${styles.addForm} glass-panel`}>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Nombre del nuevo jugador"
-          className={styles.input}
-        />
-        <button type="submit" disabled={!name.trim()} className={styles.btn}>
-          Agregar
-        </button>
-      </form>
+      {/* ── Add form (Admin Only) ── */}
+      {isAdmin && (
+        <form onSubmit={handleAdd} className={`${styles.addForm} glass-panel`}>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Nombre del nuevo jugador"
+            className={styles.input}
+          />
+          <button type="submit" disabled={!name.trim()} className={styles.btn}>
+            Agregar
+          </button>
+        </form>
+      )}
 
       {/* ── Search ── */}
       {players.length > 4 && (
@@ -247,35 +249,39 @@ export default function PlayerManager() {
 
                   {/* Actions */}
                   <div className={styles.cardActions}>
-                    <button onClick={() => handleStartEdit(player)} className={styles.editBtn} title="Editar nombre">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                      </svg>
-                    </button>
+                    {isAdmin && (
+                      <button onClick={() => handleStartEdit(player)} className={styles.editBtn} title="Editar nombre">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                      </button>
+                    )}
                     <button 
-                      onClick={() => setManagingBadgesFor({ id: player.id, name: player.name, badges: player.badges || [] })} 
+                      onClick={() => setManagingBadgesForId(player.id)} 
                       className={styles.badgeBtn} 
-                      title="Gestionar insignias"
+                      title="Votar insignias"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                         <path d="M12 15l-2 5l9-9l-9-9l2 5h-12v8h12z" />
                         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                       </svg>
                     </button>
-                    <button
-                      onClick={() => handleDeleteClick(player.id)}
-                      className={styles.deleteBtn}
-                      disabled={hasMatches}
-                      title={hasMatches ? 'No se puede eliminar: tiene partidos' : 'Eliminar jugador'}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <polyline points="3 6 5 6 21 6" />
-                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                        <path d="M10 11v6M14 11v6" />
-                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                      </svg>
-                    </button>
+                    {isAdmin && (
+                      <button
+                        onClick={() => handleDeleteClick(player.id)}
+                        className={styles.deleteBtn}
+                        disabled={hasMatches}
+                        title={hasMatches ? 'No se puede eliminar: tiene partidos' : 'Eliminar jugador'}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                          <path d="M10 11v6M14 11v6" />
+                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                        </svg>
+                      </button>
+                    )}
                   </div>
                 </>
               )}
@@ -293,30 +299,38 @@ export default function PlayerManager() {
 
       {/* ── Badges Modal ── */}
       {managingBadgesFor && (
-        <div className={styles.badgesModalOverlay} onClick={handleSaveBadges}>
+        <div className={styles.badgesModalOverlay} onClick={handleCloseBadges}>
           <div className={styles.badgesModal} onClick={e => e.stopPropagation()}>
             <div className={styles.badgesHeader}>
               <div>
-                <h3 className={styles.badgesTitle}>Insignias</h3>
+                <h3 className={styles.badgesTitle}>Votar Insignias</h3>
                 <p className={styles.badgesSubtitle}>{managingBadgesFor.name}</p>
               </div>
-              <button className={styles.badgesCloseBtn} onClick={handleSaveBadges}>
+              <button className={styles.badgesCloseBtn} onClick={handleCloseBadges}>
                 ✕
               </button>
             </div>
             
             <div className={styles.badgesList}>
               {PREDEFINED_BADGES.map(badge => {
-                const isSelected = managingBadgesFor.badges.includes(badge.id);
+                const badgeVotes = managingBadgesFor.badges?.filter(b => b.badgeId === badge.id) || [];
+                const voteCount = badgeVotes.length;
+                const iVoted = badgeVotes.some(b => b.userId === user?.username);
+
                 return (
                   <div 
                     key={badge.id}
-                    className={`${styles.badgeItem} ${isSelected ? styles.badgeItemSelected : ''}`}
+                    className={`${styles.badgeItem} ${iVoted ? styles.badgeItemSelected : ''}`}
                     onClick={() => handleToggleBadge(badge.id)}
                   >
                     <span className={styles.badgeIcon}>{badge.icon}</span>
-                    <span className={styles.badgeName}>{badge.label}</span>
-                    <span className={styles.badgeDesc}>{badge.description}</span>
+                    <div className={styles.badgeTextCol}>
+                      <span className={styles.badgeName}>
+                        {badge.label}
+                        {voteCount > 0 && <span className={styles.voteBadge}>{voteCount}</span>}
+                      </span>
+                      <span className={styles.badgeDesc}>{badge.description}</span>
+                    </div>
                   </div>
                 );
               })}

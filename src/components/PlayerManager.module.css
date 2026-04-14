@@ -564,3 +564,20 @@
   color: var(--text-secondary);
   line-height: 1.2;
 }
+
+.badgeTextCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.voteBadge {
+  background: var(--accent-primary);
+  color: #0a1f1a;
+  padding: 0.1rem 0.4rem;
+  border-radius: 12px;
+  font-size: 0.65rem;
+  margin-left: 0.3rem;
+  font-weight: 800;
+}

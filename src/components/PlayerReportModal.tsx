@@ -93,22 +93,38 @@ export default function PlayerReportModal({ playerId, onClose }: PlayerReportMod
               </span>
             </div>
             <h2 className={styles.headerTitle}>{report.player.name}</h2>
-            {report.player.badges && report.player.badges.length > 0 && (
-              <div className={styles.badgesContainer}>
-                {report.player.badges.map((badgeId, index) => {
-                  const badgeDef = PREDEFINED_BADGES.find(b => b.id === badgeId);
-                  if (!badgeDef) return null;
-                  return (
-                    <div key={badgeId} className={styles.badgeHex} style={{ animationDelay: `${index * 0.1}s` }} title={badgeDef.description}>
-                      <div className={styles.badgeHexIconWrapper}>
-                        <span className={styles.badgeHexIcon}>{badgeDef.icon}</span>
+            {(() => {
+              if (!report.player.badges || report.player.badges.length === 0) return null;
+              
+              // Agrupar y sumar votos
+              const badgeCounts: Record<string, number> = {};
+              report.player.badges.forEach(b => {
+                badgeCounts[b.badgeId] = (badgeCounts[b.badgeId] || 0) + 1;
+              });
+
+              const sortedBadges = Object.entries(badgeCounts)
+                .sort((a, b) => b[1] - a[1]) // de mayor a menor
+                .map(([badgeId]) => badgeId);
+
+              return (
+                <div className={styles.badgesContainer}>
+                  {sortedBadges.map((badgeId, index) => {
+                    const badgeDef = PREDEFINED_BADGES.find(b => b.id === badgeId);
+                    if (!badgeDef) return null;
+                    const count = badgeCounts[badgeId];
+                    return (
+                      <div key={badgeId} className={styles.badgeHex} style={{ animationDelay: `${index * 0.1}s` }} title={`${badgeDef.description} (${count} votos)`}>
+                        <div className={styles.badgeHexIconWrapper}>
+                          <span className={styles.badgeHexIcon}>{badgeDef.icon}</span>
+                          <span className={styles.badgeVoteCount}>{count}</span>
+                        </div>
+                        <span className={styles.badgeHexLabel}>{badgeDef.label}</span>
                       </div>
-                      <span className={styles.badgeHexLabel}>{badgeDef.label}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
           <button className={styles.closeButton} onClick={onClose}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

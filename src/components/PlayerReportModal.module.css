@@ -116,6 +116,20 @@
   z-index: 1;
 }
 
+.badgeVoteCount {
+  position: absolute;
+  top: -4px;
+  right: -8px;
+  background: var(--accent-primary);
+  color: #0d1220;
+  font-weight: 800;
+  font-size: 0.65rem;
+  padding: 2px 5px;
+  border-radius: 12px;
+  z-index: 2;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+}
+
 .badgeHexLabel {
   font-size: 0.65rem;
   font-weight: 800;
