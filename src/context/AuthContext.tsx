@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, supabaseNoAuth } from '../lib/supabase';
 import styles from '../components/Login.module.css';
 
 export type Role = 'admin' | 'user';
@@ -15,6 +15,7 @@ interface AuthContextProps {
   user: User | null;
   login: (username: string, password: string) => Promise<boolean>;
   loginWithGoogle: () => Promise<void>;
+  register: (username: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
 }
 
@@ -31,7 +32,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(parsedUser); // Optimistic UI
       
       // Validación en segundo plano para evitar usuarios borrados en caché
-      supabase
+      supabaseNoAuth
         .from('users')
         .select('username')
         .eq('username', parsedUser.username)
@@ -111,7 +112,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const p = pass.trim();
     
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseNoAuth
         .from('users')
         .select('*')
         .eq('username', u)
@@ -133,6 +134,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     return false;
+  };
+
+  const register = async (username: string, pass: string): Promise<boolean> => {
+    const u = username.trim();
+    const p = pass.trim();
+    
+    try {
+      const { error } = await supabaseNoAuth
+        .from('users')
+        .insert([{
+          username: u,
+          password: p,
+          role: 'user',
+          last_sign_in_at: new Date().toISOString()
+        }]);
+        
+      if (error) {
+        console.error("Error registrando usuario:", error);
+        return false;
+      }
+      
+      // Auto-login después de registrar satisfactoriamente
+      return await login(u, p);
+    } catch (e) {
+      console.error(e);
+      return false;
+    }
   };
 
   const loginWithGoogle = async () => {
@@ -174,7 +202,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, loginWithGoogle, logout }}>
+    <AuthContext.Provider value={{ user, login, loginWithGoogle, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

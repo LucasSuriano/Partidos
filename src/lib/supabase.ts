@@ -8,8 +8,21 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Faltan configurar las variables de entorno de Supabase.');
 }
 
-// Creamos y exportamos el cliente de Supabase
+// Cliente principal (usado para Login con Google y mantener sesión)
 export const supabase = createClient(
   supabaseUrl ?? '',
   supabaseAnonKey ?? ''
+);
+
+// Cliente sin Auth (usado para el login manual y consultas sueltas, esquiva de fallos de caché)
+export const supabaseNoAuth = createClient(
+  supabaseUrl ?? '',
+  supabaseAnonKey ?? '',
+  {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false
+    }
+  }
 );
