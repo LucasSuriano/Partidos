@@ -5,6 +5,7 @@ import { useAppContext } from '@/context/AppContext';
 import { calculateStats } from '@/lib/stats';
 import styles from './StatsTable.module.css';
 import PlayerReportModal from './PlayerReportModal';
+import { PREDEFINED_BADGES } from '@/types';
 
 const PODIO_ICONS = ['🥇', '🥈', '🥉'];
 const PODIO_CLASSES = ['podioGold', 'podioSilver', 'podioBronze'];
@@ -33,6 +34,7 @@ export default function StatsTable() {
           <thead className={styles.stickyHead}>
             <tr>
               <th className={styles.th}>Jugador</th>
+              <th className={styles.th}>Perfil</th>
               <th className={styles.th}>PJ</th>
               <th className={styles.th}>G - E - P</th>
               <th className={styles.th}>% Victoria</th>
@@ -63,6 +65,30 @@ export default function StatsTable() {
                       </span>
                       {s.player.name}
                     </div>
+                  </td>
+
+                  {/* Perfil (Most voted badge) */}
+                  <td className={styles.td}>
+                    {(() => {
+                      if (!s.player.badges || s.player.badges.length === 0) return <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>-</span>;
+                      
+                      const badgeCounts: Record<string, number> = {};
+                      s.player.badges.forEach(b => {
+                        badgeCounts[b.badgeId] = (badgeCounts[b.badgeId] || 0) + 1;
+                      });
+
+                      const mostVotedBadgeId = Object.keys(badgeCounts).reduce((a, b) => badgeCounts[a] > badgeCounts[b] ? a : b);
+                      const badgeDef = PREDEFINED_BADGES.find(b => b.id === mostVotedBadgeId);
+                      
+                      if (!badgeDef) return <span style={{ color: 'var(--text-secondary)' }}>-</span>;
+                      
+                      return (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} title={`${badgeDef.label} (${badgeCounts[mostVotedBadgeId]} votos)`}>
+                          <span style={{ fontSize: '1.2rem' }}>{badgeDef.icon}</span>
+                          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{badgeDef.label}</span>
+                        </div>
+                      );
+                    })()}
                   </td>
 
                   {/* PJ con indicador de actividad */}
