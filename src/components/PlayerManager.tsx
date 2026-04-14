@@ -74,7 +74,7 @@ export default function PlayerManager() {
   const handleToggleBadge = async (badgeId: string) => {
     if (!managingBadgesForId || !user) return;
     if (togglePlayerBadge) {
-      await togglePlayerBadge(managingBadgesForId, badgeId, user.username);
+      await togglePlayerBadge(managingBadgesForId, badgeId, user.id);
     }
   };
 
@@ -315,7 +315,7 @@ export default function PlayerManager() {
               {PREDEFINED_BADGES.map(badge => {
                 const badgeVotes = managingBadgesFor.badges?.filter(b => b.badgeId === badge.id) || [];
                 const voteCount = badgeVotes.length;
-                const iVoted = badgeVotes.some(b => b.userId === user?.username);
+                const iVoted = badgeVotes.some(b => b.userId === user?.id);
 
                 return (
                   <div 

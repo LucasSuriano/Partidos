@@ -7,6 +7,7 @@ import styles from '../components/Login.module.css';
 export type Role = 'admin' | 'user';
 
 export interface User {
+  id: string;
   username: string;
   role: Role;
 }
@@ -51,18 +52,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const email = session.user.email;
         
         let assignedRole: Role = 'user';
+        let assignedId: string = session.user.id;
         
         if (email) {
           try {
-            const { data, error } = await supabase
+            const { data, error } = await supabaseNoAuth
               .from('users')
-              .select('role')
+              .select('id, role')
               .eq('username', email);
               
             if (!error && data && data.length > 0) {
               assignedRole = data[0].role as Role;
+              assignedId = data[0].id;
               // Disparamos la actualización en segundo plano (SIN AWAIT) para no congelar la pantalla del usuario
-              supabase.from('users').update({
+              supabaseNoAuth.from('users').update({
                 last_sign_in_at: new Date().toISOString(),
                 full_name: name,
                 avatar_url: session.user.user_metadata?.avatar_url || ''
@@ -71,21 +74,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               });
               
             } else if (!error && (!data || data.length === 0)) {
-              // Si no existe, lo insertamos con todos los campos profesionales
-              const { error: insertError } = await supabase.from('users').insert([{
+              // Si no existe, lo insertamos con todos los campos profesionales y tomamos su id
+              const { data: insertData, error: insertError } = await supabaseNoAuth.from('users').insert([{
                 username: email,
                 password: 'google-oauth',
                 role: 'user',
                 full_name: name,
                 avatar_url: session.user.user_metadata?.avatar_url || '',
                 last_sign_in_at: new Date().toISOString()
-              }]);
+              }]).select('id');
               
               if (insertError) {
                 console.error("Fallo la inserción en Supabase:", insertError);
-                if (process.env.NODE_ENV === 'development') {
-                   console.log("Error detallado de inserción:", JSON.stringify(insertError));
-                }
+              } else if (insertData && insertData.length > 0) {
+                assignedId = insertData[0].id;
               }
             }
           } catch (err) {
@@ -93,7 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
         
-        setUser({ username: name, role: assignedRole });
+        setUser({ id: assignedId, username: name, role: assignedRole });
       } else if (event === 'SIGNED_OUT') {
         if (!localStorage.getItem('auth_user')) {
           setUser(null);
@@ -124,7 +126,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       if (data && data.length === 1) {
-        const loggedInUser: User = { username: data[0].username, role: data[0].role as Role };
+        const loggedInUser: User = { id: data[0].id, username: data[0].username, role: data[0].role as Role };
         setUser(loggedInUser);
         localStorage.setItem('auth_user', JSON.stringify(loggedInUser));
         return true;
