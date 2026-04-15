@@ -77,7 +77,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               // Si no existe, lo insertamos con todos los campos profesionales y tomamos su id
               const { data: insertData, error: insertError } = await supabaseNoAuth.from('users').insert([{
                 username: email,
-                password: 'google-oauth',
+                password: null as any,
                 role: 'user',
                 full_name: name,
                 avatar_url: session.user.user_metadata?.avatar_url || '',
@@ -113,6 +113,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const u = username.trim();
     const p = pass.trim();
     
+    if (!p) return false;
+    
     try {
       const { data, error } = await supabaseNoAuth
         .from('users')
@@ -141,6 +143,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (username: string, pass: string): Promise<boolean> => {
     const u = username.trim();
     const p = pass.trim();
+    
+    if (!p) return false;
     
     try {
       const { error } = await supabaseNoAuth
