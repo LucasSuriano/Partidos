@@ -9,54 +9,14 @@ export type Player = {
   badges?: PlayerBadgeVote[];
 };
 
-export const PREDEFINED_BADGES = [
-  // --- Positivas ---
-  { id: 'goleador', label: 'Goleador', icon: '⚽', description: 'Olfato de gol intacto' },
-  { id: 'muro', label: 'Muro', icon: '🧱', description: 'Impasable en la defensa' },
-  { id: 'asistidor', label: 'Asistidor', icon: '👟', description: 'Siempre da el pase gol' },
-  { id: 'mvp', label: 'MVP', icon: '🌟', description: 'Suele ser el mejor de la cancha' },
-  { id: 'francotirador', label: 'Francotirador', icon: '🎯', description: 'Pega tiros libres al ángulo' },
-  { id: 'pulpo', label: 'Pulpo', icon: '🐙', description: 'Recupera todas las pelotas' },
-  { id: 'motorcito', label: 'Motorcito', icon: '🔋', description: 'Tiene 3 pulmones, no para' },
-  { id: 'arquero_estrella', label: 'Muralla', icon: '🧤', description: 'Ataja hasta lo inatajable' },
-  { id: 'magia', label: 'El 10', icon: '🪄', description: 'Pisa la pelota y hace magia' },
-  { id: 'estratega', label: 'Estratega', icon: '🧠', description: 'Juega con la cabeza levantada' },
-  { id: 'fair_play', label: 'Fair Play', icon: '🤝', description: 'Juega limpio, cero faltas' },
-  { id: 'lirico', label: 'Lírico', icon: '🎩', description: 'Espectáculo puro, lujos y tacos' },
-  { id: 'todoterreno', label: 'Todoterreno', icon: '🚜', description: 'Juega bien en cualquier posición' },
-  { id: 'capitan', label: 'El Capi', icon: '©️', description: 'Ordena al equipo, voz de mando' },
-  { id: 'correcaminos', label: 'Correcaminos', icon: '💨', description: 'Pique corto intratable, inalcanzable' },
-  { id: 'cirujano', label: 'Cirujano', icon: '🪡', description: 'Pases filtrados milimétricos al pie' },
-  { id: 'gladiador', label: 'Gladiador', icon: '🛡️', description: 'Deja la vida en cada pelota dividida' },
-  { id: 'tiempista', label: 'Tiempista', icon: '⌚', description: 'Nunca corre demás, siempre bien ubicado' },
-  { id: 'elegante', label: 'Elegante', icon: '👔', description: 'Sale jugando como si estuviera de traje' },
-  { id: 'salvavidas', label: 'Salvavidas', icon: '🛟', description: 'Te salva sacándola en la línea de gol' },
-
-  // --- Negativas / Cómicas ---
-  { id: 'lesiones', label: 'De Cristal', icon: '🚑', description: 'Se lesiona con el viento' },
-  { id: 'rustico', label: 'Rústico', icon: '🪓', description: 'Pega de abajo y de arriba' },
-  { id: 'fantasma', label: 'Fantasma', icon: '👻', description: 'Desaparece en partidos importantes' },
-  { id: 'calenton', label: 'Calentón', icon: '🤬', description: 'Se enoja muy rápido' },
-  { id: 'trotamundos', label: 'Trotamundos', icon: '🚶‍♂️', description: 'Juega caminando permanentemente' },
-  { id: 'patadura', label: 'Patadura', icon: '🪵', description: 'Poca técnica con el balón' },
-  { id: 'comilon', label: 'Comilón', icon: '🍔', description: 'No suelta la pelota ni loco' },
-  { id: 'lloron', label: 'Llorón', icon: '😭', description: 'Se queja por todo, pide VAR' },
-  { id: 'llegatarde', label: 'Llega Tarde', icon: '⏱️', description: 'Cae siempre cuando ya armamos' },
-  { id: 'vendehumo', label: 'Vendehumo', icon: '💨', description: 'Mucha facha, poco fútbol' },
-  { id: 'calesita', label: 'Calesita', icon: '🎠', description: 'Da mil vueltas y la pierde' },
-  { id: 'mantequilla', label: 'Manos Flojas', icon: '🧈', description: 'Se le resbala todo (o ataja mal)' },
-  { id: 'piscinero', label: 'Piscinero', icon: '🤿', description: 'Al mínimo roce se tira pidiendo falta' },
-  { id: 'piernabrava', label: 'Terminator', icon: '🦾', description: 'Entra a romper y pide disculpas' },
-  { id: 'abeja', label: 'Abeja', icon: '🐝', description: 'Primer pique y muere (se queda sin aire)' },
-  { id: 'estatua', label: 'Estatua', icon: '🗿', description: 'Clavado en el piso, no se muestra para el pase' },
-  { id: 'bocon', label: 'Bocón', icon: '🗣️', description: 'Habla más de lo que juega' },
-  { id: 'cazagoles', label: 'Cazagoles', icon: '🎣', description: 'Pescador, empuja la pelota en la línea' },
-  { id: 'carnicero', label: 'Carnicero', icon: '🥩', description: 'Donde no llega con el fútbol corto, llega con la patada' },
-  { id: 'botinero', label: 'Botinero', icon: '🤑', description: 'Trae los botines fluorescentes más caros pero no rinde' },
-  { id: 'ansioso', label: 'Ansioso', icon: '🚀', description: 'Recibe y patea desde mitad de cancha cerrando los ojos' },
-  { id: 'lagunero', label: 'Lagunero', icon: '🛶', description: 'Juega 5 minutos como crack y desaparece 15' },
-  { id: 'tribunero', label: 'Tribunero', icon: '🎪', description: 'Tira lujos innecesarios en la defensa y te hace sufrir' }
-];
+export type Badge = {
+  id: string;
+  slug: string;
+  label: string;
+  icon: string;
+  description: string;
+  category: string;
+};
 
 export type MatchResult = 'A_WIN' | 'B_WIN' | 'DRAW';
 

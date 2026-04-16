@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { calculateStats } from '@/lib/stats';
-import { PREDEFINED_BADGES } from '@/types';
 import styles from './PlayerManager.module.css';
 
 // Generate a consistent hue from a name string
@@ -21,7 +20,7 @@ function getInitials(name: string): string {
 }
 
 export default function PlayerManager() {
-  const { players, matches, addPlayer, removePlayer, updatePlayer, togglePlayerBadge } = useAppContext();
+  const { players, matches, badges, addPlayer, removePlayer, updatePlayer, togglePlayerBadge } = useAppContext();
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
 
@@ -312,7 +311,7 @@ export default function PlayerManager() {
             </div>
             
             <div className={styles.badgesList}>
-              {PREDEFINED_BADGES.map(badge => {
+              {badges.map(badge => {
                 const badgeVotes = managingBadgesFor.badges?.filter(b => b.badgeId === badge.id) || [];
                 const voteCount = badgeVotes.length;
                 const iVoted = badgeVotes.some(b => b.userId === user?.id);

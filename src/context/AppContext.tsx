@@ -1,12 +1,13 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Player, Match, MatchResult } from '../types';
+import { Player, Match, MatchResult, Badge } from '../types';
 import { supabase } from '../lib/supabase';
 
 interface AppContextProps {
   players: Player[];
   matches: Match[];
+  badges: Badge[];
   addPlayer: (name: string) => Promise<void>;
   removePlayer: (id: string) => Promise<void>;
   updatePlayer: (id: string, newName: string) => Promise<void>;
@@ -21,30 +22,39 @@ const AppContext = createContext<AppContextProps | undefined>(undefined);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
+  const [badges, setBadges] = useState<Badge[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
+      // Fetch badges definition first
+      const { data: badgesDefData, error: badgesDefError } = await supabase.from('badges').select('*');
+      if (badgesDefError) {
+        console.error("Error loading badge definitions:", badgesDefError);
+      }
+      if (badgesDefData) {
+        setBadges(badgesDefData);
+      }
+
       // Fetch players
       const { data: playersData, error: playersError } = await supabase.from('players').select('*');
       if (playersError) console.error("Error loading players:", playersError);
 
-      // Fetch player badges
-      const { data: badgesData, error: badgesError } = await supabase.from('player_badges').select('*');
-      if (badgesError && badgesError.code !== '42P01') {
-        // Ignore 42P01 (relation does not exist) until they create the table
-        console.error("Error loading badges:", badgesError);
+      // Fetch player badges (votes)
+      const { data: votesData, error: votesError } = await supabase.from('player_badges').select('*');
+      if (votesError && votesError.code !== '42P01') {
+        console.error("Error loading votes:", votesError);
       }
 
       if (playersData) {
         const formattedPlayers: Player[] = playersData.map(p => {
-          const pBadges = badgesData 
-            ? badgesData.filter(b => b.player_id === p.id).map(b => ({ badgeId: b.badge_id, userId: b.user_id })) 
+          const pVotes = votesData 
+            ? votesData.filter(v => v.player_id === p.id).map(v => ({ badgeId: v.badge_id, userId: v.user_id })) 
             : [];
           return {
             id: p.id,
             name: p.name,
-            badges: pBadges
+            badges: pVotes
           };
         });
         setPlayers(formattedPlayers);
@@ -54,7 +64,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const { data: matchesData, error: matchesError } = await supabase.from('matches').select('*').order('date', { ascending: false });
       if (matchesError) console.error("Error loading matches:", matchesError);
       if (matchesData) {
-        // Map database fields to our frontend type
         const formattedMatches: Match[] = matchesData.map(m => ({
           id: m.id,
           date: m.date,
@@ -162,7 +171,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   if (!isLoaded) return null; // Prevent hydration mismatch by rendering only on client
 
   return (
-    <AppContext.Provider value={{ players, matches, addPlayer, removePlayer, updatePlayer, togglePlayerBadge, addMatch, removeMatch, updateMatchResult }}>
+    <AppContext.Provider value={{ players, matches, badges, addPlayer, removePlayer, updatePlayer, togglePlayerBadge, addMatch, removeMatch, updateMatchResult }}>
       {children}
     </AppContext.Provider>
   );

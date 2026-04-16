@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { getPlayerReport } from '@/lib/stats';
 import styles from './PlayerReportModal.module.css';
-import { RelationStats, PREDEFINED_BADGES } from '@/types';
+import { RelationStats } from '@/types';
 
 interface PlayerReportModalProps {
   playerId: string;
@@ -12,7 +12,7 @@ interface PlayerReportModalProps {
 }
 
 export default function PlayerReportModal({ playerId, onClose }: PlayerReportModalProps) {
-  const { players, matches } = useAppContext();
+  const { players, matches, badges } = useAppContext();
 
   const report = useMemo(() => {
     try { return getPlayerReport(playerId, players, matches); }
@@ -109,7 +109,7 @@ export default function PlayerReportModal({ playerId, onClose }: PlayerReportMod
               return (
                 <div className={styles.badgesContainer}>
                   {sortedBadges.map((badgeId, index) => {
-                    const badgeDef = PREDEFINED_BADGES.find(b => b.id === badgeId);
+                    const badgeDef = badges.find(b => b.id === badgeId);
                     if (!badgeDef) return null;
                     const count = badgeCounts[badgeId];
                     return (

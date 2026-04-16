@@ -5,14 +5,13 @@ import { useAppContext } from '@/context/AppContext';
 import { calculateStats } from '@/lib/stats';
 import styles from './StatsTable.module.css';
 import PlayerReportModal from './PlayerReportModal';
-import { PREDEFINED_BADGES } from '@/types';
 
 const PODIO_ICONS = ['🥇', '🥈', '🥉'];
 const PODIO_CLASSES = ['podioGold', 'podioSilver', 'podioBronze'];
 
 
 export default function StatsTable() {
-  const { players, matches } = useAppContext();
+  const { players, matches, badges } = useAppContext();
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
   type SortField = 'name' | 'badge' | 'matchesPlayed' | 'wins' | 'winPercentage' | 'bestStreak' | 'worstStreak' | 'currentStreak';
@@ -31,7 +30,7 @@ export default function StatsTable() {
           badgeCounts[b.badgeId] = (badgeCounts[b.badgeId] || 0) + 1;
         });
         const mostVotedBadgeId = Object.keys(badgeCounts).reduce((a, b) => badgeCounts[a] > badgeCounts[b] ? a : b);
-        const badgeDef = PREDEFINED_BADGES.find(b => b.id === mostVotedBadgeId);
+        const badgeDef = badges.find(b => b.id === mostVotedBadgeId);
         if (badgeDef) {
           badgeLabel = badgeDef.label;
           badgeIcon = badgeDef.icon;
