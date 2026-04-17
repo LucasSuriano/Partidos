@@ -26,3 +26,22 @@ export const supabaseNoAuth = createClient(
     }
   }
 );
+
+/**
+ * Crea un cliente Supabase con la service_role key.
+ * ⚠️ SOLO usar en API routes (server-side). Nunca importar desde componentes client-side.
+ * La service_role bypasea RLS completamente — tiene acceso total.
+ */
+export function createServiceClient() {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceRoleKey || serviceRoleKey === 'PEGAR_SERVICE_ROLE_KEY_AQUI') {
+    console.error('⚠️ SUPABASE_SERVICE_ROLE_KEY no configurada en .env.local');
+  }
+  return createClient(supabaseUrl ?? '', serviceRoleKey ?? '', {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false
+    }
+  });
+}

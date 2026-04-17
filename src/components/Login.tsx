@@ -38,12 +38,14 @@ export default function Login() {
       // Esperamos que termine de loguear o que pasen 8 segundos
       success = await Promise.race([authPromise, timeoutPromise]);
       
-      setDebugMsg('Completado');
       setLoading(false);
       
       if (!success) {
         setError(true);
-        setShakeKey(k => k + 1); // retrigger shake animation
+        setDebugMsg(isRegistering ? 'El usuario ya existe o hubo un error en el servidor.' : 'Credenciales incorrectas.');
+        setShakeKey(k => k + 1);
+      } else {
+        setDebugMsg('Completado');
       }
     } catch (err: any) {
       setLoading(false);

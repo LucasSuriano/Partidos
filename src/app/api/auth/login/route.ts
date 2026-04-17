@@ -1,13 +1,10 @@
-import { createClient } from '@supabase/supabase-js';
 import bcrypt from 'bcryptjs';
-
-// Cliente server-side (solo se ejecuta en el servidor, nunca en el browser)
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
-);
+import { createServiceClient } from '@/lib/supabase';
 
 export async function POST(request: Request) {
+  // Usamos service_role: bypasea RLS, puede leer/escribir users sin restricciones
+  const supabase = createServiceClient();
+
   try {
     const { username, password } = await request.json();
 
