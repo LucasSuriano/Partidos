@@ -319,7 +319,6 @@ export default function TournamentSelector() {
             <span className={styles.emptyIcon}>🔍</span>
             <p>No tenés torneos asignados.</p>
             {isSuperAdmin && <p>Creá el primero con el botón de abajo.</p>}
-            {!isSuperAdmin && user && <JoinWithCode userId={user.id} />}
           </div>
         ) : (
           tournaments.map(t => {
