@@ -46,9 +46,15 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         // Superadmin sees ALL tournaments
         const { data, error } = await supabase
           .from('tournaments')
-          .select('*')
+          .select('*, owner:users!owner_id(username)')
           .order('created_at', { ascending: false });
-        if (!error && data) accessibleTournaments = data as Tournament[];
+        if (!error && data) {
+          accessibleTournaments = data.map((t: any) => ({
+            ...t,
+            owner_username: t.owner?.username ?? null,
+            owner: undefined
+          })) as Tournament[];
+        }
       } else {
         // Regular users and admins: only their tournaments via user_tournaments
         const { data, error } = await supabase
@@ -60,10 +66,16 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           const tournamentIds = data.map((row: { tournament_id: string }) => row.tournament_id);
           const { data: tournamentData, error: tError } = await supabase
             .from('tournaments')
-            .select('*')
+            .select('*, owner:users!owner_id(username)')
             .in('id', tournamentIds)
             .order('created_at', { ascending: false });
-          if (!tError && tournamentData) accessibleTournaments = tournamentData as Tournament[];
+          if (!tError && tournamentData) {
+            accessibleTournaments = tournamentData.map((t: any) => ({
+              ...t,
+              owner_username: t.owner?.username ?? null,
+              owner: undefined
+            })) as Tournament[];
+          }
         } else if (error) {
           console.warn('user_tournaments not accessible:', error.message);
           // Do NOT fallback to all tournaments — show empty list instead
@@ -115,7 +127,7 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const { data, error } = await supabase
       .from('tournaments')
       .insert([{ name, description, owner_id: ownerId }])
-      .select()
+      .select('*, owner:users!owner_id(username)')
       .single();
 
     if (error || !data) {
@@ -128,7 +140,11 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       .from('user_tournaments')
       .insert([{ user_id: ownerId, tournament_id: data.id }]);
 
-    const newTournament = data as Tournament;
+    const newTournament: Tournament = {
+      ...(data as any),
+      owner_username: (data as any).owner?.username ?? null,
+      owner: undefined
+    };
     setTournaments(prev => [newTournament, ...prev]);
     return newTournament;
   };

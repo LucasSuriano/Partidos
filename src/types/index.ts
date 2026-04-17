@@ -3,6 +3,7 @@ export type Tournament = {
   name: string;
   description?: string | null;
   owner_id?: string | null;
+  owner_username?: string | null;
   created_at?: string;
 };
 

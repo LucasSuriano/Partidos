@@ -228,12 +228,20 @@ export default function TournamentSelector() {
                 <div className={styles.cardBody}>
                   <h2 className={styles.cardName}>{t.name}</h2>
                   {t.description && <p className={styles.cardDesc}>{t.description}</p>}
-                  {t.created_at && (
-                    <p className={styles.cardDate}>
-                      <span className={styles.calIcon}>📅</span>
-                      {formatDate(t.created_at)}
-                    </p>
-                  )}
+                  <div className={styles.cardMeta}>
+                    {t.owner_username && (
+                      <p className={styles.cardOwner}>
+                        <span>👑</span>
+                        {t.owner_username}
+                      </p>
+                    )}
+                    {t.created_at && (
+                      <p className={styles.cardDate}>
+                        <span className={styles.calIcon}>📅</span>
+                        {formatDate(t.created_at)}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <div className={styles.cardArrow}>→</div>
               </button>
