@@ -226,7 +226,7 @@ function JoinWithCode({ userId }: { userId: string }) {
           className={styles.joinInput}
           value={code}
           onChange={e => { setCode(e.target.value); setStatus('idle'); }}
-          placeholder="Ej: LUJ-AB3K9"
+          placeholder="Ingresá tu código..."
           maxLength={12}
           disabled={status === 'loading'}
         />
