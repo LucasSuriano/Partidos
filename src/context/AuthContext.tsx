@@ -27,81 +27,95 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
+    // ── Usuarios manuales: sesión via localStorage (sincrónico) ──
     const savedUser = localStorage.getItem('auth_user');
     if (savedUser) {
-      const parsedUser = JSON.parse(savedUser);
-      setUser(parsedUser); // Optimistic UI
-      
-      // Validación en segundo plano para evitar usuarios borrados en caché
-      supabaseNoAuth
-        .from('users')
-        .select('username')
-        .eq('username', parsedUser.username)
-        .then(({ data, error }) => {
-          if (error || !data || data.length === 0) {
-            // El usuario fue eliminado de la tabla, invalidamos su sesión
-            setUser(null);
-            localStorage.removeItem('auth_user');
-          }
-        });
+      try {
+        const parsed = JSON.parse(savedUser) as User;
+        setUser(parsed);
+        setIsLoaded(true);
+
+        // Validación en background: confirmar que el usuario aún existe en DB
+        supabaseNoAuth
+          .from('users')
+          .select('username')
+          .eq('username', parsed.username)
+          .then(({ data, error }) => {
+            if (error || !data || data.length === 0) {
+              setUser(null);
+              localStorage.removeItem('auth_user');
+            }
+          });
+      } catch {
+        localStorage.removeItem('auth_user');
+      }
     }
 
+    // ── Usuarios de Google: sesión via Supabase Auth ──
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session && session.user) {
-        const name = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'Google User';
-        const email = session.user.email;
-        
+        // Solo procesamos sesiones de Google (emails reales, no @entiendanla.local)
+        const email = session.user.email ?? '';
+        const name = session.user.user_metadata?.full_name || email.split('@')[0] || 'Google User';
+
         let assignedRole: Role = 'user';
         let assignedId: string = session.user.id;
-        
-        if (email) {
-          try {
-            const { data, error } = await supabaseNoAuth
-              .from('users')
-              .select('id, role')
-              .eq('username', email);
-              
-            if (!error && data && data.length > 0) {
-              assignedRole = data[0].role as Role;
-              assignedId = data[0].id;
-              // Disparamos la actualización en segundo plano (SIN AWAIT) para no congelar la pantalla del usuario
-              supabaseNoAuth.from('users').update({
-                last_sign_in_at: new Date().toISOString(),
-                full_name: name,
-                avatar_url: session.user.user_metadata?.avatar_url || ''
-              }).eq('username', email).then(({ error: updateError }) => {
-                if (updateError) console.error("Fallo actualizando last_sign_in_at:", updateError);
-              });
-              
-            } else if (!error && (!data || data.length === 0)) {
-              // Si no existe, lo insertamos con todos los campos profesionales y tomamos su id
-              const { data: insertData, error: insertError } = await supabaseNoAuth.from('users').insert([{
-                username: email,
-                password: null as any,
-                role: 'user',
-                full_name: name,
-                avatar_url: session.user.user_metadata?.avatar_url || '',
-                last_sign_in_at: new Date().toISOString()
-              }]).select('id');
-              
-              if (insertError) {
-                console.error("Fallo la inserción en Supabase:", insertError);
-              } else if (insertData && insertData.length > 0) {
-                assignedId = insertData[0].id;
-              }
+
+        try {
+          const { data, error } = await supabaseNoAuth
+            .from('users')
+            .select('id, role')
+            .eq('username', email);
+
+          if (!error && data && data.length > 0) {
+            assignedRole = data[0].role as Role;
+            assignedId = data[0].id;
+
+            // Actualizar last_sign_in en background
+            supabaseNoAuth.from('users').update({
+              last_sign_in_at: new Date().toISOString(),
+              full_name: name,
+              avatar_url: session.user.user_metadata?.avatar_url || ''
+            }).eq('username', email).then(({ error: updateError }) => {
+              if (updateError) console.error("Fallo actualizando last_sign_in_at:", updateError);
+            });
+
+          } else if (!error && (!data || data.length === 0)) {
+            // Primer login con Google: crear registro en tabla users
+            const { data: insertData, error: insertError } = await supabaseNoAuth.from('users').insert([{
+              username: email,
+              password: null as any,
+              role: 'user',
+              full_name: name,
+              avatar_url: session.user.user_metadata?.avatar_url || '',
+              last_sign_in_at: new Date().toISOString()
+            }]).select('id');
+
+            if (insertError) {
+              console.error("Fallo la inserción en Supabase:", insertError);
+            } else if (insertData && insertData.length > 0) {
+              assignedId = insertData[0].id;
             }
-          } catch (err) {
-            console.error("Error al obtener/guardar el rol del usuario:", err);
           }
+        } catch (err) {
+          console.error("Error al obtener/guardar el rol del usuario Google:", err);
         }
-        
-        setUser({ id: assignedId, username: name, role: assignedRole });
+
+        // Solo seteamos si no hay un usuario manual ya cargado
+        if (!localStorage.getItem('auth_user')) {
+          setUser({ id: assignedId, username: name, role: assignedRole });
+        }
+
       } else if (event === 'SIGNED_OUT') {
         if (!localStorage.getItem('auth_user')) {
           setUser(null);
         }
       }
-      setIsLoaded(true);
+
+      // Marcamos como cargado una vez que llega el evento inicial de Google
+      if (!localStorage.getItem('auth_user')) {
+        setIsLoaded(true);
+      }
     });
 
     return () => {
@@ -109,62 +123,76 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  const login = async (username: string, pass: string): Promise<boolean> => {
+  /**
+   * Login manual — delega al endpoint server-side que usa bcrypt.
+   * La contraseña nunca viaja de vuelta al cliente.
+   */
+  const login = async (username: string, password: string): Promise<boolean> => {
     const u = username.trim();
-    const p = pass.trim();
-    
+    const p = password.trim();
+
     if (!p) return false;
-    
+
     try {
-      const { data, error } = await supabaseNoAuth
-        .from('users')
-        .select('*')
-        .eq('username', u)
-        .eq('password', p);
-        
-      if (error) {
-        console.error("Error validando usuario:", error);
-        return false;
-      }
-      
-      if (data && data.length === 1) {
-        const loggedInUser: User = { id: data[0].id, username: data[0].username, role: data[0].role as Role };
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: u, password: p })
+      });
+
+      const json = await res.json();
+
+      if (json.ok && json.user) {
+        const loggedInUser: User = {
+          id: json.user.id,
+          username: json.user.username,
+          role: json.user.role as Role
+        };
         setUser(loggedInUser);
         localStorage.setItem('auth_user', JSON.stringify(loggedInUser));
         return true;
       }
-    } catch (e) {
-      console.error(e);
-    }
 
-    return false;
+      return false;
+    } catch (e) {
+      console.error('Error llamando a /api/auth/login:', e);
+      return false;
+    }
   };
 
-  const register = async (username: string, pass: string): Promise<boolean> => {
+  /**
+   * Registro manual — delega al endpoint server-side que hashea con bcrypt.
+   * Nunca se guarda la contraseña en texto plano.
+   */
+  const register = async (username: string, password: string): Promise<boolean> => {
     const u = username.trim();
-    const p = pass.trim();
-    
+    const p = password.trim();
+
     if (!p) return false;
-    
+
     try {
-      const { error } = await supabaseNoAuth
-        .from('users')
-        .insert([{
-          username: u,
-          password: p,
-          role: 'user',
-          last_sign_in_at: new Date().toISOString()
-        }]);
-        
-      if (error) {
-        console.error("Error registrando usuario:", error);
-        return false;
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: u, password: p })
+      });
+
+      const json = await res.json();
+
+      if (json.ok && json.user) {
+        const registeredUser: User = {
+          id: json.user.id,
+          username: json.user.username,
+          role: json.user.role as Role
+        };
+        setUser(registeredUser);
+        localStorage.setItem('auth_user', JSON.stringify(registeredUser));
+        return true;
       }
-      
-      // Auto-login después de registrar satisfactoriamente
-      return await login(u, p);
+
+      return false;
     } catch (e) {
-      console.error(e);
+      console.error('Error llamando a /api/auth/register:', e);
       return false;
     }
   };
@@ -181,27 +209,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     setUser(null);
     localStorage.removeItem('auth_user');
+    // Cerramos también sesión de Google si existe
     await supabase.auth.signOut();
   };
 
   if (!isLoaded) {
     return (
       <div className={styles.wrapper}>
-        {/* Fondo animado idéntico al del Login */}
         <div className={styles.bgBlob1} />
         <div className={styles.bgBlob2} />
         <div className={styles.bgBlob3} />
-        
+
         <div className={styles.card} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3rem 2rem', gap: '1.5rem', maxWidth: '320px', margin: 'auto' }}>
-           {/* Logo central */}
-           <div className={styles.logoWrap} style={{ width: '64px', height: '64px', opacity: 0.9 }}>
-             <img src="/img/v987-24a.jpg" alt="Logo" className={styles.logo} />
-           </div>
-           
-           <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-             <div className={styles.spinner} style={{ borderColor: 'rgba(255,255,255,0.1)', borderTopColor: '#10b981', width: '20px', height: '20px' }}></div>
-             <span style={{ color: '#e2e8f0', fontSize: '0.95rem', fontWeight: 600, letterSpacing: '0.03em' }}>Cargando sesión...</span>
-           </div>
+          <div className={styles.logoWrap} style={{ width: '64px', height: '64px', opacity: 0.9 }}>
+            <img src="/img/v987-24a.jpg" alt="Logo" className={styles.logo} />
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+            <div className={styles.spinner} style={{ borderColor: 'rgba(255,255,255,0.1)', borderTopColor: '#10b981', width: '20px', height: '20px' }}></div>
+            <span style={{ color: '#e2e8f0', fontSize: '0.95rem', fontWeight: 600, letterSpacing: '0.03em' }}>Cargando sesión...</span>
+          </div>
         </div>
       </div>
     );
