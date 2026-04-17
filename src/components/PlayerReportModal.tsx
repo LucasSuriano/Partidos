@@ -103,7 +103,16 @@ export default function PlayerReportModal({ playerId, onClose }: PlayerReportMod
               });
 
               const sortedBadges = Object.entries(badgeCounts)
-                .sort((a, b) => b[1] - a[1]) // de mayor a menor
+                .sort((a, b) => {
+                  const tie = b[1] - a[1];
+                  if (tie !== 0) return tie;
+                  // Tie-break: positive badge first
+                  const defA = badges.find(bad => bad.id === a[0]);
+                  const defB = badges.find(bad => bad.id === b[0]);
+                  if (defA?.category === 'positiva' && defB?.category !== 'positiva') return -1;
+                  if (defB?.category === 'positiva' && defA?.category !== 'positiva') return 1;
+                  return 0;
+                })
                 .map(([badgeId]) => badgeId);
 
               return (

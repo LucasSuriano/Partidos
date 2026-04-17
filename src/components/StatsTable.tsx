@@ -29,8 +29,20 @@ export default function StatsTable() {
         s.player.badges.forEach(b => {
           badgeCounts[b.badgeId] = (badgeCounts[b.badgeId] || 0) + 1;
         });
-        const mostVotedBadgeId = Object.keys(badgeCounts).reduce((a, b) => badgeCounts[a] > badgeCounts[b] ? a : b);
-        const badgeDef = badges.find(b => b.id === mostVotedBadgeId);
+        const maxVotes = Math.max(...Object.values(badgeCounts));
+        const winners = Object.keys(badgeCounts).filter(id => badgeCounts[id] === maxVotes);
+        
+        // Si hay empate, priorizar la primera insignia positiva
+        let chosenId = winners[0];
+        if (winners.length > 1) {
+          const firstPositive = winners.find(id => {
+            const def = badges.find(b => b.id === id);
+            return def?.category === 'positiva';
+          });
+          if (firstPositive) chosenId = firstPositive;
+        }
+
+        const badgeDef = badges.find(b => b.id === chosenId);
         if (badgeDef) {
           badgeLabel = badgeDef.label;
           badgeIcon = badgeDef.icon;
