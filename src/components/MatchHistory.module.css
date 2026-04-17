@@ -226,24 +226,41 @@
 .editScores {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  justify-content: center;
+  gap: 1.25rem;
   color: var(--text-secondary);
+  background: rgba(0, 0, 0, 0.2);
+  padding: 1rem 1.5rem;
+  border-radius: 16px;
+  border: 1px solid var(--panel-border);
 }
 
 .editInput {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid var(--panel-border);
-  border-radius: 6px;
-  padding: 0.5rem;
-  width: 60px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 0.6rem;
+  width: 70px;
+  height: 50px;
   text-align: center;
   color: var(--text-primary);
-  font-weight: 700;
+  font-weight: 800;
+  font-size: 1.5rem;
+  transition: all 0.2s;
 }
 
 .editInput:focus {
   outline: none;
   border-color: var(--accent-primary);
+  background: rgba(16, 185, 129, 0.05);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+}
+
+.editScoreSeparator {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-secondary);
+  opacity: 0.5;
 }
 
 .editActions {
@@ -415,24 +432,43 @@
 .scorePill {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 0.5rem 0.9rem;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.35);
   border: 1px solid var(--panel-border);
-  border-radius: 20px;
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: var(--text-primary);
-  letter-spacing: 0.05em;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  border-radius: 14px;
+  overflow: hidden;
   align-self: center;
   flex-shrink: 0;
   transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.scoreBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  height: 42px;
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.scoreSeparator {
+  width: 1px;
+  height: 24px;
+  background: var(--panel-border);
+  opacity: 0.6;
 }
 
 .matchCard:hover .scorePill {
   border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 6px 16px rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.1);
+  transform: scale(1.05);
+}
+
+.matchCard:hover .scoreBox {
+  color: var(--accent-primary);
 }
 
 /* ── Empty state ── */

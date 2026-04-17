@@ -193,29 +193,29 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
 
           {/* Opcional: Goles */}
           <div className={styles.scoreSection}>
-            <span className={styles.scoreLabel}>Goles (Opcional)</span>
+            <span className={styles.scoreLabel}>Marcador Final (Opcional)</span>
             <div className={styles.scoreInputsWrapper}>
               <div className={styles.scoreInputBox}>
-                <span className={styles.scoreTeamName}>Eq. A</span>
+                <span className={styles.scoreTeamName}>Equipo A</span>
                 <input 
                   type="number" 
                   min="0" 
                   className={styles.scoreInput} 
                   value={scoreA} 
                   onChange={e => setScoreA(e.target.value)} 
-                  placeholder="-"
+                  placeholder="0"
                 />
               </div>
-              <span className={styles.scoreSeparator}>-</span>
+              <span className={styles.scoreSeparator}>—</span>
               <div className={styles.scoreInputBox}>
-                <span className={styles.scoreTeamName}>Eq. B</span>
+                <span className={styles.scoreTeamName}>Equipo B</span>
                 <input 
                   type="number" 
                   min="0" 
                   className={styles.scoreInput} 
                   value={scoreB} 
                   onChange={e => setScoreB(e.target.value)} 
-                  placeholder="-"
+                  placeholder="0"
                 />
               </div>
             </div>

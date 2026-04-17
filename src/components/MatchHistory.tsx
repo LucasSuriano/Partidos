@@ -158,9 +158,9 @@ export default function MatchHistory() {
                         <button className={`${styles.editOption} ${editResult === 'B_WIN' ? styles.editOptionActiveRed : ''}`} onClick={() => setEditResult('B_WIN')}>Ganó Eq. B</button>
                       </div>
                       <div className={styles.editScores}>
-                        <input type="number" min="0" value={editScoreA} onChange={e => setEditScoreA(e.target.value)} placeholder="Goles A" className={styles.editInput} />
-                        <span>-</span>
-                        <input type="number" min="0" value={editScoreB} onChange={e => setEditScoreB(e.target.value)} placeholder="Goles B" className={styles.editInput} />
+                        <input type="number" min="0" value={editScoreA} onChange={e => setEditScoreA(e.target.value)} placeholder="0" className={styles.editInput} />
+                        <span className={styles.editScoreSeparator}>-</span>
+                        <input type="number" min="0" value={editScoreB} onChange={e => setEditScoreB(e.target.value)} placeholder="0" className={styles.editInput} />
                       </div>
                       <div className={styles.editActions}>
                         <button onClick={handleSaveEdit} className={styles.saveEditBtn}>Guardar</button>
@@ -186,7 +186,9 @@ export default function MatchHistory() {
                       {/* VS central o Score */}
                       {match.scoreA != null && match.scoreB != null ? (
                         <div className={styles.scorePill}>
-                          {match.scoreA} - {match.scoreB}
+                          <div className={styles.scoreBox}>{match.scoreA}</div>
+                          <div className={styles.scoreSeparator} />
+                          <div className={styles.scoreBox}>{match.scoreB}</div>
                         </div>
                       ) : (
                         <div className={styles.vsSeparator}>
