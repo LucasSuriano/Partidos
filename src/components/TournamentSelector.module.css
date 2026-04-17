@@ -548,6 +548,106 @@
   line-height: 1.4;
 }
 
+/* ── Join with code ── */
+.joinSection {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 0 1rem 3rem;
+}
+
+.joinWidget {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.joinLabel {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.joinForm {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.joinInput {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 10px;
+  padding: 0.6rem 0.9rem;
+  color: #e2e8f0;
+  font-size: 0.92rem;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.05em;
+  outline: none;
+  transition: border-color 0.18s;
+  text-transform: uppercase;
+}
+.joinInput:focus {
+  border-color: rgba(99, 102, 241, 0.5);
+}
+.joinInput::placeholder {
+  color: #475569;
+  letter-spacing: normal;
+  font-family: inherit;
+  text-transform: none;
+}
+.joinInput:disabled { opacity: 0.5; }
+
+.joinBtn {
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 10px;
+  color: #818cf8;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0 1.1rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  min-width: 70px;
+  justify-content: center;
+}
+.joinBtn:hover { background: rgba(99, 102, 241, 0.25); }
+.joinBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.joinSpinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(129, 140, 248, 0.3);
+  border-top-color: #818cf8;
+  border-radius: 50%;
+  animation: joinSpin 0.7s linear infinite;
+}
+@keyframes joinSpin { to { transform: rotate(360deg); } }
+
+.joinSuccess {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #10b981;
+  font-weight: 600;
+}
+
+.joinError {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #f87171;
+  font-weight: 600;
+}
+
+
 
 .modalActions {
   display: flex;

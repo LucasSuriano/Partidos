@@ -136,6 +136,115 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
   );
 }
 
+function JoinWithCode({ userId }: { userId: string }) {
+  const [code, setCode] = useState('');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [message, setMessage] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = code.trim().toUpperCase();
+    if (!trimmed) return;
+
+    setStatus('loading');
+    setMessage('');
+
+    // Find the invite
+    const { data: invite, error: inviteErr } = await supabase
+      .from('tournament_invites')
+      .select('id, tournament_id')
+      .eq('code', trimmed)
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (inviteErr || !invite) {
+      setStatus('error');
+      setMessage('Código no encontrado o inválido.');
+      return;
+    }
+
+    // Check if already a member
+    const { data: existing } = await supabase
+      .from('user_tournaments')
+      .select('user_id')
+      .eq('user_id', userId)
+      .eq('tournament_id', invite.tournament_id)
+      .maybeSingle();
+
+    if (existing) {
+      setStatus('error');
+      setMessage('Ya sos miembro de ese torneo.');
+      return;
+    }
+
+    // Check if already requested
+    const { data: existingReq } = await supabase
+      .from('tournament_join_requests')
+      .select('id, status')
+      .eq('user_id', userId)
+      .eq('tournament_id', invite.tournament_id)
+      .maybeSingle();
+
+    if (existingReq) {
+      if (existingReq.status === 'pending') {
+        setStatus('error');
+        setMessage('Ya enviaste una solicitud. Esperá que el owner la apruebe.');
+      } else {
+        // Re-submit if previously rejected
+        await supabase
+          .from('tournament_join_requests')
+          .update({ status: 'pending', created_at: new Date().toISOString() })
+          .eq('id', existingReq.id);
+        setStatus('success');
+        setMessage('¡Solicitud enviada! El owner del torneo deberá aprobarla.');
+        setCode('');
+      }
+      return;
+    }
+
+    // Create join request
+    const { error: reqErr } = await supabase
+      .from('tournament_join_requests')
+      .insert([{ user_id: userId, tournament_id: invite.tournament_id, invite_code: trimmed }]);
+
+    if (reqErr) {
+      setStatus('error');
+      setMessage('Error al enviar la solicitud. Intentá de nuevo.');
+      return;
+    }
+
+    setStatus('success');
+    setMessage('¡Solicitud enviada! El owner del torneo deberá aprobarla.');
+    setCode('');
+  };
+
+  return (
+    <div className={styles.joinWidget}>
+      <p className={styles.joinLabel}>¿Tenés un código de invitación?</p>
+      <form className={styles.joinForm} onSubmit={handleSubmit}>
+        <input
+          className={styles.joinInput}
+          value={code}
+          onChange={e => { setCode(e.target.value); setStatus('idle'); }}
+          placeholder="Ej: LUJ-AB3K9"
+          maxLength={12}
+          disabled={status === 'loading'}
+        />
+        <button
+          type="submit"
+          className={styles.joinBtn}
+          disabled={!code.trim() || status === 'loading'}
+        >
+          {status === 'loading' ? <span className={styles.joinSpinner} /> : 'Unirse'}
+        </button>
+      </form>
+      {status === 'success' && <p className={styles.joinSuccess}>{message}</p>}
+      {status === 'error'   && <p className={styles.joinError}>{message}</p>}
+    </div>
+  );
+}
+
+
 export default function TournamentSelector() {
   const { tournaments, setActiveTournament, isLoading } = useTournament();
   const { user, logout } = useAuth();
@@ -210,6 +319,7 @@ export default function TournamentSelector() {
             <span className={styles.emptyIcon}>🔍</span>
             <p>No tenés torneos asignados.</p>
             {isSuperAdmin && <p>Creá el primero con el botón de abajo.</p>}
+            {!isSuperAdmin && user && <JoinWithCode userId={user.id} />}
           </div>
         ) : (
           tournaments.map(t => {
@@ -260,6 +370,13 @@ export default function TournamentSelector() {
           </button>
         )}
       </main>
+
+      {/* Join with code — always visible for non-superadmins */}
+      {!isSuperAdmin && !isLoading && user && (
+        <div className={styles.joinSection}>
+          <JoinWithCode userId={user.id} />
+        </div>
+      )}
 
       {showCreateModal && (
         <CreateModal

@@ -8,19 +8,21 @@ import PlayerManager from '@/components/PlayerManager';
 import MatchHistory from '@/components/MatchHistory';
 import TeamSimulator from '@/components/TeamSimulator';
 import TournamentSelector from '@/components/TournamentSelector';
+import TournamentUsers from '@/components/TournamentUsers';
 import { useAuth } from '@/context/AuthContext';
 import { useTournament } from '@/context/TournamentContext';
 import { AppProvider } from '@/context/AppContext';
 import Login from '@/components/Login';
 
-const NAV_ITEMS = [
+const BASE_NAV_ITEMS = [
   { id: 'STATS',      label: '📊 Estadísticas' },
   { id: 'HISTORY',   label: '🗂️ Historial' },
   { id: 'SIMULATOR', label: '⚽ Simulación' },
   { id: 'PLAYERS',   label: '👥 Jugadores' },
 ] as const;
 
-type View = 'STATS' | 'NEW_MATCH' | 'PLAYERS' | 'HISTORY' | 'SIMULATOR';
+type BaseView = 'STATS' | 'NEW_MATCH' | 'PLAYERS' | 'HISTORY' | 'SIMULATOR';
+type View = BaseView | 'USERS';
 
 function getInitials(username: string) {
   return username.slice(0, 2).toUpperCase();
@@ -40,6 +42,11 @@ function MainApp() {
   const isAdmin = isAdminOfActiveTournament;
   const isSuperAdmin = user?.role === 'superadmin';
   const hue = user ? nameToHue(user.username) : 120;
+
+  const navItems = [
+    ...BASE_NAV_ITEMS,
+    ...(isAdmin ? [{ id: 'USERS', label: '🔐 Usuarios' }] : []),
+  ];
 
   return (
     <AppProvider tournamentId={activeTournament?.id ?? null}>
@@ -70,7 +77,7 @@ function MainApp() {
 
             {/* Nav tabs */}
             <nav className={styles.nav}>
-              {NAV_ITEMS.map(item => (
+              {navItems.map(item => (
                 <button
                   key={item.id}
                   className={`${styles.navTab} ${view === item.id ? styles.navTabActive : ''}`}
@@ -131,6 +138,7 @@ function MainApp() {
           {view === 'SIMULATOR' && <TeamSimulator />}
           {view === 'NEW_MATCH' && isAdmin && <MatchBuilder onComplete={() => setView('STATS')} />}
           {view === 'PLAYERS'   && <PlayerManager />}
+          {view === 'USERS'     && isAdmin && <TournamentUsers />}
         </main>
       </div>
     </AppProvider>
