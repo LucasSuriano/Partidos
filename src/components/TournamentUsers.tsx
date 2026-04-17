@@ -19,6 +19,11 @@ interface Member {
   role: string;
 }
 
+interface ConfirmRemove {
+  user_id: string;
+  username: string;
+}
+
 interface InviteCode {
   id: string;
   code: string;
@@ -54,6 +59,8 @@ export default function TournamentUsers() {
   const [copiedCode, setCopiedCode] = useState(false);
   const [generatingCode, setGeneratingCode] = useState(false);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [confirmRemove, setConfirmRemove] = useState<ConfirmRemove | null>(null);
+  const [removing, setRemoving] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!activeTournament) return;
@@ -70,36 +77,55 @@ export default function TournamentUsers() {
       .maybeSingle();
     setInviteCode(codeData ?? null);
 
-    // Pending join requests (join with users for username)
+    // Pending join requests (two-step: get requests, then look up usernames)
     const { data: reqData } = await supabase
       .from('tournament_join_requests')
-      .select('id, user_id, created_at, users(username)')
+      .select('id, user_id, created_at, invite_code')
       .eq('tournament_id', activeTournament.id)
       .eq('status', 'pending')
       .order('created_at', { ascending: true });
 
-    if (reqData) {
+    if (reqData && reqData.length > 0) {
+      const userIds = [...new Set(reqData.map((r: any) => r.user_id))];
+      const { data: usersData } = await supabase
+        .from('users')
+        .select('id, username')
+        .in('id', userIds);
+
+      const usernameMap = Object.fromEntries((usersData ?? []).map((u: any) => [u.id, u.username]));
+
       setRequests(reqData.map((r: any) => ({
         id: r.id,
         user_id: r.user_id,
-        username: r.users?.username ?? 'Desconocido',
+        username: usernameMap[r.user_id] ?? 'Desconocido',
         created_at: r.created_at,
       })));
+    } else {
+      setRequests([]);
     }
 
-    // Members
+    // Members (two-step: get user_tournaments, then look up usernames)
     const { data: memberData } = await supabase
       .from('user_tournaments')
-      .select('user_id, users(username, role)')
+      .select('user_id')
       .eq('tournament_id', activeTournament.id);
 
-    if (memberData) {
-      setMembers(memberData.map((m: any) => ({
-        user_id: m.user_id,
-        username: m.users?.username ?? 'Desconocido',
-        role: m.users?.role ?? 'user',
+    if (memberData && memberData.length > 0) {
+      const memberIds = memberData.map((m: any) => m.user_id);
+      const { data: memberUsers } = await supabase
+        .from('users')
+        .select('id, username, role')
+        .in('id', memberIds);
+
+      setMembers((memberUsers ?? []).map((u: any) => ({
+        user_id: u.id,
+        username: u.username ?? 'Desconocido',
+        role: u.role ?? 'user',
       })));
+    } else {
+      setMembers([]);
     }
+
 
     setLoading(false);
   }, [activeTournament]);
@@ -166,24 +192,30 @@ export default function TournamentUsers() {
 
   const handleRemoveMember = async (memberId: string) => {
     if (!activeTournament) return;
-    if (activeTournament.owner_id === memberId) return; // never remove owner
-    if (!confirm('¿Eliminar a este usuario del torneo? También se eliminarán sus votos de insignias.')) return;
+    if (activeTournament.owner_id === memberId) return;
+    const member = members.find(m => m.user_id === memberId);
+    if (member) setConfirmRemove({ user_id: member.user_id, username: member.username });
+  };
 
-    // Delete their badge votes for players in this tournament
+  const executeRemove = async () => {
+    if (!confirmRemove || !activeTournament) return;
+    setRemoving(true);
+
     await supabase
       .from('player_badges')
       .delete()
-      .eq('user_id', memberId)
+      .eq('user_id', confirmRemove.user_id)
       .eq('tournament_id', activeTournament.id);
 
-    // Remove from tournament
     await supabase
       .from('user_tournaments')
       .delete()
-      .eq('user_id', memberId)
+      .eq('user_id', confirmRemove.user_id)
       .eq('tournament_id', activeTournament.id);
 
-    setMembers(prev => prev.filter(m => m.user_id !== memberId));
+    setMembers(prev => prev.filter(m => m.user_id !== confirmRemove.user_id));
+    setRemoving(false);
+    setConfirmRemove(null);
   };
 
   if (!activeTournament) return null;
@@ -198,6 +230,48 @@ export default function TournamentUsers() {
 
   return (
     <div className={styles.container}>
+
+      {/* ── Confirm Remove Modal ── */}
+      {confirmRemove && (
+        <div className={styles.modalOverlay} onClick={() => !removing && setConfirmRemove(null)}>
+          <div className={styles.confirmModal} onClick={e => e.stopPropagation()}>
+            <div className={styles.confirmIcon}>⚠️</div>
+            <h3 className={styles.confirmTitle}>Quitar usuario del torneo</h3>
+            <p className={styles.confirmBody}>
+              Estás por quitar a <strong>{confirmRemove.username}</strong> del torneo
+              {' '}<strong>{activeTournament?.name}</strong>.
+            </p>
+            <ul className={styles.confirmList}>
+              <li>❌ Perderá acceso al torneo</li>
+              <li>🗳️ Se eliminarán todos sus votos de insignias</li>
+            </ul>
+            <div className={styles.confirmActions}>
+              <button
+                className={styles.confirmCancelBtn}
+                onClick={() => setConfirmRemove(null)}
+                disabled={removing}
+              >
+                Cancelar
+              </button>
+              <button
+                className={styles.confirmDeleteBtn}
+                onClick={executeRemove}
+                disabled={removing}
+              >
+                {removing ? <span className={styles.spinner} /> : null}
+                {removing ? 'Quitando...' : 'Sí, quitar usuario'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className={styles.topBar}>
+        <h1 className={styles.pageTitle}>Gestión de Usuarios</h1>
+        <button className={styles.refreshBtn} onClick={fetchData} title="Actualizar">
+          🔄 Actualizar
+        </button>
+      </div>
 
       {/* ── Invite Code ── */}
       <section className={styles.section}>
