@@ -2,6 +2,7 @@ export type Tournament = {
   id: string;
   name: string;
   description?: string | null;
+  owner_id?: string | null;
   created_at?: string;
 };
 

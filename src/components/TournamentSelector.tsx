@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './TournamentSelector.module.css';
 import { useTournament } from '@/context/TournamentContext';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase';
 import type { Tournament } from '@/types';
 
 function getInitials(name: string) {
@@ -22,6 +23,8 @@ function formatDate(iso?: string) {
   return d.toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
+interface AppUser { id: string; username: string; }
+
 interface CreateModalProps {
   onClose: () => void;
   onCreated: (t: Tournament) => void;
@@ -29,16 +32,37 @@ interface CreateModalProps {
 
 function CreateModal({ onClose, onCreated }: CreateModalProps) {
   const { createTournament } = useTournament();
+  const { user: currentUser } = useAuth();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [ownerId, setOwnerId] = useState('');
+  const [users, setUsers] = useState<AppUser[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    supabase
+      .from('users')
+      .select('id, username')
+      .order('username')
+      .then(({ data }) => {
+        if (data) setUsers(data as AppUser[]);
+        setLoadingUsers(false);
+        // Default owner = current superadmin
+        if (data && currentUser) {
+          const self = data.find((u: AppUser) => u.id === currentUser.id);
+          if (self) setOwnerId(self.id);
+        }
+      });
+  }, [currentUser]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) { setError('El nombre es obligatorio'); return; }
+    if (!ownerId) { setError('Tenés que designar un dueño'); return; }
     setLoading(true);
-    const result = await createTournament(name.trim(), description.trim());
+    const result = await createTournament(name.trim(), description.trim(), ownerId);
     setLoading(false);
     if (result) {
       onCreated(result);
@@ -78,10 +102,30 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
               maxLength={200}
             />
           </div>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>Dueño del torneo *</label>
+            {loadingUsers ? (
+              <div className={styles.formInput} style={{ color: '#475569' }}>Cargando usuarios...</div>
+            ) : (
+              <select
+                className={styles.formSelect}
+                value={ownerId}
+                onChange={e => setOwnerId(e.target.value)}
+              >
+                <option value="">— Seleccioná un usuario —</option>
+                {users.map(u => (
+                  <option key={u.id} value={u.id}>{u.username}</option>
+                ))}
+              </select>
+            )}
+            <p className={styles.formHint}>
+              Este usuario podrá registrar partidos y gestionar jugadores en este torneo.
+            </p>
+          </div>
           {error && <p className={styles.formError}>{error}</p>}
           <div className={styles.modalActions}>
             <button type="button" className={styles.cancelBtn} onClick={onClose}>Cancelar</button>
-            <button type="submit" className={styles.createBtn} disabled={loading}>
+            <button type="submit" className={styles.createBtn} disabled={loading || loadingUsers}>
               {loading ? <span className={styles.btnSpinner} /> : '⚽'}
               {loading ? 'Creando...' : 'Crear Torneo'}
             </button>

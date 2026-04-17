@@ -10,7 +10,8 @@ interface TournamentContextProps {
   activeTournament: Tournament | null;
   setActiveTournament: (t: Tournament) => void;
   clearActiveTournament: () => void;
-  createTournament: (name: string, description: string) => Promise<Tournament | null>;
+  createTournament: (name: string, description: string, ownerId: string) => Promise<Tournament | null>;
+  isAdminOfActiveTournament: boolean;
   isLoading: boolean;
 }
 
@@ -21,6 +22,11 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [activeTournament, setActiveTournamentState] = useState<Tournament | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // The user is an admin of the active tournament if they are the owner or a superadmin
+  const isAdminOfActiveTournament =
+    user?.role === 'superadmin' ||
+    (!!activeTournament?.owner_id && activeTournament.owner_id === user?.id);
 
   const loadTournaments = useCallback(async () => {
     if (!user) {
@@ -63,7 +69,6 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             .order('created_at', { ascending: false });
           if (allData) setTournaments(allData as Tournament[]);
         }
-
       }
     } finally {
       setIsLoading(false);
@@ -96,12 +101,12 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   }, []);
 
-  const createTournament = async (name: string, description: string): Promise<Tournament | null> => {
+  const createTournament = async (name: string, description: string, ownerId: string): Promise<Tournament | null> => {
     if (user?.role !== 'superadmin') return null;
 
     const { data, error } = await supabase
       .from('tournaments')
-      .insert([{ name, description }])
+      .insert([{ name, description, owner_id: ownerId }])
       .select()
       .single();
 
@@ -109,6 +114,12 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       console.error('Error creating tournament:', error);
       return null;
     }
+
+    // Auto-associate the owner with the tournament in user_tournaments
+    await supabase
+      .from('user_tournaments')
+      .insert([{ user_id: ownerId, tournament_id: data.id }])
+      .select();
 
     const newTournament = data as Tournament;
     setTournaments(prev => [newTournament, ...prev]);
@@ -122,6 +133,7 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       setActiveTournament,
       clearActiveTournament,
       createTournament,
+      isAdminOfActiveTournament,
       isLoading
     }}>
       {children}

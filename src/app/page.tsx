@@ -35,9 +35,9 @@ function nameToHue(s: string) {
 function MainApp() {
   const [view, setView] = useState<View>('STATS');
   const { user, logout } = useAuth();
-  const { activeTournament, clearActiveTournament } = useTournament();
+  const { activeTournament, clearActiveTournament, isAdminOfActiveTournament } = useTournament();
 
-  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
+  const isAdmin = isAdminOfActiveTournament;
   const isSuperAdmin = user?.role === 'superadmin';
   const hue = user ? nameToHue(user.username) : 120;
 
