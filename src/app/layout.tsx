@@ -7,8 +7,8 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
-import { AppProvider } from "@/context/AppContext";
 import { AuthProvider } from "@/context/AuthContext";
+import { TournamentProvider } from "@/context/TournamentContext";
 
 export const metadata: Metadata = {
   title: "Entiendanla - Estadísticas",
@@ -25,9 +25,9 @@ export default function RootLayout({
       <body>
         <main>
           <AuthProvider>
-            <AppProvider>
+            <TournamentProvider>
               {children}
-            </AppProvider>
+            </TournamentProvider>
           </AuthProvider>
         </main>
       </body>

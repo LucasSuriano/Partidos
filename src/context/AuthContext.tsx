@@ -3,8 +3,9 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase, supabaseNoAuth } from '../lib/supabase';
 import styles from '../components/Login.module.css';
+import type { Role } from '../types';
 
-export type Role = 'admin' | 'user';
+export type { Role };
 
 export interface User {
   id: string;

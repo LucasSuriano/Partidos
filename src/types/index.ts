@@ -1,3 +1,10 @@
+export type Tournament = {
+  id: string;
+  name: string;
+  description?: string | null;
+  created_at?: string;
+};
+
 export type PlayerBadgeVote = {
   badgeId: string;
   userId: string;
@@ -17,6 +24,8 @@ export type Badge = {
   description: string;
   category: string;
 };
+
+export type Role = 'superadmin' | 'admin' | 'user';
 
 export type MatchResult = 'A_WIN' | 'B_WIN' | 'DRAW';
 

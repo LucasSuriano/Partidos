@@ -170,6 +170,47 @@
   letter-spacing: 0.05em;
 }
 
+.roleBadgeSuperadmin {
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #0a0e1a;
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  padding: 0.1rem 0.45rem;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Tournament back button (breadcrumb in header) */
+.tournamentBackBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 20px;
+  padding: 0.22rem 0.6rem 0.22rem 0.7rem;
+  color: #94a3b8;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
+  white-space: nowrap;
+  max-width: 140px;
+}
+
+.tournamentBackBtn:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: #e2e8f0;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.tournamentName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Logout icon button */
 .logoutBtn {
   color: var(--text-secondary);
