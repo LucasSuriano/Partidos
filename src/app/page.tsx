@@ -9,6 +9,7 @@ import MatchHistory from '@/components/MatchHistory';
 import TeamSimulator from '@/components/TeamSimulator';
 import TournamentSelector from '@/components/TournamentSelector';
 import TournamentUsers from '@/components/TournamentUsers';
+import UserMenu from '@/components/UserMenu';
 import { useAuth } from '@/context/AuthContext';
 import { useTournament } from '@/context/TournamentContext';
 import { AppProvider } from '@/context/AppContext';
@@ -36,7 +37,7 @@ function nameToHue(s: string) {
 
 function MainApp() {
   const [view, setView] = useState<View>('STATS');
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { activeTournament, clearActiveTournament, isAdminOfActiveTournament } = useTournament();
 
   const isAdmin = isAdminOfActiveTournament;
@@ -101,31 +102,8 @@ function MainApp() {
                 </button>
               )}
 
-              {/* Avatar + role */}
-              <div className={styles.avatarChip}>
-                <div
-                  className={styles.avatar}
-                  style={{
-                    background: `hsl(${hue} 50% 25%)`,
-                    borderColor: `hsl(${hue} 65% 45%)`,
-                    color: `hsl(${hue} 80% 80%)`
-                  }}
-                >
-                  {user ? getInitials(user.username) : '?'}
-                </div>
-                <span className={styles.username}>{user?.username}</span>
-                {user?.role === 'admin' && <span className={styles.roleBadge}>admin</span>}
-                {isSuperAdmin && <span className={styles.roleBadgeSuperadmin}>superadmin</span>}
-              </div>
-
-              {/* Logout icon button */}
-              <button onClick={logout} className={styles.logoutBtn} title="Cerrar sesión">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                  <polyline points="16 17 21 12 16 7" />
-                  <line x1="21" y1="12" x2="9" y2="12" />
-                </svg>
-              </button>
+              {/* User menu (avatar + dropdown) */}
+              <UserMenu hue={hue} />
             </div>
 
           </div>
