@@ -31,11 +31,15 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const loadTournaments = useCallback(async () => {
     if (!user) {
       setTournaments([]);
+      setActiveTournamentState(null);
+      sessionStorage.removeItem('active_tournament');
       setIsLoading(false);
       return;
     }
 
     setIsLoading(true);
+
+    let accessibleTournaments: Tournament[] = [];
 
     try {
       if (user.role === 'superadmin') {
@@ -44,7 +48,7 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           .from('tournaments')
           .select('*')
           .order('created_at', { ascending: false });
-        if (!error && data) setTournaments(data as Tournament[]);
+        if (!error && data) accessibleTournaments = data as Tournament[];
       } else {
         // Regular users and admins: only their tournaments via user_tournaments
         const { data, error } = await supabase
@@ -59,15 +63,31 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             .select('*')
             .in('id', tournamentIds)
             .order('created_at', { ascending: false });
-          if (!tError && tournamentData) setTournaments(tournamentData as Tournament[]);
+          if (!tError && tournamentData) accessibleTournaments = tournamentData as Tournament[];
         } else if (error) {
-          // Fallback: if user_tournaments is not accessible, load all tournaments
-          console.warn('user_tournaments not accessible, falling back to all tournaments:', error.message);
-          const { data: allData } = await supabase
-            .from('tournaments')
-            .select('*')
-            .order('created_at', { ascending: false });
-          if (allData) setTournaments(allData as Tournament[]);
+          console.warn('user_tournaments not accessible:', error.message);
+          // Do NOT fallback to all tournaments — show empty list instead
+        }
+      }
+
+      setTournaments(accessibleTournaments);
+
+      // Restore saved tournament ONLY if it's in the user's accessible list
+      const saved = sessionStorage.getItem('active_tournament');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved) as Tournament;
+          const stillAccessible = accessibleTournaments.find(t => t.id === parsed.id);
+          if (stillAccessible) {
+            // Use the fresh data from the DB (may have owner_id updates)
+            setActiveTournamentState(stillAccessible);
+          } else {
+            // User no longer has access to this tournament — clear it
+            sessionStorage.removeItem('active_tournament');
+            setActiveTournamentState(null);
+          }
+        } catch {
+          sessionStorage.removeItem('active_tournament');
         }
       }
     } finally {
@@ -89,18 +109,6 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     sessionStorage.removeItem('active_tournament');
   };
 
-  // Restore from sessionStorage on mount
-  useEffect(() => {
-    const saved = sessionStorage.getItem('active_tournament');
-    if (saved) {
-      try {
-        setActiveTournamentState(JSON.parse(saved) as Tournament);
-      } catch {
-        sessionStorage.removeItem('active_tournament');
-      }
-    }
-  }, []);
-
   const createTournament = async (name: string, description: string, ownerId: string): Promise<Tournament | null> => {
     if (user?.role !== 'superadmin') return null;
 
@@ -118,8 +126,7 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     // Auto-associate the owner with the tournament in user_tournaments
     await supabase
       .from('user_tournaments')
-      .insert([{ user_id: ownerId, tournament_id: data.id }])
-      .select();
+      .insert([{ user_id: ownerId, tournament_id: data.id }]);
 
     const newTournament = data as Tournament;
     setTournaments(prev => [newTournament, ...prev]);

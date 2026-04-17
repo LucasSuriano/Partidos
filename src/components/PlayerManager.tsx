@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
+import { useTournament } from '@/context/TournamentContext';
 import { calculateStats } from '@/lib/stats';
 import styles from './PlayerManager.module.css';
 
@@ -22,7 +23,8 @@ function getInitials(name: string): string {
 export default function PlayerManager() {
   const { players, matches, badges, addPlayer, removePlayer, updatePlayer, togglePlayerBadge } = useAppContext();
   const { user } = useAuth();
-  const isAdmin = user?.role === 'admin';
+  const { isAdminOfActiveTournament } = useTournament();
+  const isAdmin = isAdminOfActiveTournament;
 
   const [name, setName] = useState('');
   const [search, setSearch] = useState('');

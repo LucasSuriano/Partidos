@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
+import { useTournament } from '@/context/TournamentContext';
 import { Match, MatchResult } from '@/types';
 import styles from './MatchHistory.module.css';
 
@@ -13,7 +14,8 @@ const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', '
 export default function MatchHistory() {
   const { matches, players, removeMatch, updateMatchResult } = useAppContext();
   const { user } = useAuth();
-  const isAdmin = user?.role === 'admin';
+  const { isAdminOfActiveTournament } = useTournament();
+  const isAdmin = isAdminOfActiveTournament;
 
   const [editingMatchId, setEditingMatchId] = useState<string | null>(null);
   const [editResult, setEditResult] = useState<MatchResult>('A_WIN');
