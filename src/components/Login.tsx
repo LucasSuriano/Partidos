@@ -177,6 +177,11 @@ export default function Login() {
           </button>
         </div>
 
+        {/* 
+          IMPORTANT: DO NOT REMOVE the following commented code. 
+          It contains Google Login functionality that is temporarily hidden but must be preserved for future use.
+        */}
+        {/*
         <div className={styles.dividerBox}>
           <hr className={styles.dividerLine} />
           <span className={styles.dividerText}>o usa google</span>
@@ -204,6 +209,7 @@ export default function Login() {
           </svg>
           Continuar con Google
         </button>
+        */}
 
         {/* Footer */}
         <p className={styles.footer}>Entiendanla © {new Date().getFullYear()}</p>
