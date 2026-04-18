@@ -287,7 +287,6 @@ export default function TournamentSelector() {
             {user ? getInitials(user.username) : '?'}
           </div>
           <span className={styles.username}>{user?.username}</span>
-          {user?.role === 'admin' && <span className={styles.roleBadgeAdmin}>admin</span>}
           {isSuperAdmin && <span className={styles.roleBadgeSuperadmin}>superadmin</span>}
           <button className={styles.logoutBtn} onClick={logout} title="Cerrar sesión">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">

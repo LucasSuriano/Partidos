@@ -27,7 +27,7 @@ export type Badge = {
   category: string;
 };
 
-export type Role = 'superadmin' | 'admin' | 'user';
+export type Role = 'superadmin' | 'user';
 
 export type MatchResult = 'A_WIN' | 'B_WIN' | 'DRAW';
 

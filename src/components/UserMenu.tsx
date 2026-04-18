@@ -56,9 +56,7 @@ export default function UserMenu({ hue }: Props) {
           {user?.role === 'superadmin' && (
             <span className={styles.roleBadgeSuperadmin}>superadmin</span>
           )}
-          {user?.role === 'admin' && (
-            <span className={styles.roleBadgeAdmin}>admin</span>
-          )}
+
           <svg
             className={`${styles.chevron} ${open ? styles.chevronOpen : ''}`}
             width="12" height="12" viewBox="0 0 24 24"
