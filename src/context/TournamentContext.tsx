@@ -10,7 +10,7 @@ interface TournamentContextProps {
   activeTournament: Tournament | null;
   setActiveTournament: (t: Tournament) => void;
   clearActiveTournament: () => void;
-  createTournament: (name: string, description: string, ownerId: string) => Promise<Tournament | null>;
+  createTournament: (name: string, description: string, ownerId: string, typeId: string) => Promise<Tournament | null>;
   isAdminOfActiveTournament: boolean;
   isLoading: boolean;
 }
@@ -46,13 +46,17 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         // Superadmin sees ALL tournaments
         const { data, error } = await supabase
           .from('tournaments')
-          .select('*, owner:users!owner_id(username)')
+          .select('*, owner:users!owner_id(username), type:tournament_types(name, slug, icon)')
           .order('created_at', { ascending: false });
         if (!error && data) {
           accessibleTournaments = data.map((t: any) => ({
             ...t,
             owner_username: t.owner?.username ?? null,
-            owner: undefined
+            type_name: t.type?.name ?? null,
+            type_slug: t.type?.slug ?? null,
+            type_icon: t.type?.icon ?? null,
+            owner: undefined,
+            type: undefined
           })) as Tournament[];
         }
       } else {
@@ -66,14 +70,18 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           const tournamentIds = data.map((row: { tournament_id: string }) => row.tournament_id);
           const { data: tournamentData, error: tError } = await supabase
             .from('tournaments')
-            .select('*, owner:users!owner_id(username)')
+            .select('*, owner:users!owner_id(username), type:tournament_types(name, slug, icon)')
             .in('id', tournamentIds)
             .order('created_at', { ascending: false });
           if (!tError && tournamentData) {
             accessibleTournaments = tournamentData.map((t: any) => ({
               ...t,
               owner_username: t.owner?.username ?? null,
-              owner: undefined
+              type_name: t.type?.name ?? null,
+              type_slug: t.type?.slug ?? null,
+              type_icon: t.type?.icon ?? null,
+              owner: undefined,
+              type: undefined
             })) as Tournament[];
           }
         } else if (error) {
@@ -121,13 +129,13 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     sessionStorage.removeItem('active_tournament');
   };
 
-  const createTournament = async (name: string, description: string, ownerId: string): Promise<Tournament | null> => {
+  const createTournament = async (name: string, description: string, ownerId: string, typeId: string): Promise<Tournament | null> => {
     if (user?.role !== 'superadmin') return null;
 
     const { data, error } = await supabase
       .from('tournaments')
-      .insert([{ name, description, owner_id: ownerId }])
-      .select('*, owner:users!owner_id(username)')
+      .insert([{ name, description, owner_id: ownerId, type_id: typeId }])
+      .select('*, owner:users!owner_id(username), type:tournament_types(name, slug, icon)')
       .single();
 
     if (error || !data) {
@@ -143,7 +151,11 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const newTournament: Tournament = {
       ...(data as any),
       owner_username: (data as any).owner?.username ?? null,
-      owner: undefined
+      type_name: (data as any).type?.name ?? null,
+      type_slug: (data as any).type?.slug ?? null,
+      type_icon: (data as any).type?.icon ?? null,
+      owner: undefined,
+      type: undefined
     };
     setTournaments(prev => [newTournament, ...prev]);
     return newTournament;

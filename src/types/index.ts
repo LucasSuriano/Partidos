@@ -4,6 +4,10 @@ export type Tournament = {
   description?: string | null;
   owner_id?: string | null;
   owner_username?: string | null;
+  type_id: string;
+  type_slug?: string;
+  type_name?: string;
+  type_icon?: string;
   created_at?: string;
 };
 

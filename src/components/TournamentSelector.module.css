@@ -290,6 +290,32 @@
   font-weight: 500;
 }
 
+.cardType {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.1rem;
+}
+
+.typeIcon {
+  font-size: 0.85rem;
+  filter: grayscale(0.5) opacity(0.7);
+}
+
+.card:hover .cardType {
+  color: #64748b;
+}
+
+.card:hover .typeIcon {
+  filter: grayscale(0) opacity(1);
+}
+
 
 .calIcon {
   font-size: 0.75rem;

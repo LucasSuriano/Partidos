@@ -29,6 +29,7 @@ interface CreateModalProps {
   onClose: () => void;
   onCreated: (t: Tournament) => void;
 }
+interface TournamentType { id: string; name: string; slug: string; icon: string; }
 
 function CreateModal({ onClose, onCreated }: CreateModalProps) {
   const { createTournament } = useTournament();
@@ -36,33 +37,57 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [ownerId, setOwnerId] = useState('');
+  const [typeId, setTypeId] = useState('');
   const [users, setUsers] = useState<AppUser[]>([]);
-  const [loadingUsers, setLoadingUsers] = useState(true);
+  const [types, setTypes] = useState<TournamentType[]>([]);
+  const [loadingInitial, setLoadingInitial] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    supabase
-      .from('users')
-      .select('id, username')
-      .order('username')
-      .then(({ data }) => {
-        if (data) setUsers(data as AppUser[]);
-        setLoadingUsers(false);
-        // Default owner = current superadmin
-        if (data && currentUser) {
-          const self = data.find((u: AppUser) => u.id === currentUser.id);
+    Promise.all([
+      supabase.from('users').select('id, username').order('username'),
+      supabase.from('tournament_types').select('*').order('name')
+    ]).then(([{ data: userData, error: userError }, { data: typeData, error: typeError }]) => {
+      if (userError) console.error('Error loading users:', userError);
+      if (typeError) {
+        console.error('Error loading tournament types:', typeError);
+        setError('Error al cargar tipos de torneo. Verificá la base de datos.');
+      }
+
+      if (userData) {
+        setUsers(userData as AppUser[]);
+        if (currentUser) {
+          const self = userData.find((u: AppUser) => u.id === currentUser.id);
           if (self) setOwnerId(self.id);
         }
-      });
+      }
+      
+      if (typeData && typeData.length > 0) {
+        setTypes(typeData as TournamentType[]);
+        // Default to football if available, otherwise any basketball/padel or the first one
+        const fallback = typeData.find((t: any) => t.slug.includes('foot')) || 
+                         typeData.find((t: any) => t.slug.includes('pad')) || 
+                         typeData[0];
+        if (fallback) setTypeId(fallback.id);
+      } else {
+        setTypes([]);
+      }
+      setLoadingInitial(false);
+    }).catch(err => {
+      console.error('Initial load failed:', err);
+      setLoadingInitial(false);
+      setError('Error de conexión o configuración.');
+    });
   }, [currentUser]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) { setError('El nombre es obligatorio'); return; }
     if (!ownerId) { setError('Tenés que designar un dueño'); return; }
+    if (!typeId) { setError('Tenés que elegir un tipo de torneo'); return; }
     setLoading(true);
-    const result = await createTournament(name.trim(), description.trim(), ownerId);
+    const result = await createTournament(name.trim(), description.trim(), ownerId, typeId);
     setLoading(false);
     if (result) {
       onCreated(result);
@@ -70,6 +95,8 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
       setError('No se pudo crear el torneo. Intentá de nuevo.');
     }
   };
+
+  const typeIcon = types.find(t => t.id === typeId)?.icon || '🏆';
 
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
@@ -104,7 +131,7 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
           </div>
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>Dueño del torneo *</label>
-            {loadingUsers ? (
+            {loadingInitial ? (
               <div className={styles.formInput} style={{ color: '#475569' }}>Cargando usuarios...</div>
             ) : (
               <select
@@ -122,11 +149,32 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
               Este usuario podrá registrar partidos y gestionar jugadores en este torneo.
             </p>
           </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>Tipo de Torneo *</label>
+            {loadingInitial ? (
+              <div className={styles.formInput} style={{ color: '#475569' }}>Cargando tipos...</div>
+            ) : types.length === 0 ? (
+              <div className={styles.formInput} style={{ color: '#f87171', borderColor: 'rgba(248, 113, 113, 0.3)' }}>
+                ⚠️ No se encontraron tipos de torneo
+              </div>
+            ) : (
+              <select
+                className={styles.formSelect}
+                value={typeId}
+                onChange={e => setTypeId(e.target.value)}
+              >
+                {types.map(t => (
+                  <option key={t.id} value={t.id}>{t.icon} {t.name}</option>
+                ))}
+              </select>
+            )}
+          </div>
           {error && <p className={styles.formError}>{error}</p>}
           <div className={styles.modalActions}>
             <button type="button" className={styles.cancelBtn} onClick={onClose}>Cancelar</button>
-            <button type="submit" className={styles.createBtn} disabled={loading || loadingUsers}>
-              {loading ? <span className={styles.btnSpinner} /> : '⚽'}
+            <button type="submit" className={styles.createBtn} disabled={loading || loadingInitial}>
+              {loading ? <span className={styles.btnSpinner} /> : typeIcon}
               {loading ? 'Creando...' : 'Crear Torneo'}
             </button>
           </div>
@@ -300,7 +348,7 @@ export default function TournamentSelector() {
 
       {/* Hero section */}
       <section className={styles.hero}>
-        <div className={styles.heroIcon}>⚽</div>
+        <div className={styles.heroIcon}>🏆</div>
         <h1 className={styles.heroTitle}>Seleccioná un Torneo</h1>
         <p className={styles.heroSubtitle}>
           {isLoading ? 'Cargando torneos...' : `${tournaments.length} torneo${tournaments.length !== 1 ? 's' : ''} disponible${tournaments.length !== 1 ? 's' : ''}`}
@@ -349,6 +397,10 @@ export default function TournamentSelector() {
                         {formatDate(t.created_at)}
                       </p>
                     )}
+                    <p className={styles.cardType}>
+                      <span className={styles.typeIcon}>{t.type_icon || '🏆'}</span>
+                      {t.type_name}
+                    </p>
                   </div>
                 </div>
                 <div className={styles.cardArrow}>→</div>
