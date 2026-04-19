@@ -134,6 +134,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (!p) return false;
 
+    // Helper para determinar la URL de la API
+    const getApiUrl = (path: string) => {
+      if (typeof window !== 'undefined' && !window.location.href.includes('localhost:3000')) {
+        return `https://partidos-ruby.vercel.app${path}`;
+      }
+      return path;
+    };
+
+    try {
       // Usamos la URL dinámica para que funcione tanto en local como en el APK
       const res = await fetch(getApiUrl('/api/auth/login'), {
         method: 'POST',
@@ -170,6 +179,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const p = password.trim();
 
     if (!p) return false;
+
+    const getApiUrl = (path: string) => {
+      if (typeof window !== 'undefined' && !window.location.href.includes('localhost:3000')) {
+        return `https://partidos-ruby.vercel.app${path}`;
+      }
+      return path;
+    };
 
     try {
       // Usamos la URL dinámica para que funcione tanto en local como en el APK
