@@ -1,7 +1,24 @@
 import bcrypt from 'bcryptjs';
 import { createServiceClient } from '@/lib/supabase';
 
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  });
+}
+
 export async function POST(request: Request) {
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+
   // Usamos service_role: bypasea RLS, puede leer/escribir users sin restricciones
   const supabase = createServiceClient();
 
@@ -9,7 +26,7 @@ export async function POST(request: Request) {
     const { username, password } = await request.json();
 
     if (!username || !password) {
-      return Response.json({ ok: false, error: 'Faltan credenciales' }, { status: 400 });
+      return Response.json({ ok: false, error: 'Faltan credenciales' }, { status: 400, headers: corsHeaders });
     }
 
     const u = username.trim();
@@ -23,12 +40,12 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (error || !data) {
-      return Response.json({ ok: false, error: 'Usuario no encontrado' }, { status: 401 });
+      return Response.json({ ok: false, error: 'Usuario no encontrado' }, { status: 401, headers: corsHeaders });
     }
 
     // Si no tiene password (usuario de Google u otro), rechazamos login manual
     if (!data.password) {
-      return Response.json({ ok: false, error: 'Este usuario no tiene contraseña manual' }, { status: 401 });
+      return Response.json({ ok: false, error: 'Este usuario no tiene contraseña manual' }, { status: 401, headers: corsHeaders });
     }
 
     let isValid = false;
@@ -63,10 +80,10 @@ export async function POST(request: Request) {
 
     // Devolvemos los datos del usuario (sin password)
     const user = { id: data.id, username: data.username, role: data.role };
-    return Response.json({ ok: true, user });
+    return Response.json({ ok: true, user }, { headers: corsHeaders });
 
   } catch (err) {
     console.error('Error en /api/auth/login:', err);
-    return Response.json({ ok: false, error: 'Error interno del servidor' }, { status: 500 });
+    return Response.json({ ok: false, error: 'Error interno del servidor' }, { status: 500, headers: corsHeaders });
   }
 }

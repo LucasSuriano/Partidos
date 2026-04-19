@@ -134,8 +134,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (!p) return false;
 
-    try {
-      const res = await fetch('/api/auth/login', {
+      // Usamos la URL dinámica para que funcione tanto en local como en el APK
+      const res = await fetch(getApiUrl('/api/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: u, password: p })
@@ -172,7 +172,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!p) return false;
 
     try {
-      const res = await fetch('/api/auth/register', {
+      // Usamos la URL dinámica para que funcione tanto en local como en el APK
+      const res = await fetch(getApiUrl('/api/auth/register'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: u, password: p })
