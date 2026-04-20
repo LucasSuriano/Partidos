@@ -378,8 +378,9 @@ function ManualBuilder({ allStats, pairMap, onReset, teamSize }: {
 
   const explanation = useMemo(() => {
     if (!revealed || !isComplete) return [];
-    return generateExplanation(teamA, teamB, pairMap);
-  }, [revealed, isComplete, teamA, teamB, pairMap]);
+    const isPadel = teamSize === 2;
+    return generateExplanation(teamA, teamB, pairMap, isPadel);
+  }, [revealed, isComplete, teamA, teamB, pairMap, teamSize]);
 
   return (
     <>
