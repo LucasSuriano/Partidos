@@ -11,6 +11,7 @@ interface TournamentContextProps {
   setActiveTournament: (t: Tournament) => void;
   clearActiveTournament: () => void;
   createTournament: (name: string, description: string, ownerId: string, typeId: string) => Promise<Tournament | null>;
+  updateTournamentConfig: (matchTypes: number[]) => Promise<boolean>;
   isAdminOfActiveTournament: boolean;
   isLoading: boolean;
 }
@@ -46,7 +47,7 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         // Superadmin sees ALL tournaments
         const { data, error } = await supabase
           .from('tournaments')
-          .select('*, owner:users!owner_id(username), type:tournament_types(name, slug, icon)')
+          .select('*, owner:users!owner_id(username), type:tournament_types(name, slug, icon), tournament_formats(match_type)')
           .order('created_at', { ascending: false });
         if (!error && data) {
           accessibleTournaments = data.map((t: any) => ({
@@ -55,8 +56,10 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             type_name: t.type?.name ?? null,
             type_slug: t.type?.slug ?? null,
             type_icon: t.type?.icon ?? null,
+            match_types: t.tournament_formats ? t.tournament_formats.map((f: any) => f.match_type).sort((a:number,b:number)=>a-b) : [],
             owner: undefined,
-            type: undefined
+            type: undefined,
+            tournament_formats: undefined
           })) as Tournament[];
         }
       } else {
@@ -70,7 +73,7 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           const tournamentIds = data.map((row: { tournament_id: string }) => row.tournament_id);
           const { data: tournamentData, error: tError } = await supabase
             .from('tournaments')
-            .select('*, owner:users!owner_id(username), type:tournament_types(name, slug, icon)')
+            .select('*, owner:users!owner_id(username), type:tournament_types(name, slug, icon), tournament_formats(match_type)')
             .in('id', tournamentIds)
             .order('created_at', { ascending: false });
           if (!tError && tournamentData) {
@@ -80,8 +83,10 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
               type_name: t.type?.name ?? null,
               type_slug: t.type?.slug ?? null,
               type_icon: t.type?.icon ?? null,
+              match_types: t.tournament_formats ? t.tournament_formats.map((f: any) => f.match_type).sort((a:number,b:number)=>a-b) : [],
               owner: undefined,
-              type: undefined
+              type: undefined,
+              tournament_formats: undefined
             })) as Tournament[];
           }
         } else if (error) {
@@ -135,7 +140,7 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const { data, error } = await supabase
       .from('tournaments')
       .insert([{ name, description, owner_id: ownerId, type_id: typeId }])
-      .select('*, owner:users!owner_id(username), type:tournament_types(name, slug, icon)')
+      .select('*, owner:users!owner_id(username), type:tournament_types(name, slug, icon), tournament_formats(match_type)')
       .single();
 
     if (error || !data) {
@@ -154,11 +159,50 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       type_name: (data as any).type?.name ?? null,
       type_slug: (data as any).type?.slug ?? null,
       type_icon: (data as any).type?.icon ?? null,
+      match_types: (data as any).tournament_formats ? (data as any).tournament_formats.map((f: any) => f.match_type).sort((a:number,b:number)=>a-b) : [],
       owner: undefined,
-      type: undefined
+      type: undefined,
+      tournament_formats: undefined
     };
     setTournaments(prev => [newTournament, ...prev]);
     return newTournament;
+  };
+  const updateTournamentConfig = async (matchTypes: number[]): Promise<boolean> => {
+    if (!activeTournament) return false;
+    try {
+      // 1. Limpiar todos los formatos anteriores del torneo
+      const { error: deleteError } = await supabase
+        .from('tournament_formats')
+        .delete()
+        .eq('tournament_id', activeTournament.id);
+
+      if (deleteError) {
+        console.error('Error vaciando formatos:', deleteError);
+        return false;
+      }
+
+      // 2. Insertar las nuevas filas (si se eligieron formatos)
+      if (matchTypes.length > 0) {
+        const insertData = matchTypes.map((t) => ({ tournament_id: activeTournament.id, match_type: t }));
+        const { error: insertError } = await supabase
+          .from('tournament_formats')
+          .insert(insertData);
+
+        if (insertError) {
+          console.error('Error insertando nuevos formatos:', insertError);
+          return false;
+        }
+      }
+      
+      const updatedStr = JSON.stringify({ ...activeTournament, match_types: matchTypes });
+      sessionStorage.setItem('active_tournament', updatedStr);
+      setTournaments(prev => prev.map(t => t.id === activeTournament.id ? { ...t, match_types: matchTypes } : t));
+      setActiveTournamentState(prev => prev ? { ...prev, match_types: matchTypes } : null);
+      return true;
+    } catch(e) {
+      console.error('Catch error in updateTournamentConfig:', e);
+      return false;
+    }
   };
 
   return (
@@ -168,6 +212,7 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       setActiveTournament,
       clearActiveTournament,
       createTournament,
+      updateTournamentConfig,
       isAdminOfActiveTournament,
       isLoading
     }}>

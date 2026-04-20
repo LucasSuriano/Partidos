@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { calculateStats } from '@/lib/stats';
 import { Match, Player, PlayerStats } from '@/types';
+import { useTournament } from '@/context/TournamentContext';
 import styles from './TeamSimulator.module.css';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -273,7 +274,8 @@ function getNotablePairs(
 
 function generateExplanation(
   teamA: PlayerStats[], teamB: PlayerStats[],
-  pairMap: Map<string, PairStats>
+  pairMap: Map<string, PairStats>,
+  isPadel: boolean
 ): string[] {
   const avgA   = teamA.reduce((s, p) => s + playerStrength(p), 0) / teamA.length;
   const avgB   = teamB.reduce((s, p) => s + playerStrength(p), 0) / teamB.length;
@@ -287,10 +289,14 @@ function generateExplanation(
   const lines: string[] = [];
 
   lines.push(
-    `🎯 El draft inicial ordenó a los jugadores por puntaje de fuerza y los distribuyó en serpentina. Luego, un optimizador probó todos los intercambios posibles para minimizar la diferencia de fuerza Y la diferencia de química de equipo.`
+    isPadel
+      ? `🎯 La simulación ordenó a los jugadores por nivel de juego y buscó equilibrar las parejas. Luego probó combinaciones cruzadas para tener un partido justo.`
+      : `🎯 El draft inicial ordenó a los jugadores por puntaje de fuerza y los distribuyó en serpentina. Luego, un optimizador probó todos los intercambios posibles para minimizar la diferencia de nivel.`
   );
   lines.push(
-    `📊 Puntaje de fuerza = % victorias + bono de experiencia (hasta +10 pts con 20 PJ) + bono de racha histórica (×1.5 por win). Química = promedio ponderado de % de victorias jugando juntos.`
+    isPadel 
+      ? `📊 Nivel individual = % victorias + bono de experiencia + rachas. Química = promedio de % victorias cuando jugaron juntos como pareja.`
+      : `📊 Puntaje de fuerza = % victorias + bono de experiencia (hasta +10 pts con 20 PJ) + bono de racha histórica (×1.5 por win). Química = promedio ponderado de % de victorias jugando juntos.`
   );
   lines.push(
     `⚖️ Fuerza promedio — Equipo A: ${avgA.toFixed(1)} pts · Equipo B: ${avgB.toFixed(1)} pts (diferencia: ${diff} pts).`
@@ -330,10 +336,11 @@ function generateExplanation(
 
 const MANUAL_TEAM_SIZE = 5;
 
-function ManualBuilder({ allStats, pairMap, onReset }: {
+function ManualBuilder({ allStats, pairMap, onReset, teamSize }: {
   allStats: PlayerStats[];
   pairMap: Map<string, PairStats>;
   onReset: () => void;
+  teamSize: number;
 }) {
   const [teamA, setTeamA] = useState<PlayerStats[]>([]);
   const [teamB, setTeamB] = useState<PlayerStats[]>([]);
@@ -351,8 +358,8 @@ function ManualBuilder({ allStats, pairMap, onReset }: {
 
   const addTo = (team: 'A' | 'B', s: PlayerStats) => {
     if (revealed) return;
-    if (team === 'A' && teamA.length < MANUAL_TEAM_SIZE) setTeamA(prev => [...prev, s]);
-    if (team === 'B' && teamB.length < MANUAL_TEAM_SIZE) setTeamB(prev => [...prev, s]);
+    if (team === 'A' && teamA.length < teamSize) setTeamA(prev => [...prev, s]);
+    if (team === 'B' && teamB.length < teamSize) setTeamB(prev => [...prev, s]);
   };
 
   const removeFrom = (team: 'A' | 'B', id: string) => {
@@ -361,7 +368,7 @@ function ManualBuilder({ allStats, pairMap, onReset }: {
     if (team === 'B') setTeamB(prev => prev.filter(p => p.player.id !== id));
   };
 
-  const isComplete = teamA.length === MANUAL_TEAM_SIZE && teamB.length === MANUAL_TEAM_SIZE;
+  const isComplete = teamA.length === teamSize && teamB.length === teamSize;
 
   // Use parent pairMap for the analysis (it contains all match history)
   const notablePairs = useMemo(() => {
@@ -386,6 +393,7 @@ function ManualBuilder({ allStats, pairMap, onReset }: {
               color="green"
               team={teamA}
               available={available}
+              teamSize={teamSize}
               onAdd={(s) => addTo('A', s)}
               onRemove={(id) => removeFrom('A', id)}
             />
@@ -395,6 +403,7 @@ function ManualBuilder({ allStats, pairMap, onReset }: {
               color="blue"
               team={teamB}
               available={available}
+              teamSize={teamSize}
               onAdd={(s) => addTo('B', s)}
               onRemove={(id) => removeFrom('B', id)}
             />
@@ -407,7 +416,7 @@ function ManualBuilder({ allStats, pairMap, onReset }: {
               disabled={!isComplete}
             >
               {!isComplete
-                ? `Faltan jugadores (A: ${teamA.length}/5 · B: ${teamB.length}/5)`
+                ? `Faltan jugadores (A: ${teamA.length}/${teamSize} · B: ${teamB.length}/${teamSize})`
                 : '📊 Ver Análisis'}
             </button>
           </div>
@@ -467,15 +476,16 @@ function ManualBuilder({ allStats, pairMap, onReset }: {
   );
 }
 
-function ManualTeamPanel({ label, color, team, available, onAdd, onRemove }: {
+function ManualTeamPanel({ label, color, team, available, onAdd, onRemove, teamSize }: {
   label: string;
   color: 'green' | 'blue';
   team: PlayerStats[];
   available: PlayerStats[];
   onAdd: (s: PlayerStats) => void;
   onRemove: (id: string) => void;
+  teamSize: number;
 }) {
-  const full = team.length === MANUAL_TEAM_SIZE;
+  const full = team.length === teamSize;
   const isGreen = color === 'green';
 
   return (
@@ -484,7 +494,7 @@ function ManualTeamPanel({ label, color, team, available, onAdd, onRemove }: {
         <span className={styles.teamIcon}>{isGreen ? '🟢' : '🔵'}</span>
         <h3 className={styles.manualTeamTitle}>{label}</h3>
         <span className={`${styles.counter} ${full ? styles.counterFull : ''}`}>
-          {team.length}/{MANUAL_TEAM_SIZE}
+          {team.length}/{teamSize}
         </span>
       </div>
 
@@ -492,7 +502,7 @@ function ManualTeamPanel({ label, color, team, available, onAdd, onRemove }: {
       <div className={styles.manualProgressTrack}>
         <div
           className={`${styles.manualProgressBar} ${isGreen ? styles.manualProgressGreen : styles.manualProgressBlue}`}
-          style={{ width: `${(team.length / MANUAL_TEAM_SIZE) * 100}%` }}
+          style={{ width: `${(team.length / teamSize) * 100}%` }}
         />
       </div>
 
@@ -506,7 +516,7 @@ function ManualTeamPanel({ label, color, team, available, onAdd, onRemove }: {
             <button className={styles.manualRemoveBtn} onClick={() => onRemove(s.player.id)}>✕</button>
           </div>
         ))}
-        {Array.from({ length: MANUAL_TEAM_SIZE - team.length }).map((_, i) => (
+        {Array.from({ length: teamSize - team.length }).map((_, i) => (
           <div key={`empty-${i}`} className={styles.manualRosterEmpty}>
             <span className={styles.manualRosterNum}>{team.length + i + 1}</span>
             <span className={styles.manualRosterPlaceholder}>Vacío</span>
@@ -553,6 +563,13 @@ type SimMode = null | 'auto' | 'manual';
 
 export default function TeamSimulator() {
   const { players, matches } = useAppContext();
+  const { activeTournament } = useTournament();
+
+  const isPadel = activeTournament?.type_slug === 'paddle';
+  const matchTypes = isPadel ? [2] : (activeTournament?.match_types?.length ? activeTournament.match_types.sort((a,b)=>a-b) : [5]);
+  const [teamSize, setTeamSize] = useState<number>(matchTypes[0]);
+  const totalRequired = teamSize * 2;
+
   const allStats = useMemo(() => {
     const stats = calculateStats(players, matches);
     return stats.sort((a, b) => {
@@ -578,7 +595,7 @@ export default function TeamSimulator() {
     setSelected(prev => {
       const next = new Set(prev);
       if (next.has(id)) { next.delete(id); }
-      else if (next.size < 10) { next.add(id); }
+      else if (next.size < totalRequired) { next.add(id); }
       return next;
     });
   };
@@ -594,21 +611,21 @@ export default function TeamSimulator() {
   );
 
   const result = useMemo(() => {
-    if (!simulated || selectedStats.length !== 10) return null;
+    if (!simulated || selectedStats.length !== totalRequired) return null;
     return buildBalancedTeams(selectedStats, pairMap);
-  }, [simulated, selectedStats, pairMap]);
+  }, [simulated, selectedStats, pairMap, totalRequired]);
 
   const explanation = useMemo(() => {
     if (!result) return [];
-    return generateExplanation(result.teamA, result.teamB, pairMap);
-  }, [result, pairMap]);
+    return generateExplanation(result.teamA, result.teamB, pairMap, isPadel);
+  }, [result, pairMap, isPadel]);
 
   const notablePairs = useMemo(() => {
     if (!result) return { internal: [], clashes: [] };
     return getNotablePairs(result.teamA, result.teamB, pairMap, playerById);
   }, [result, pairMap, playerById]);
 
-  const handleSimulate = () => { if (selected.size === 10) setSimulated(true); };
+  const handleSimulate = () => { if (selected.size === totalRequired) setSimulated(true); };
 
   // Full pair map for manual mode (all players, all history)
   const fullPairMap = useMemo(
@@ -616,6 +633,12 @@ export default function TeamSimulator() {
     [players, matches]
   );
 
+  const handleTypeChange = (newSize: number) => {
+    setTeamSize(newSize);
+    setSelected(new Set());
+    setSimulated(false);
+  };
+  
   const handleReset = () => {
     setMode(null);
     setSelected(new Set());
@@ -635,11 +658,34 @@ export default function TeamSimulator() {
   return (
     <div className={styles.container}>
       <div className={styles.pageHeader}>
-        <h1 className={styles.pageTitle}>⚽ Simulación de Equipos</h1>
+        <h1 className={styles.pageTitle}>{activeTournament?.type_icon || '⚽'} Simulación de Equipos</h1>
         {!mode && (
           <p className={styles.pageSubtitle}>
             Elegí cómo querés armar los equipos para el partido.
           </p>
+        )}
+        
+        {mode && matchTypes.length > 1 && !simulated && (
+          <div className={styles.formatSelector} style={{marginTop: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center'}}>
+            <span style={{color: '#94a3b8', fontSize: '0.9rem'}}>Formato:</span>
+            {matchTypes.map(size => (
+              <button
+                key={size}
+                className={styles.formatBtn}
+                style={{
+                  background: teamSize === size ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                  color: teamSize === size ? '#10b981' : '#94a3b8',
+                  border: `1px solid ${teamSize === size ? 'rgba(16, 185, 129, 0.5)' : 'rgba(255, 255, 255, 0.1)'}`,
+                  borderRadius: '6px',
+                  padding: '4px 12px',
+                  cursor: 'pointer'
+                }}
+                onClick={() => handleTypeChange(size)}
+              >
+                {size}v{size}
+              </button>
+            ))}
+          </div>
         )}
       </div>
 
@@ -687,15 +733,15 @@ export default function TeamSimulator() {
         <div className={styles.pickerSection}>
           <div className={styles.pickerHeader}>
             <span className={styles.pickerLabel}>Jugadores seleccionados</span>
-            <span className={`${styles.counter} ${selected.size === 10 ? styles.counterFull : ''}`}>
-              {selected.size} / 10
+            <span className={`${styles.counter} ${selected.size === totalRequired ? styles.counterFull : ''}`}>
+              {selected.size} / {totalRequired}
             </span>
           </div>
 
           <div className={styles.playerGrid}>
             {allStats.map((s, index) => {
               const isSelected  = selected.has(s.player.id);
-              const isDisabled  = !isSelected && selected.size >= 10;
+              const isDisabled  = !isSelected && selected.size >= totalRequired;
               const strength    = playerStrength(s);
               const strengthPct = Math.min(strength, 120) / 120 * 100;
 
@@ -725,10 +771,10 @@ export default function TeamSimulator() {
             <button
               className={styles.simulateBtn}
               onClick={handleSimulate}
-              disabled={selected.size !== 10}
+              disabled={selected.size !== totalRequired}
             >
-              {selected.size < 10
-                ? `Falta elegir ${10 - selected.size} jugador${10 - selected.size !== 1 ? 'es' : ''}`
+              {selected.size < totalRequired
+                ? `Falta elegir ${totalRequired - selected.size} jugador${totalRequired - selected.size !== 1 ? 'es' : ''}`
                 : '⚡ Generar Equipos'}
             </button>
           </div>
@@ -787,6 +833,7 @@ export default function TeamSimulator() {
           allStats={allStats}
           pairMap={fullPairMap}
           onReset={handleReset}
+          teamSize={teamSize}
         />
       )}
     </div>

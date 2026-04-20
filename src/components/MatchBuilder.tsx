@@ -5,8 +5,7 @@ import { useAppContext } from '@/context/AppContext';
 import { Player, MatchResult } from '@/types';
 import styles from './MatchBuilder.module.css';
 import DatePicker from './DatePicker';
-
-const TEAM_SIZE = 5;
+import { useTournament } from '@/context/TournamentContext';
 
 interface TeamPanelProps {
   label: string;
@@ -15,11 +14,12 @@ interface TeamPanelProps {
   variant: 'green' | 'red' | 'draw';
   onAdd: (player: Player) => void;
   onRemove: (playerId: string) => void;
+  teamSize: number;
 }
 
-function TeamPanel({ label, team, availablePlayers, variant, onAdd, onRemove }: TeamPanelProps) {
-  const full = team.length === TEAM_SIZE;
-  const progress = team.length / TEAM_SIZE;
+function TeamPanel({ label, team, availablePlayers, variant, onAdd, onRemove, teamSize }: TeamPanelProps) {
+  const full = team.length === teamSize;
+  const progress = team.length / teamSize;
   const isDraw = variant === 'draw';
   const isRed = variant === 'red';
 
@@ -33,7 +33,7 @@ function TeamPanel({ label, team, availablePlayers, variant, onAdd, onRemove }: 
           {label}
         </h3>
         <span className={`${styles.counter} ${full ? (isDraw ? styles.counterFullDraw : styles.counterFull) : ''}`}>
-          {team.length}/{TEAM_SIZE}
+          {team.length}/{teamSize}
         </span>
       </div>
 
@@ -47,7 +47,7 @@ function TeamPanel({ label, team, availablePlayers, variant, onAdd, onRemove }: 
 
       {/* Slots de jugadores seleccionados */}
       <div className={styles.slotList}>
-        {Array.from({ length: TEAM_SIZE }).map((_, i) => {
+        {Array.from({ length: teamSize }).map((_, i) => {
           const player = team[i];
           return player ? (
             <div key={player.id} className={`${styles.slot} ${styles.slotFilled} ${isRed ? styles.slotFilledRed : ''} ${isDraw ? styles.slotFilledDraw : ''}`}>
@@ -102,17 +102,41 @@ function TeamPanel({ label, team, availablePlayers, variant, onAdd, onRemove }: 
 
 export default function MatchBuilder({ onComplete }: { onComplete: () => void }) {
   const { players, matches, addMatch } = useAppContext();
+  const { activeTournament } = useTournament();
+
+  const isPadel = activeTournament?.type_slug === 'paddle';
+  const matchTypes = isPadel ? [2] : (activeTournament?.match_types?.length ? activeTournament.match_types.sort((a,b)=>a-b) : [5]);
+  const [teamSize, setTeamSize] = useState<number>(matchTypes[0]);
 
   const [teamA, setTeamA] = useState<Player[]>([]);
   const [teamB, setTeamB] = useState<Player[]>([]);
   const [matchDate, setMatchDate] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [result, setResult] = useState<MatchResult>('A_WIN');
+  const [result, setResult] = useState<MatchResult | null>(null);
   const [scoreA, setScoreA] = useState<string>('');
   const [scoreB, setScoreB] = useState<string>('');
+  
+  const [padelSets, setPadelSets] = useState<{ scoreA: string; scoreB: string }[]>([
+    { scoreA: '', scoreB: '' },
+    { scoreA: '', scoreB: '' },
+    { scoreA: '', scoreB: '' },
+    { scoreA: '', scoreB: '' },
+    { scoreA: '', scoreB: '' }
+  ]);
 
-  const isDraw = result === 'DRAW';
+  const handlePadelSetChange = (index: number, field: 'scoreA' | 'scoreB', value: string) => {
+    const newSets = [...padelSets];
+    newSets[index][field] = value;
+    setPadelSets(newSets);
+  };
 
-  const availablePlayers = players
+  const handleTypeChange = (newSize: number) => {
+    setTeamSize(newSize);
+    setTeamA([]);
+    setTeamB([]);
+    setResult(null);
+  };
+
+  const available = players
     .filter(p => !teamA.find(a => a.id === p.id) && !teamB.find(b => b.id === p.id))
     .sort((a, b) => {
       const attendanceA = matches.filter(m => m.teamA.includes(a.id) || m.teamB.includes(a.id)).length;
@@ -121,41 +145,89 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
       return a.name.localeCompare(b.name);
     });
 
-  const addToTeam = (team: 'A' | 'B', player: Player) => {
-    if (team === 'A' && teamA.length < TEAM_SIZE) setTeamA(prev => [...prev, player]);
-    if (team === 'B' && teamB.length < TEAM_SIZE) setTeamB(prev => [...prev, player]);
+  const addTo = (team: 'A' | 'B', player: Player) => {
+    if (team === 'A' && teamA.length < teamSize) setTeamA(prev => [...prev, player]);
+    if (team === 'B' && teamB.length < teamSize) setTeamB(prev => [...prev, player]);
   };
 
-  const removeFromTeam = (team: 'A' | 'B', playerId: string) => {
+  const removeFrom = (team: 'A' | 'B', playerId: string) => {
     if (team === 'A') setTeamA(prev => prev.filter(p => p.id !== playerId));
     if (team === 'B') setTeamB(prev => prev.filter(p => p.id !== playerId));
   };
 
   const handleSubmit = () => {
-    if (teamA.length !== TEAM_SIZE || teamB.length !== TEAM_SIZE || !matchDate) return;
+    let finalResult = result;
+    let finalScoreA: number | undefined = parseInt(scoreA, 10);
+    let finalScoreB: number | undefined = parseInt(scoreB, 10);
+    let metadata: any = null;
+
+    if (isPadel) {
+      let setsA = 0;
+      let setsB = 0;
+      const validSets = padelSets.filter(s => s.scoreA !== '' && s.scoreB !== '');
+      
+      validSets.forEach(s => {
+        const a = parseInt(s.scoreA, 10);
+        const b = parseInt(s.scoreB, 10);
+        if (!isNaN(a) && !isNaN(b)) {
+           if (a > b) setsA++;
+           else if (b > a) setsB++;
+        }
+      });
+      
+      finalScoreA = setsA;
+      finalScoreB = setsB;
+      
+      if (setsA > setsB) finalResult = 'A_WIN';
+      else if (setsB > setsA) finalResult = 'B_WIN';
+      else if (validSets.length > 0) finalResult = 'DRAW'; // Fallback
+
+      metadata = {
+        sets: validSets.map(s => ({ scoreA: parseInt(s.scoreA, 10), scoreB: parseInt(s.scoreB, 10) }))
+      };
+    }
+
+    if (teamA.length !== teamSize || teamB.length !== teamSize || !matchDate || !finalResult) return;
     const fullDate = new Date(`${matchDate}T12:00:00Z`).toISOString();
     
-    let parsedScoreA: number | undefined = parseInt(scoreA, 10);
-    let parsedScoreB: number | undefined = parseInt(scoreB, 10);
-    if (isNaN(parsedScoreA)) parsedScoreA = undefined;
-    if (isNaN(parsedScoreB)) parsedScoreB = undefined;
+    if (!isPadel) {
+      if (isNaN(finalScoreA as number)) finalScoreA = undefined;
+      if (isNaN(finalScoreB as number)) finalScoreB = undefined;
+    }
 
-    addMatch(fullDate, teamA.map(p => p.id), teamB.map(p => p.id), result, parsedScoreA, parsedScoreB);
+    addMatch(fullDate, teamA.map(p => p.id), teamB.map(p => p.id), finalResult, finalScoreA, finalScoreB, metadata);
     onComplete();
   };
 
-  const isComplete = teamA.length === TEAM_SIZE && teamB.length === TEAM_SIZE;
-
-  // Labels y variantes dinámicos según resultado
-  const labelA = isDraw ? 'Equipo A' : result === 'A_WIN' ? 'Equipo Ganador' : 'Equipo Perdedor';
-  const labelB = isDraw ? 'Equipo B' : result === 'B_WIN' ? 'Equipo Ganador' : 'Equipo Perdedor';
-  const variantA: 'green' | 'red' | 'draw' = isDraw ? 'draw' : result === 'A_WIN' ? 'green' : 'red';
-  const variantB: 'green' | 'red' | 'draw' = isDraw ? 'draw' : result === 'B_WIN' ? 'green' : 'red';
+  const teamsFull = teamA.length === teamSize && teamB.length === teamSize;
+  const validPadelSets = padelSets.filter(s => s.scoreA !== '' && s.scoreB !== '').length;
+  const canSubmit = teamsFull && (isPadel ? validPadelSets > 0 : !!result);
 
   return (
     <div className={styles.container}>
 
-      {/* Fecha arriba */}
+      <div className={styles.pageHeader}>
+        <h1 className={styles.pageTitle}>{activeTournament?.type_icon || '⚽'} Registrar Partido</h1>
+        <p className={styles.pageSubtitle}>Armá los equipos y guardá el resultado.</p>
+        
+        {matchTypes.length > 1 && (
+          <div className={styles.formatSelector}>
+            <span className={styles.formatLabel}>Formato:</span>
+            <div className={styles.formatGroup}>
+              {matchTypes.map(size => (
+                <button
+                  key={size}
+                  className={`${styles.formatBtn} ${teamSize === size ? styles.formatBtnActive : ''}`}
+                  onClick={() => handleTypeChange(size)}
+                >
+                  {size}v{size}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className={`${styles.datePanelBox} glass-panel`}>
         <div className={styles.datePickerContainer}>
           <label className={styles.dateLabel}>Fecha del Partido</label>
@@ -163,8 +235,47 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
         </div>
       </div>
 
-      {/* Selector de resultado — visible cuando ambos equipos están completos */}
-      {isComplete && (
+      {teamsFull && isPadel && (
+        <div className={`${styles.resultPicker} glass-panel`}>
+          <span className={styles.resultPickerLabel} style={{ marginBottom: '0.5rem', display: 'block' }}>Resultados de los Sets</span>
+          <div className={styles.padelSetsWrapper} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
+            {padelSets.map((set, index) => (
+              <div key={index} className={styles.scoreInputsWrapper} style={{ gap: '10px' }}>
+                <div className={styles.scoreInputBox} style={{ flex: '1', padding: '10px' }}>
+                  <span className={styles.scoreTeamName} style={{ fontSize: '0.75rem', opacity: 0.7 }}>Eq. A (Set {index + 1})</span>
+                  <input
+                    type="number"
+                    min="0"
+                    className={styles.scoreInput}
+                    value={set.scoreA}
+                    onChange={e => handlePadelSetChange(index, 'scoreA', e.target.value)}
+                    placeholder="0"
+                    style={{ padding: '4px', fontSize: '1.1rem', marginTop: '4px', textAlign: 'center' }}
+                  />
+                </div>
+                <span className={styles.scoreSeparator} style={{ fontSize: '1.2rem' }}>—</span>
+                <div className={styles.scoreInputBox} style={{ flex: '1', padding: '10px' }}>
+                  <span className={styles.scoreTeamName} style={{ fontSize: '0.75rem', opacity: 0.7 }}>Eq. B (Set {index + 1})</span>
+                  <input
+                    type="number"
+                    min="0"
+                    className={styles.scoreInput}
+                    value={set.scoreB}
+                    onChange={e => handlePadelSetChange(index, 'scoreB', e.target.value)}
+                    placeholder="0"
+                    style={{ padding: '4px', fontSize: '1.1rem', marginTop: '4px', textAlign: 'center' }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.85rem', color: 'var(--accent-primary)', background: 'rgba(16, 185, 129, 0.1)', padding: '10px', borderRadius: '8px' }}>
+            Puntaje Final será calculado automáticamente en base a sets ganados.
+          </div>
+        </div>
+      )}
+
+      {teamsFull && !isPadel && (
         <div className={`${styles.resultPicker} glass-panel`}>
           <span className={styles.resultPickerLabel}>¿Cómo terminó el partido?</span>
           <div className={styles.resultOptions}>
@@ -191,7 +302,6 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
             </button>
           </div>
 
-          {/* Opcional: Goles */}
           <div className={styles.scoreSection}>
             <span className={styles.scoreLabel}>Marcador Final (Opcional)</span>
             <div className={styles.scoreInputsWrapper}>
@@ -223,37 +333,37 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
         </div>
       )}
 
-      {/* Equipos */}
       <div className={styles.teamsLayout}>
         <TeamPanel
-          label={labelA}
+          label="Equipo A"
+          variant={result === 'A_WIN' ? 'green' : result === 'B_WIN' ? 'red' : result === 'DRAW' ? 'draw' : 'green'}
           team={teamA}
-          availablePlayers={availablePlayers}
-          variant={variantA}
-          onAdd={(p) => addToTeam('A', p)}
-          onRemove={(id) => removeFromTeam('A', id)}
+          teamSize={teamSize}
+          availablePlayers={available}
+          onAdd={(p) => addTo('A', p)}
+          onRemove={(id) => removeFrom('A', id)}
         />
         <TeamPanel
-          label={labelB}
+          label="Equipo B"
+          variant={result === 'B_WIN' ? 'green' : result === 'A_WIN' ? 'red' : result === 'DRAW' ? 'draw' : 'green'}
           team={teamB}
-          availablePlayers={availablePlayers}
-          variant={variantB}
-          onAdd={(p) => addToTeam('B', p)}
-          onRemove={(id) => removeFromTeam('B', id)}
+          teamSize={teamSize}
+          availablePlayers={available}
+          onAdd={(p) => addTo('B', p)}
+          onRemove={(id) => removeFrom('B', id)}
         />
       </div>
 
-      {/* Botón guardar */}
-      {isComplete ? (
+      {canSubmit ? (
         <button
-          className={`${styles.submitBtn} ${isDraw ? styles.submitBtnDraw : ''}`}
+          className={`${styles.submitBtn} ${result === 'DRAW' ? styles.submitBtnDraw : ''}`}
           onClick={handleSubmit}
         >
-          {isDraw ? '🤝 Guardar Empate' : '⚽ Guardar Partido'}
+          {result === 'DRAW' ? '🤝 Guardar Empate' : '⚽ Guardar Partido'}
         </button>
       ) : (
         <p className={styles.hint}>
-          Selecciona {TEAM_SIZE} jugadores por equipo para continuar.
+          Selecciona {teamSize} jugadores por equipo para continuar.
         </p>
       )}
 

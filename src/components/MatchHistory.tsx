@@ -14,8 +14,9 @@ const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', '
 export default function MatchHistory() {
   const { matches, players, removeMatch, updateMatchResult } = useAppContext();
   const { user } = useAuth();
-  const { isAdminOfActiveTournament } = useTournament();
+  const { activeTournament, isAdminOfActiveTournament } = useTournament();
   const isAdmin = isAdminOfActiveTournament;
+  const tIcon = activeTournament?.type_icon || '⚽';
 
   const [editingMatchId, setEditingMatchId] = useState<string | null>(null);
   const [editResult, setEditResult] = useState<MatchResult>('A_WIN');
@@ -79,7 +80,7 @@ export default function MatchHistory() {
   if (matches.length === 0) {
     return (
       <div className={`${styles.container} glass-panel ${styles.emptyState}`}>
-        <span className={styles.emptyIcon}>⚽</span>
+        <span className={styles.emptyIcon}>{tIcon}</span>
         <h2>No se han jugado partidos aún</h2>
         <p>Registra un partido para que aparezca aquí el historial.</p>
       </div>
@@ -185,14 +186,25 @@ export default function MatchHistory() {
 
                       {/* VS central o Score */}
                       {match.scoreA != null && match.scoreB != null ? (
-                        <div className={styles.scorePill}>
-                          <div className={styles.scoreBox}>{match.scoreA}</div>
-                          <div className={styles.scoreSeparator} />
-                          <div className={styles.scoreBox}>{match.scoreB}</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                          <div className={styles.scorePill}>
+                            <div className={styles.scoreBox}>{match.scoreA}</div>
+                            <div className={styles.scoreSeparator} />
+                            <div className={styles.scoreBox}>{match.scoreB}</div>
+                          </div>
+                          {match.metadata?.sets && match.metadata.sets.length > 0 && (
+                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                              {match.metadata.sets.map((setInfo: any, sIdx: number) => (
+                                <div key={sIdx} style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px', color: 'rgba(255,255,255,0.8)' }}>
+                                  {setInfo.scoreA}-{setInfo.scoreB}
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <div className={styles.vsSeparator}>
-                          <span className={styles.vsIcon}>⚽</span>
+                          <span className={styles.vsIcon}>{tIcon}</span>
                           <span className={styles.vsText}>VS</span>
                         </div>
                       )}

@@ -8,6 +8,7 @@ export type Tournament = {
   type_slug?: string;
   type_name?: string;
   type_icon?: string;
+  match_types?: number[];
   created_at?: string;
 };
 
@@ -29,6 +30,7 @@ export type Badge = {
   icon: string;
   description: string;
   category: string;
+  type_id?: string | null;
 };
 
 export type Role = 'superadmin' | 'user';
@@ -43,6 +45,9 @@ export type Match = {
   result: MatchResult;
   scoreA?: number | null;
   scoreB?: number | null;
+  metadata?: {
+    sets?: { scoreA: number; scoreB: number }[];
+  } | null;
 };
 
 export type PlayerStats = {

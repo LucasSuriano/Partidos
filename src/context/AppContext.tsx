@@ -13,14 +13,14 @@ interface AppContextProps {
   removePlayer: (id: string) => Promise<void>;
   updatePlayer: (id: string, newName: string) => Promise<void>;
   togglePlayerBadge: (playerId: string, badgeId: string, userId: string) => Promise<void>;
-  addMatch: (date: string, teamA: string[], teamB: string[], result: MatchResult, scoreA?: number, scoreB?: number) => Promise<void>;
+  addMatch: (date: string, teamA: string[], teamB: string[], result: MatchResult, scoreA?: number, scoreB?: number, metadata?: any) => Promise<void>;
   removeMatch: (id: string) => Promise<void>;
   updateMatchResult: (id: string, result: MatchResult, scoreA?: number, scoreB?: number) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextProps | undefined>(undefined);
 
-export const AppProvider: React.FC<{ children: React.ReactNode; tournamentId: string | null }> = ({ children, tournamentId }) => {
+export const AppProvider: React.FC<{ children: React.ReactNode; tournamentId: string | null; tournamentTypeId?: string | null }> = ({ children, tournamentId, tournamentTypeId }) => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
   const [badges, setBadges] = useState<Badge[]>([]);
@@ -37,13 +37,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode; tournamentId: st
     const loadData = async () => {
       setIsLoaded(false);
 
-      // Fetch badges definition (global — not scoped to tournament)
+      // Fetch badges definition (global or specific to this sport type)
       const { data: badgesDefData, error: badgesDefError } = await supabase.from('badges').select('*');
       if (badgesDefError) {
         console.error("Error loading badge definitions:", badgesDefError);
       }
       if (badgesDefData) {
-        setBadges(badgesDefData);
+        // Filter out badges that belong exclusively to another sport
+        const filteredBadges = badgesDefData.filter(b => !b.type_id || b.type_id === tournamentTypeId);
+        setBadges(filteredBadges);
       }
 
       // Fetch players for this tournament
@@ -91,7 +93,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode; tournamentId: st
           teamB: m.team_b,
           result: m.result as MatchResult,
           scoreA: m.score_a,
-          scoreB: m.score_b
+          scoreB: m.score_b,
+          metadata: m.metadata
         }));
         setMatches(formattedMatches);
       }
@@ -139,9 +142,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode; tournamentId: st
     }
   };
 
-  const addMatch = async (date: string, teamA: string[], teamB: string[], result: MatchResult, scoreA?: number, scoreB?: number) => {
+  const addMatch = async (date: string, teamA: string[], teamB: string[], result: MatchResult, scoreA?: number, scoreB?: number, metadata?: any) => {
     if (!tournamentId) return;
-    const newMatch: Match = { id: crypto.randomUUID(), date, teamA, teamB, result, scoreA, scoreB };
+    const newMatch: Match = { id: crypto.randomUUID(), date, teamA, teamB, result, scoreA, scoreB, metadata };
     setMatches(prev => [...prev, newMatch]);
 
     const { error } = await supabase.from('matches').insert([{
@@ -152,6 +155,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode; tournamentId: st
       result: newMatch.result,
       score_a: newMatch.scoreA,
       score_b: newMatch.scoreB,
+      metadata: newMatch.metadata,
       tournament_id: tournamentId
     }]);
 

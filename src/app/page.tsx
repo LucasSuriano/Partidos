@@ -9,6 +9,7 @@ import MatchHistory from '@/components/MatchHistory';
 import TeamSimulator from '@/components/TeamSimulator';
 import TournamentSelector from '@/components/TournamentSelector';
 import TournamentUsers from '@/components/TournamentUsers';
+import TournamentSettings from '@/components/TournamentSettings';
 import UserMenu from '@/components/UserMenu';
 import { useAuth } from '@/context/AuthContext';
 import { useTournament } from '@/context/TournamentContext';
@@ -18,12 +19,12 @@ import Login from '@/components/Login';
 const BASE_NAV_ITEMS = [
   { id: 'STATS',      label: '📊 Estadísticas' },
   { id: 'HISTORY',   label: '🗂️ Historial' },
-  { id: 'SIMULATOR', label: '⚽ Simulación' },
+  { id: 'SIMULATOR', label: 'Simulación' },
   { id: 'PLAYERS',   label: '👥 Jugadores' },
 ] as const;
 
 type BaseView = 'STATS' | 'NEW_MATCH' | 'PLAYERS' | 'HISTORY' | 'SIMULATOR';
-type View = BaseView | 'USERS';
+type View = BaseView | 'USERS' | 'CONFIG';
 
 function getInitials(username: string) {
   return username.slice(0, 2).toUpperCase();
@@ -44,13 +45,18 @@ function MainApp() {
   const isSuperAdmin = user?.role === 'superadmin';
   const hue = user ? nameToHue(user.username) : 120;
 
+  const tIcon = activeTournament?.type_icon || '⚽';
+
   const navItems = [
-    ...BASE_NAV_ITEMS,
-    ...(isAdmin ? [{ id: 'USERS', label: '🔐 Usuarios' }] : []),
+    { id: 'STATS',      label: '📊 Estadísticas' },
+    { id: 'HISTORY',   label: '🗂️ Historial' },
+    { id: 'SIMULATOR', label: `${tIcon} Simulación` },
+    { id: 'PLAYERS',   label: '👥 Jugadores' },
+    ...(isAdmin ? [{ id: 'CONFIG', label: '⚙️ Configuración' }, { id: 'USERS', label: '🔐 Usuarios' }] : []),
   ];
 
   return (
-    <AppProvider tournamentId={activeTournament?.id ?? null}>
+    <AppProvider tournamentId={activeTournament?.id ?? null} tournamentTypeId={activeTournament?.type_id ?? null}>
       <div className={styles.pageRoot}>
         {/* ── Sticky header ── */}
         <header className={styles.header}>
@@ -97,7 +103,7 @@ function MainApp() {
                   className={`${styles.registerBtn} ${view === 'NEW_MATCH' ? styles.registerBtnActive : ''}`}
                   onClick={() => setView('NEW_MATCH')}
                 >
-                  <span>⚽</span>
+                  <span>{tIcon}</span>
                   <span className={styles.registerLabel}>Registrar Partido</span>
                 </button>
               )}
@@ -116,6 +122,7 @@ function MainApp() {
           {view === 'SIMULATOR' && <TeamSimulator />}
           {view === 'NEW_MATCH' && isAdmin && <MatchBuilder onComplete={() => setView('STATS')} />}
           {view === 'PLAYERS'   && <PlayerManager />}
+          {view === 'CONFIG'    && isAdmin && <TournamentSettings />}
           {view === 'USERS'     && isAdmin && <TournamentUsers />}
         </main>
       </div>
