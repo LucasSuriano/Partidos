@@ -4,9 +4,9 @@ export const dynamic = "force-static";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Entiendanla - Fútbol 5v5',
+    name: 'Entiendanla - Gestión Deportiva',
     short_name: 'Entiendanla',
-    description: 'Registro de resultados y estadísticas de fútbol 5v5.',
+    description: 'Registro de resultados y estadísticas para torneos multideporte.',
     start_url: '/',
     display: 'standalone',
     background_color: '#101729', /* Color de fondo oscuro acorde a la app */

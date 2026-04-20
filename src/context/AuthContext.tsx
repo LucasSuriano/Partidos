@@ -240,7 +240,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         <div className={styles.card} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3rem 2rem', gap: '1.5rem', maxWidth: '320px', margin: 'auto' }}>
           <div className={styles.logoWrap} style={{ width: '64px', height: '64px', opacity: 0.9 }}>
-            <img src="/img/v987-24a.jpg" alt="Logo" className={styles.logo} />
+            <img src="/logo.png" alt="Logo" className={styles.logo} />
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>

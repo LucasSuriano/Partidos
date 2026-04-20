@@ -18,8 +18,8 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Entiendanla - Estadísticas",
-  description: "Registro de resultados y estadísticas de fútbol 5v5.",
+  title: "Entiendanla - Gestión Deportiva",
+  description: "Registro de resultados y estadísticas para tus torneos.",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

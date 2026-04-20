@@ -65,7 +65,7 @@ function MainApp() {
             {/* Brand + back to tournaments */}
             <div className={styles.brand}>
               <img
-                src="/img/v987-24a.jpg"
+                src="/logo.png"
                 alt="Logo Entiendanla"
                 className={styles.logoImage}
               />

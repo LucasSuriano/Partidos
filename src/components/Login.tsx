@@ -64,7 +64,7 @@ export default function Login() {
       <div className={styles.card} key={shakeKey} data-error={error}>
         <div className={styles.brandSection}>
           <div className={styles.logoWrap}>
-            <img src="/img/v987-24a.jpg" alt="Logo" className={styles.logo} />
+            <img src="/logo.png" alt="Logo" className={styles.logo} />
           </div>
           <h1 className={styles.appName}>Entiendanla</h1>
           <p className={styles.tagline}>Gestión de partidos · Estadísticas · Historial</p>

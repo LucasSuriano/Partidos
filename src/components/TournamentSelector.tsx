@@ -320,7 +320,7 @@ export default function TournamentSelector() {
       {/* Top bar */}
       <header className={styles.topBar}>
         <div className={styles.brand}>
-          <img src="/img/v987-24a.jpg" alt="Logo" className={styles.logo} />
+          <img src="/logo.png" alt="Logo" className={styles.logo} />
           <span className={styles.brandName}>Entiendanla</span>
         </div>
         <div className={styles.userChip}>
