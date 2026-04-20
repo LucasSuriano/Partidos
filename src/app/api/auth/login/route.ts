@@ -78,6 +78,12 @@ export async function POST(request: Request) {
       return Response.json({ ok: false, error: 'Contraseña incorrecta' }, { status: 401 });
     }
 
+    // Actualizar last_sign_in_at
+    await supabase
+      .from('users')
+      .update({ last_sign_in_at: new Date().toISOString() })
+      .eq('id', data.id);
+
     // Devolvemos los datos del usuario (sin password)
     const user = { id: data.id, username: data.username, role: data.role };
     return Response.json({ ok: true, user }, { headers: corsHeaders });

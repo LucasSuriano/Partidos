@@ -21,6 +21,7 @@ export async function POST(request: Request) {
 
   // Usamos service_role: bypasea RLS, puede insertar en users sin restricciones
   const supabase = createServiceClient();
+  const RESERVED_USERNAMES = ['admin', 'root', 'superuser', 'moderator', 'soporte', 'support', 'sistema', 'system'];
 
   try {
     const { username, password } = await request.json();
@@ -31,6 +32,11 @@ export async function POST(request: Request) {
 
     const u = username.trim();
     const p = password.trim();
+
+    // Prevenir el registro de nombres de usuario reservados
+    if (RESERVED_USERNAMES.includes(u.toLowerCase())) {
+      return Response.json({ ok: false, error: 'Este nombre de usuario no está permitido' }, { status: 403, headers: corsHeaders });
+    }
 
     // Verificar que el username no exista ya
     const { data: existing } = await supabase

@@ -36,15 +36,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(parsed);
         setIsLoaded(true);
 
-        // Validación en background: confirmar que el usuario aún existe en DB
+        // Validación en background: confirmar que el usuario aún existe en DB y actualizar última conexión
         supabaseNoAuth
           .from('users')
-          .select('username')
+          .select('id, username')
           .eq('username', parsed.username)
           .then(({ data, error }) => {
             if (error || !data || data.length === 0) {
               setUser(null);
               localStorage.removeItem('auth_user');
+            } else {
+              // Actualizar last_sign_in_at en background
+              supabaseNoAuth.from('users').update({
+                last_sign_in_at: new Date().toISOString()
+              }).eq('id', data[0].id).then(({ error: updateError }) => {
+                if (updateError) console.error("Fallo actualizando last_sign_in_at (manual-bg):", updateError);
+              });
             }
           });
       } catch {
