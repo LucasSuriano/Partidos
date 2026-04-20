@@ -6,6 +6,8 @@ import { useTournament } from '@/context/TournamentContext';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import type { Tournament } from '@/types';
+import UserMenu from './UserMenu';
+import Brand from './Brand';
 
 function getInitials(name: string) {
   return name.slice(0, 2).toUpperCase();
@@ -295,7 +297,7 @@ function JoinWithCode({ userId }: { userId: string }) {
 
 export default function TournamentSelector() {
   const { tournaments, setActiveTournament, isLoading } = useTournament();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   const isSuperAdmin = user?.role === 'superadmin';
@@ -319,31 +321,8 @@ export default function TournamentSelector() {
 
       {/* Top bar */}
       <header className={styles.topBar}>
-        <div className={styles.brand}>
-          <img src="/logo.png" alt="Logo" className={styles.logo} />
-          <span className={styles.brandName}>Entiendanla</span>
-        </div>
-        <div className={styles.userChip}>
-          <div
-            className={styles.avatar}
-            style={{
-              background: `hsl(${hue} 50% 25%)`,
-              borderColor: `hsl(${hue} 65% 45%)`,
-              color: `hsl(${hue} 80% 80%)`
-            }}
-          >
-            {user ? getInitials(user.username) : '?'}
-          </div>
-          <span className={styles.username}>{user?.username}</span>
-          {isSuperAdmin && <span className={styles.roleBadgeSuperadmin}>superadmin</span>}
-          <button className={styles.logoutBtn} onClick={logout} title="Cerrar sesión">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <polyline points="16 17 21 12 16 7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
-            </svg>
-          </button>
-        </div>
+        <Brand />
+        <UserMenu hue={hue} />
       </header>
 
       {/* Hero section */}

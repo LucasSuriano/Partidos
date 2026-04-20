@@ -15,6 +15,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useTournament } from '@/context/TournamentContext';
 import { AppProvider } from '@/context/AppContext';
 import Login from '@/components/Login';
+import Brand from '@/components/Brand';
 
 const BASE_NAV_ITEMS = [
   { id: 'STATS',      label: '📊 Estadísticas' },
@@ -63,13 +64,8 @@ function MainApp() {
           <div className={styles.headerInner}>
 
             {/* Brand + back to tournaments */}
-            <div className={styles.brand}>
-              <img
-                src="/logo.png"
-                alt="Logo Entiendanla"
-                className={styles.logoImage}
-              />
-              <span className={styles.title}>Entiendanla</span>
+            <div className={styles.brandContainer}>
+              <Brand />
               <button
                 className={styles.tournamentBackBtn}
                 onClick={clearActiveTournament}
