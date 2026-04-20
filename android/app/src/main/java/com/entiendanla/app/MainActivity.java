@@ -1,4 +1,4 @@
-package com.partidoslujan.app;
+package com.entiendanla.app;
 
 import com.getcapacitor.BridgeActivity;
 

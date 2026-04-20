@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Partidos Lujan</string>
-    <string name="title_activity_main">Partidos Lujan</string>
-    <string name="package_name">com.partidoslujan.app</string>
-    <string name="custom_url_scheme">com.partidoslujan.app</string>
+    <string name="app_name">Entiendanla</string>
+    <string name="title_activity_main">Entiendanla</string>
+    <string name="package_name">com.entiendanla.app</string>
+    <string name="custom_url_scheme">com.entiendanla.app</string>
 </resources>
