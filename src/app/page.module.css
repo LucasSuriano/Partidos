@@ -247,16 +247,7 @@
     font-size: 1.15rem;
   }
 
-  .logoImage {
-    width: 30px;
-    height: 30px;
-  }
-
   /* Row 1: user section stays right */
-  .username, .roleBadge {
-    display: none;
-  }
-
   .avatarChip {
     padding: 0.25rem;
     border-radius: 50%;

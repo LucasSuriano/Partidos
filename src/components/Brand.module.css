@@ -23,3 +23,13 @@
   color: #10b981;
   white-space: nowrap;
 }
+
+@media (max-width: 768px) {
+  .logoImage {
+    width: 30px;
+    height: 30px;
+  }
+  .title {
+    font-size: 1.2rem;
+  }
+}

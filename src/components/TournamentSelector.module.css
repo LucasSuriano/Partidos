@@ -645,3 +645,9 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+@media (max-width: 768px) {
+  .topBar {
+    padding: 0 1rem;
+  }
+}

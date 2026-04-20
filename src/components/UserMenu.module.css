@@ -315,3 +315,21 @@
   animation: spin 0.7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .username,
+  .roleBadgeSuperadmin {
+    display: none;
+  }
+
+  .avatarChip {
+    padding: 0.25rem;
+  }
+
+  .dropdown {
+    min-width: 180px;
+    max-width: calc(100vw - 2rem);
+    right: -4px; /* Slight offset to ensure shadow isn't clipped */
+  }
+}
