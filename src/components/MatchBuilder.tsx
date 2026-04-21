@@ -111,7 +111,9 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
 
   const [teamA, setTeamA] = useState<Player[]>([]);
   const [teamB, setTeamB] = useState<Player[]>([]);
-  const [matchDate, setMatchDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const [matchDate, setMatchDate] = useState<string>(todayStr);
   const [result, setResult] = useState<MatchResult | null>(null);
   const [scoreA, setScoreA] = useState<string>('');
   const [scoreB, setScoreB] = useState<string>('');
