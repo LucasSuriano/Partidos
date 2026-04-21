@@ -123,11 +123,25 @@
 
 /* ── Card header ── */
 .cardHeader {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   margin-bottom: 0.9rem;
   gap: 1rem;
+  position: relative;
+  min-height: 32px;
+}
+
+.headerLeft {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1.25rem;
 }
 
 .matchNumber {
@@ -145,7 +159,9 @@
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-secondary);
-  flex: 1;
+  white-space: nowrap;
+  pointer-events: auto;
+  z-index: 2;
   text-align: center;
 }
 
@@ -171,6 +187,27 @@
 
 .deleteBtn {
   color: var(--danger);
+}
+
+.videoLink {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--accent-primary);
+  text-decoration: none;
+  transition: all 0.2s;
+  opacity: 0.8;
+}
+
+.videoLink:hover {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+.videoText {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
 }
 
 .editBtn:hover {

@@ -164,7 +164,10 @@ export default function MatchHistory() {
                 <div className={styles.cardInner}>
                   {/* Cabecera */}
                   <div className={styles.cardHeader}>
-                    <div className={styles.matchNumber}>Partido #{num}</div>
+                    <div className={styles.headerLeft}>
+                      <div className={styles.matchNumber}>Partido #{num}</div>
+                    </div>
+
                     <div className={styles.dateLabel}>
                       {editingMatchId === match.id ? (
                         <DatePicker value={editDate} onChange={setEditDate} />
@@ -173,40 +176,41 @@ export default function MatchHistory() {
                       )}
                     </div>
                     
-                    {match.metadata?.video_url && (
-                      <a 
-                        href={match.metadata.video_url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className={styles.editBtn}
-                        style={{ opacity: 1, color: 'var(--accent-primary)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '4px' }}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        🎥 <span style={{ fontSize: '0.7rem', fontWeight: 700 }}>VER VIDEO</span>
-                      </a>
-                    )}
+                    <div className={styles.headerRight}>
+                      {match.metadata?.video_url && (
+                        <a 
+                          href={match.metadata.video_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className={styles.videoLink}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          🎥 <span className={styles.videoText}>VER VIDEO</span>
+                        </a>
+                      )}
 
-                    {isAdmin && (
-                      <div className={styles.adminActions}>
-                        <button
-                          className={styles.editBtn}
-                          onClick={() => handleEditClick(match)}
-                          title="Editar resultado"
-                        >
-                          ✏️
-                        </button>
-                        <button
-                          className={styles.deleteBtn}
-                          onClick={() =>
-                            confirm('¿Estás seguro de eliminar este partido?') &&
-                            removeMatch(match.id)
-                          }
-                          title="Eliminar partido"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    )}
+                      {isAdmin && (
+                        <div className={styles.adminActions}>
+                          <button
+                            className={styles.editBtn}
+                            onClick={() => handleEditClick(match)}
+                            title="Editar resultado"
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            className={styles.deleteBtn}
+                            onClick={() =>
+                              confirm('¿Estás seguro de eliminar este partido?') &&
+                              removeMatch(match.id)
+                            }
+                            title="Eliminar partido"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Cuerpo: equipos o Edición */}
