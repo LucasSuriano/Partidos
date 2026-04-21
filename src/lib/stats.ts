@@ -115,7 +115,7 @@ export function calculateStats(players: Player[], matches: Match[]): PlayerStats
       favoriteVictim: favVic ? { players: favVic.players, winsAgainst: favVic.count } : null,
       currentStreak: currentStreaks[p.id],
     };
-  }).sort((a, b) => b.wins - a.wins || b.winPercentage - a.winPercentage);
+  }).sort((a, b) => b.wins - a.wins || a.player.name.localeCompare(b.player.name));
 }
 
 export function getPlayerReport(playerId: string, players: Player[], matches: Match[]): PlayerReport {

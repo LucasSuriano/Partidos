@@ -81,7 +81,9 @@ export default function StatsTable() {
 
       if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
       if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
-      return 0;
+      
+      // Tie-breaker: Name (siempre ASC salvo que estemos ordenando por nombre DESC)
+      return a.player.name.localeCompare(b.player.name);
     });
   }, [enrichedStats, sortField, sortOrder]);
 
