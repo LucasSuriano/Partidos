@@ -7,6 +7,7 @@ import { useTournament } from '@/context/TournamentContext';
 import { Match, MatchResult } from '@/types';
 import styles from './MatchHistory.module.css';
 import DatePicker from './DatePicker';
+import CustomSelect from './CustomSelect';
 
 const MESES_CORTOS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 const MESES_LARGOS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
@@ -24,6 +25,8 @@ export default function MatchHistory() {
   const [editScoreA, setEditScoreA] = useState<string>('');
   const [editScoreB, setEditScoreB] = useState<string>('');
   const [editDate, setEditDate] = useState<string>('');
+  const [editVideoUrl, setEditVideoUrl] = useState<string>('');
+  const [editMvpId, setEditMvpId] = useState<string>('');
 
   const handleEditClick = (match: Match) => {
     setEditingMatchId(match.id);
@@ -31,6 +34,8 @@ export default function MatchHistory() {
     setEditScoreA(match.scoreA != null ? match.scoreA.toString() : '');
     setEditScoreB(match.scoreB != null ? match.scoreB.toString() : '');
     setEditDate(match.date.split('T')[0]);
+    setEditVideoUrl(match.metadata?.video_url || '');
+    setEditMvpId(match.metadata?.mvp_id || '');
   };
 
   const handleSaveEdit = async () => {
@@ -46,7 +51,14 @@ export default function MatchHistory() {
       isoDate = new Date(`${editDate}T12:00:00Z`).toISOString();
     }
 
-    await updateMatchResult(editingMatchId, editResult, parsedA, parsedB, isoDate);
+    const currentMatch = matches.find(m => m.id === editingMatchId);
+    const newMetadata = {
+      ...currentMatch?.metadata,
+      video_url: editVideoUrl || null,
+      mvp_id: editMvpId || null
+    };
+
+    await updateMatchResult(editingMatchId, editResult, parsedA, parsedB, isoDate, newMetadata);
     setEditingMatchId(null);
   };
 
@@ -140,7 +152,10 @@ export default function MatchHistory() {
               <div
                 key={match.id}
                 className={styles.matchCard}
-                style={{ animationDelay: `${i * 0.06}s` }}
+                style={{ 
+                  animationDelay: `${i * 0.06}s`,
+                  zIndex: editingMatchId === match.id ? 100 : 1
+                }}
               >
                 {/* Tinte de fondo split */}
                 <div className={styles[`splitBg${teamAColor}Left`]} />
@@ -157,6 +172,20 @@ export default function MatchHistory() {
                         formatDateLabel(match.date)
                       )}
                     </div>
+                    
+                    {match.metadata?.video_url && (
+                      <a 
+                        href={match.metadata.video_url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className={styles.editBtn}
+                        style={{ opacity: 1, color: 'var(--accent-primary)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        🎥 <span style={{ fontSize: '0.7rem', fontWeight: 700 }}>VER VIDEO</span>
+                      </a>
+                    )}
+
                     {isAdmin && (
                       <div className={styles.adminActions}>
                         <button
@@ -193,7 +222,55 @@ export default function MatchHistory() {
                         <span className={styles.editScoreSeparator}>-</span>
                         <input type="number" min="0" value={editScoreB} onChange={e => setEditScoreB(e.target.value)} placeholder="0" className={styles.editInput} />
                       </div>
-                      <div className={styles.editActions}>
+                      
+                      <div style={{ 
+                        display: 'grid', 
+                        gridTemplateColumns: 'minmax(200px, 1fr) minmax(200px, 1.5fr)', 
+                        gap: '1.5rem', 
+                        width: '100%', 
+                        maxWidth: '800px',
+                        background: 'rgba(0,0,0,0.15)',
+                        padding: '1.25rem',
+                        borderRadius: '16px',
+                        border: '1px solid var(--panel-border)',
+                        marginTop: '0.5rem'
+                      }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 800, letterSpacing: '0.05em' }}>⭐ MVP (OPCIONAL)</span>
+                          <CustomSelect 
+                            options={[...match.teamA, ...match.teamB].map(id => ({ 
+                              id, 
+                              label: players.find(p => p.id === id)?.name || 'Desconocido' 
+                            }))}
+                            value={editMvpId}
+                            onChange={setEditMvpId}
+                            placeholder="Ninguno"
+                            icon="🏅"
+                          />
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 800, letterSpacing: '0.05em' }}>📹 VIDEO (OPCIONAL)</span>
+                          <input 
+                            type="url" 
+                            value={editVideoUrl} 
+                            onChange={e => setEditVideoUrl(e.target.value)} 
+                            placeholder="https://youtube.com/..."
+                            style={{ 
+                              background: 'rgba(255,255,255,0.04)', 
+                              border: '1px solid var(--panel-border)', 
+                              borderRadius: '10px', 
+                              padding: '0 1rem', 
+                              color: 'var(--text-primary)', 
+                              fontSize: '0.9rem',
+                              height: '45px',
+                              width: '100%',
+                              transition: 'all 0.2s'
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className={styles.editActions} style={{ marginTop: '0.5rem' }}>
                         <button onClick={handleSaveEdit} className={styles.saveEditBtn}>Guardar</button>
                         <button onClick={() => setEditingMatchId(null)} className={styles.cancelEditBtn}>Cancelar</button>
                       </div>
@@ -229,6 +306,24 @@ export default function MatchHistory() {
                                   {setInfo.scoreA}-{setInfo.scoreB}
                                 </div>
                               ))}
+                            </div>
+                          )}
+                          
+                          {match.metadata?.mvp_id && (
+                            <div style={{ 
+                              marginTop: '8px',
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              gap: '6px', 
+                              background: 'rgba(245, 158, 11, 0.1)', 
+                              border: '1px solid rgba(245, 158, 11, 0.2)',
+                              padding: '2px 10px', 
+                              borderRadius: '20px',
+                              color: '#f59e0b',
+                              fontSize: '0.75rem',
+                              fontWeight: 700
+                            }}>
+                              ⭐ MVP: {players.find(p => p.id === match.metadata?.mvp_id)?.name || 'Desconocido'}
                             </div>
                           )}
                         </div>

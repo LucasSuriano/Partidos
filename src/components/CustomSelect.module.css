@@ -1,0 +1,161 @@
+.wrapper {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+/* ── Trigger ── */
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--panel-border);
+  padding: 0 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  height: 45px;
+  text-align: left;
+}
+
+.trigger:hover,
+.triggerOpen {
+  border-color: var(--accent-primary);
+  background: rgba(16, 185, 129, 0.06);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
+}
+
+.icon {
+  font-size: 1rem;
+  opacity: 0.8;
+}
+
+.valueText {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: white;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.placeholder {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.chevron {
+  font-size: 0.6rem;
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+/* ── Dropdown ── */
+.dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  width: 100%;
+  background: #111c1f;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  overflow: hidden;
+  z-index: 500;
+  backdrop-filter: blur(24px);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+  animation: slideDown 0.15s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.optionsList {
+  max-height: 250px;
+  overflow-y: auto;
+  padding: 0.4rem;
+}
+
+/* Scrollbar */
+.optionsList::-webkit-scrollbar {
+  width: 4px;
+}
+.optionsList::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.option {
+  padding: 0.7rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.option:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+}
+
+.optionSelected {
+  background: rgba(16, 185, 129, 0.1) !important;
+  color: var(--accent-primary) !important;
+  font-weight: 700;
+}
+
+.check {
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+/* Overlay para cerrar en móvil si es necesario */
+.overlay {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .dropdown {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    top: auto;
+    width: 100%;
+    border-radius: 20px 20px 0 0;
+    border-bottom: none;
+    animation: slideUp 0.3s ease;
+  }
+  
+  .overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 490;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .optionsList {
+    max-height: 50vh;
+    padding: 1rem 0.5rem 2rem;
+  }
+
+  .option {
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+  }
+}

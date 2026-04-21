@@ -5,6 +5,7 @@ import { useAppContext } from '@/context/AppContext';
 import { Player, MatchResult } from '@/types';
 import styles from './MatchBuilder.module.css';
 import DatePicker from './DatePicker';
+import CustomSelect from './CustomSelect';
 import { useTournament } from '@/context/TournamentContext';
 
 interface TeamPanelProps {
@@ -114,6 +115,8 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
   const [result, setResult] = useState<MatchResult | null>(null);
   const [scoreA, setScoreA] = useState<string>('');
   const [scoreB, setScoreB] = useState<string>('');
+  const [videoUrl, setVideoUrl] = useState<string>('');
+  const [mvpId, setMvpId] = useState<string>('');
   
   const [padelSets, setPadelSets] = useState<{ scoreA: string; scoreB: string }[]>([
     { scoreA: '', scoreB: '' },
@@ -173,7 +176,10 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
     let finalResult = result;
     let finalScoreA: number | undefined = parseInt(scoreA, 10);
     let finalScoreB: number | undefined = parseInt(scoreB, 10);
-    let metadata: any = null;
+    let metadata: any = {
+      video_url: videoUrl || null,
+      mvp_id: mvpId || null
+    };
 
     if (isPadel) {
       let setsA = 0;
@@ -197,6 +203,7 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
       else if (validSets.length > 0) finalResult = 'DRAW'; // Fallback
 
       metadata = {
+        ...metadata,
         sets: validSets.map(s => ({ scoreA: parseInt(s.scoreA, 10), scoreB: parseInt(s.scoreB, 10) }))
       };
     }
@@ -342,6 +349,30 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
                   placeholder="0"
                 />
               </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+            <div>
+              <span className={styles.scoreLabel} style={{ marginBottom: '0.6rem', display: 'block' }}>MVP del Partido (Opcional)</span>
+              <CustomSelect 
+                options={[...teamA, ...teamB].map(p => ({ id: p.id, label: p.name }))}
+                value={mvpId}
+                onChange={setMvpId}
+                placeholder="Seleccionar MVP..."
+                icon="⭐"
+              />
+            </div>
+            <div>
+              <span className={styles.scoreLabel} style={{ marginBottom: '0.6rem', display: 'block' }}>Link de Grabación (Opcional)</span>
+              <input 
+                type="url" 
+                className={styles.scoreInput} 
+                style={{ width: '100%', fontSize: '0.9rem', textAlign: 'left', height: '45px', padding: '0 1rem' }}
+                value={videoUrl}
+                onChange={e => setVideoUrl(e.target.value)}
+                placeholder="https://youtube.com/..."
+              />
             </div>
           </div>
         </div>

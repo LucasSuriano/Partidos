@@ -47,6 +47,8 @@ export type Match = {
   scoreB?: number | null;
   metadata?: {
     sets?: { scoreA: number; scoreB: number }[];
+    video_url?: string | null;
+    mvp_id?: string | null;
   } | null;
 };
 

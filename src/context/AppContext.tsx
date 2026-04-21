@@ -15,7 +15,7 @@ interface AppContextProps {
   togglePlayerBadge: (playerId: string, badgeId: string, userId: string) => Promise<void>;
   addMatch: (date: string, teamA: string[], teamB: string[], result: MatchResult, scoreA?: number, scoreB?: number, metadata?: any) => Promise<void>;
   removeMatch: (id: string) => Promise<void>;
-  updateMatchResult: (id: string, result: MatchResult, scoreA?: number, scoreB?: number, date?: string) => Promise<void>;
+  updateMatchResult: (id: string, result: MatchResult, scoreA?: number, scoreB?: number, date?: string, metadata?: any) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextProps | undefined>(undefined);
@@ -170,14 +170,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode; tournamentId: st
     await supabase.from('matches').delete().eq('id', id);
   };
 
-  const updateMatchResult = async (id: string, result: MatchResult, scoreA?: number, scoreB?: number, date?: string) => {
-    setMatches(prev => prev.map(m => m.id === id ? { ...m, result, scoreA, scoreB, date: date ?? m.date } : m));
+  const updateMatchResult = async (id: string, result: MatchResult, scoreA?: number, scoreB?: number, date?: string, metadata?: any) => {
+    setMatches(prev => prev.map(m => m.id === id ? { ...m, result, scoreA, scoreB, date: date ?? m.date, metadata: metadata ?? m.metadata } : m));
 
     const { error } = await supabase.from('matches').update({
       result,
       score_a: scoreA ?? null,
       score_b: scoreB ?? null,
-      date: date ?? undefined
+      date: date ?? undefined,
+      metadata: metadata ?? undefined
     }).eq('id', id);
 
     if (error) {
