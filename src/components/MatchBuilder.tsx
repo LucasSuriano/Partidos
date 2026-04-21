@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Player, MatchResult } from '@/types';
 import styles from './MatchBuilder.module.css';
@@ -128,6 +128,20 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
     newSets[index][field] = value;
     setPadelSets(newSets);
   };
+
+  // Link scores with result selection
+  useEffect(() => {
+    if (isPadel) return;
+
+    const valA = parseInt(scoreA, 10);
+    const valB = parseInt(scoreB, 10);
+
+    if (!isNaN(valA) && !isNaN(valB)) {
+      if (valA > valB) setResult('A_WIN');
+      else if (valB > valA) setResult('B_WIN');
+      else setResult('DRAW');
+    }
+  }, [scoreA, scoreB, isPadel]);
 
   const handleTypeChange = (newSize: number) => {
     setTeamSize(newSize);

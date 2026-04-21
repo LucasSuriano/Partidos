@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { useTournament } from '@/context/TournamentContext';
@@ -49,6 +49,21 @@ export default function MatchHistory() {
     await updateMatchResult(editingMatchId, editResult, parsedA, parsedB, isoDate);
     setEditingMatchId(null);
   };
+
+  // Link scores with result selection (Edit Mode)
+  useEffect(() => {
+    const isPadel = activeTournament?.type_slug === 'paddle';
+    if (isPadel || !editingMatchId) return;
+
+    const valA = parseInt(editScoreA, 10);
+    const valB = parseInt(editScoreB, 10);
+
+    if (!isNaN(valA) && !isNaN(valB)) {
+      if (valA > valB) setEditResult('A_WIN');
+      else if (valB > valA) setEditResult('B_WIN');
+      else setEditResult('DRAW');
+    }
+  }, [editScoreA, editScoreB, activeTournament, editingMatchId]);
 
   const getPlayers = (ids: string[]) =>
     ids.map(id => players.find(p => p.id === id)?.name ?? 'Desconocido');
