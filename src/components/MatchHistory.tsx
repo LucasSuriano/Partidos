@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useTournament } from '@/context/TournamentContext';
 import { Match, MatchResult } from '@/types';
 import styles from './MatchHistory.module.css';
+import DatePicker from './DatePicker';
 
 const MESES_CORTOS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 const MESES_LARGOS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
@@ -22,12 +23,14 @@ export default function MatchHistory() {
   const [editResult, setEditResult] = useState<MatchResult>('A_WIN');
   const [editScoreA, setEditScoreA] = useState<string>('');
   const [editScoreB, setEditScoreB] = useState<string>('');
+  const [editDate, setEditDate] = useState<string>('');
 
   const handleEditClick = (match: Match) => {
     setEditingMatchId(match.id);
     setEditResult(match.result);
     setEditScoreA(match.scoreA != null ? match.scoreA.toString() : '');
     setEditScoreB(match.scoreB != null ? match.scoreB.toString() : '');
+    setEditDate(match.date.split('T')[0]);
   };
 
   const handleSaveEdit = async () => {
@@ -37,7 +40,13 @@ export default function MatchHistory() {
     if (isNaN(parsedA)) parsedA = undefined;
     if (isNaN(parsedB)) parsedB = undefined;
     
-    await updateMatchResult(editingMatchId, editResult, parsedA, parsedB);
+    // Si se editó la fecha, asegurarnos de enviarla en formato ISO
+    let isoDate = undefined;
+    if (editDate) {
+      isoDate = new Date(`${editDate}T12:00:00Z`).toISOString();
+    }
+
+    await updateMatchResult(editingMatchId, editResult, parsedA, parsedB, isoDate);
     setEditingMatchId(null);
   };
 
@@ -126,7 +135,13 @@ export default function MatchHistory() {
                   {/* Cabecera */}
                   <div className={styles.cardHeader}>
                     <div className={styles.matchNumber}>Partido #{num}</div>
-                    <div className={styles.dateLabel}>{formatDateLabel(match.date)}</div>
+                    <div className={styles.dateLabel}>
+                      {editingMatchId === match.id ? (
+                        <DatePicker value={editDate} onChange={setEditDate} />
+                      ) : (
+                        formatDateLabel(match.date)
+                      )}
+                    </div>
                     {isAdmin && (
                       <div className={styles.adminActions}>
                         <button
