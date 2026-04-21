@@ -573,15 +573,12 @@ export default function TeamSimulator() {
 
   const allStats = useMemo(() => {
     const stats = calculateStats(players, matches);
-    return stats.sort((a, b) => {
-      if (b.matchesPlayed !== a.matchesPlayed) {
-        return b.matchesPlayed - a.matchesPlayed;
-      }
-      if (b.winPercentage !== a.winPercentage) {
-        return b.winPercentage - a.winPercentage;
-      }
-      return a.player.name.localeCompare(b.player.name);
-    });
+    return stats.sort((a, b) => 
+      b.wins - a.wins || 
+      b.draws - a.draws || 
+      b.winPercentage - a.winPercentage || 
+      a.player.name.localeCompare(b.player.name)
+    );
   }, [players, matches]);
   const playerById = useMemo(() => new Map(players.map(p => [p.id, p])), [players]);
 

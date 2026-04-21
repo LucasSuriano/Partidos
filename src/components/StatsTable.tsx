@@ -82,7 +82,11 @@ export default function StatsTable() {
       if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
       if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
       
-      // Tie-breaker: Name (siempre ASC salvo que estemos ordenando por nombre DESC)
+      // Tie-breaker chain: Wins -> Draws -> WinRate -> Name
+      if (a.wins !== b.wins) return b.wins - a.wins;
+      if (a.draws !== b.draws) return b.draws - a.draws;
+      if (a.winPercentage !== b.winPercentage) return b.winPercentage - a.winPercentage;
+      
       return a.player.name.localeCompare(b.player.name);
     });
   }, [enrichedStats, sortField, sortOrder]);
