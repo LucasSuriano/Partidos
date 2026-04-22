@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type JerseyPattern = 'solid' | 'stripes' | 'hoops' | 'halves';
+export type JerseyPattern = 'solid' | 'stripes' | 'hoops' | 'halves' | 'chevron' | 'sash' | 'band';
 
 export interface JerseyProps {
   primaryColor: string;
@@ -40,9 +40,12 @@ export function JerseySVG({ primaryColor, secondaryColor, pattern, width = 48, h
             <stop offset="50%" stopColor={secondaryColor} />
           </linearGradient>
         )}
+        <clipPath id={`${defsId}-bodyClip`}>
+          <path d="M 25 15 C 35 5, 65 5, 75 15 L 85 92 Q 50 100 15 92 Z" />
+        </clipPath>
       </defs>
 
-      {/* Sleeves (always primary for simplicity or slightly darker?) */}
+      {/* Sleeves */}
       <path 
         d="M 15 25 Q -5 10 5 45 Q 15 50 20 25 Z" 
         fill={primaryColor} 
@@ -54,15 +57,38 @@ export function JerseySVG({ primaryColor, secondaryColor, pattern, width = 48, h
         stroke="rgba(0,0,0,0.2)" strokeWidth="1"
       />
 
-      {/* Main Body */}
+      {/* Main Body Base */}
       <path 
         d="M 25 15 C 35 5, 65 5, 75 15 L 85 92 Q 50 100 15 92 Z" 
-        fill={
-          pattern === 'solid' ? primaryColor : 
-          pattern === 'stripes' ? `url(#${defsId}-stripes)` : 
-          pattern === 'hoops' ? `url(#${defsId}-hoops)` : 
-          `url(#${defsId}-halves)`
-        }
+        fill={primaryColor}
+      />
+
+      {/* Body Patterns using clip-path */}
+      <g clipPath={`url(#${defsId}-bodyClip)`}>
+        {pattern === 'stripes' && <rect width="100" height="100" fill={`url(#${defsId}-stripes)`} />}
+        {pattern === 'hoops' && <rect width="100" height="100" fill={`url(#${defsId}-hoops)`} />}
+        {pattern === 'halves' && <rect width="100" height="100" fill={`url(#${defsId}-halves)`} />}
+        
+        {/* Vélez: V Shape (Chevron) */}
+        {pattern === 'chevron' && (
+          <polygon points="10,20 50,65 90,20 100,20 100,5 50,55 0,5 0,20" fill={secondaryColor} />
+        )}
+        
+        {/* River: Banda cruzada (Sash) */}
+        {pattern === 'sash' && (
+          <rect x="-30" y="30" width="160" height="24" transform="rotate(-45 50 50)" fill={secondaryColor} />
+        )}
+
+        {/* Boca: Franja horizontal (Band) */}
+        {pattern === 'band' && (
+          <rect x="0" y="42" width="100" height="26" fill={secondaryColor} />
+        )}
+      </g>
+
+      {/* Main Body Outline on top */}
+      <path 
+        d="M 25 15 C 35 5, 65 5, 75 15 L 85 92 Q 50 100 15 92 Z" 
+        fill="transparent"
         stroke="rgba(0,0,0,0.2)" strokeWidth="1.5"
       />
 

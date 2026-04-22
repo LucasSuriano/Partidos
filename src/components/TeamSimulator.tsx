@@ -543,9 +543,9 @@ export default function TeamSimulator() {
           )}
 
           <div className={styles.teamsGrid}>
-            <TeamCard label="Equipo A" color="green" players={teamA} pairMap={fullPairMap} />
+            <TeamCard label="Equipo A" color="green" dotColor={tacticalConfig?.colorA1} players={teamA} pairMap={fullPairMap} />
             <div className={styles.vsDivider}><span className={styles.vsText}>VS</span></div>
-            <TeamCard label="Equipo B" color="blue" players={teamB} pairMap={fullPairMap} />
+            <TeamCard label="Equipo B" color="blue" dotColor={tacticalConfig?.colorB1} players={teamB} pairMap={fullPairMap} />
           </div>
 
           {(notablePairs.internal.length > 0 || notablePairs.clashes.length > 0) && (
@@ -594,7 +594,7 @@ export default function TeamSimulator() {
 
 // DistributionTeamPanel removed completely
 
-function TeamCard({ label, color, players, pairMap }: { label: string; color: 'green'|'blue'; players: PlayerStats[]; pairMap: Map<string, PairStats> }) {
+function TeamCard({ label, color, dotColor, players, pairMap }: { label: string; color: 'green'|'blue'; dotColor?: string; players: PlayerStats[]; pairMap: Map<string, PairStats> }) {
   const avgWin      = players.length ? players.reduce((s, p) => s + p.winPercentage, 0) / players.length : 0;
   const totalPJ     = players.reduce((s, p) => s + p.matchesPlayed, 0);
   const avgStrength = players.length ? players.reduce((s, p) => s + playerStrength(p), 0) / players.length : 0;
@@ -604,7 +604,11 @@ function TeamCard({ label, color, players, pairMap }: { label: string; color: 'g
   return (
     <div className={`${styles.teamCard} ${color === 'green' ? styles.teamCardGreen : styles.teamCardBlue}`}>
       <div className={styles.teamHeader}>
-        <span className={styles.teamIcon}>{color === 'green' ? '🟢' : '🔵'}</span>
+        {dotColor ? (
+           <span style={{ display: 'inline-block', width: '14px', height: '14px', borderRadius: '50%', backgroundColor: dotColor, marginRight: '8px', boxShadow: '0 0 8px rgba(0,0,0,0.5)' }}></span>
+        ) : (
+           <span className={styles.teamIcon}>{color === 'green' ? '🟢' : '🔵'}</span>
+        )}
         <h2 className={styles.teamLabel}>{label}</h2>
       </div>
       <div className={styles.teamMetaRow}>

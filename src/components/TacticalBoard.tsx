@@ -50,6 +50,7 @@ const FORMATIONS: Record<number, Formation[]> = {
   5: [
     { id: '1-2-1', name: 'Rombo (1-2-1)', pos: [{x: 8, y: 50}, {x: 20, y: 50}, {x: 32, y: 23}, {x: 32, y: 77}, {x: 45, y: 50}] },
     { id: '2-2', name: 'Cuadrado (2-2)', pos: [{x: 8, y: 50}, {x: 22, y: 25}, {x: 22, y: 75}, {x: 40, y: 25}, {x: 40, y: 75}] },
+    { id: '1-3', name: 'Ofensiva (1-3)', pos: [{x: 8, y: 50}, {x: 20, y: 50}, {x: 40, y: 15}, {x: 44, y: 50}, {x: 40, y: 85}] },
     { id: '3-1', name: 'Muro defensivo (3-1)', pos: [{x: 8, y: 50}, {x: 25, y: 15}, {x: 25, y: 50}, {x: 25, y: 85}, {x: 42, y: 50}] }
   ]
 };
@@ -184,6 +185,9 @@ export function TacticalBoard({ players, teamSize, pairMap, fillBestBalance, onC
                 <option value="stripes">Rayas Vet.</option>
                 <option value="hoops">Franjas Hor.</option>
                 <option value="halves">Mitades</option>
+                <option value="chevron">Pico en V</option>
+                <option value="sash">Banda cruzada</option>
+                <option value="band">Franja ancha</option>
               </select>
            </div>
            
@@ -199,6 +203,9 @@ export function TacticalBoard({ players, teamSize, pairMap, fillBestBalance, onC
                 <option value="stripes">Rayas Vet.</option>
                 <option value="hoops">Franjas Hor.</option>
                 <option value="halves">Mitades</option>
+                <option value="chevron">Pico en V</option>
+                <option value="sash">Banda cruzada</option>
+                <option value="band">Franja ancha</option>
               </select>
            </div>
         </div>
