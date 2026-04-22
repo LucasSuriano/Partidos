@@ -3,9 +3,9 @@
 import { useMemo, useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { calculateStats } from '@/lib/stats';
-import { Match, Player, PlayerStats } from '@/types';
 import { useTournament } from '@/context/TournamentContext';
 import styles from './TeamSimulator.module.css';
+import { TacticalBoard } from './TacticalBoard';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -14,13 +14,11 @@ import styles from './TeamSimulator.module.css';
 interface PairStats {
   idA: string;
   idB: string;
-  // As teammates
   togetherTotal: number;
   togetherWins: number;
-  togetherWinPct: number; // A's win% when on same team as B
-  // As opponents — from A's perspective
+  togetherWinPct: number;
   vsTotal: number;
-  vsWins: number; // A wins vs B
+  vsWins: number;
   vsWinPct: number;
 }
 
@@ -30,9 +28,7 @@ interface PairStats {
 
 function computePairwise(ids: string[], matches: Match[]): Map<string, PairStats> {
   const map = new Map<string, PairStats>();
-
   const key = (a: string, b: string) => (a < b ? `${a}::${b}` : `${b}::${a}`);
-
   const getOrCreate = (a: string, b: string): PairStats => {
     const k = key(a, b);
     if (!map.has(k)) {
@@ -45,17 +41,12 @@ function computePairwise(ids: string[], matches: Match[]): Map<string, PairStats
     }
     return map.get(k)!;
   };
-
   const idSet = new Set(ids);
-
   matches.forEach(m => {
     const teamA = m.teamA.filter(id => idSet.has(id));
     const teamB = m.teamB.filter(id => idSet.has(id));
-
     const aWins = m.result === 'A_WIN';
     const bWins = m.result === 'B_WIN';
-
-    // Teammates within same team
     const processSameTeam = (team: string[], teamWon: boolean) => {
       for (let i = 0; i < team.length; i++) {
         for (let j = i + 1; j < team.length; j++) {
@@ -67,26 +58,20 @@ function computePairwise(ids: string[], matches: Match[]): Map<string, PairStats
     };
     processSameTeam(teamA, aWins);
     processSameTeam(teamB, bWins);
-
-    // Opponents across teams
     teamA.forEach(pa => {
       teamB.forEach(pb => {
         const p = getOrCreate(pa, pb);
         p.vsTotal++;
-        // Store from canonical idA's perspective
         const canonA = pa < pb ? pa : pb;
         const canonWins = pa < pb ? aWins : bWins;
         if (canonA === p.idA && canonWins) p.vsWins++;
       });
     });
   });
-
-  // Compute percentages
   map.forEach(p => {
     p.togetherWinPct = p.togetherTotal > 0 ? (p.togetherWins / p.togetherTotal) * 100 : 50;
     p.vsWinPct       = p.vsTotal > 0       ? (p.vsWins       / p.vsTotal)       * 100 : 50;
   });
-
   return map;
 }
 
@@ -95,14 +80,12 @@ function getPair(map: Map<string, PairStats>, a: string, b: string): PairStats |
   return map.get(k) ?? null;
 }
 
-// Win % of idA vs idB (from A's perspective)
 function vsWinPctFor(map: Map<string, PairStats>, idA: string, idB: string): number {
   const p = getPair(map, idA, idB);
   if (!p || p.vsTotal === 0) return 50;
   return p.idA === idA ? p.vsWinPct : 100 - p.vsWinPct;
 }
 
-// Win % of idA when paired with idB
 function togetherWinPct(map: Map<string, PairStats>, idA: string, idB: string): number {
   const p = getPair(map, idA, idB);
   if (!p || p.togetherTotal === 0) return 50;
@@ -120,7 +103,6 @@ function playerStrength(s: PlayerStats): number {
   return winScore + expBonus + streakBonus;
 }
 
-// Team chemistry: average together-win% across all teammate pairs (weighted by games together)
 function teamChemistry(team: PlayerStats[], pairMap: Map<string, PairStats>): number {
   let total = 0, count = 0;
   for (let i = 0; i < team.length; i++) {
@@ -128,91 +110,129 @@ function teamChemistry(team: PlayerStats[], pairMap: Map<string, PairStats>): nu
       const p = getPair(pairMap, team[i].player.id, team[j].player.id);
       const weight = p?.togetherTotal ?? 0;
       const pct    = p && p.togetherTotal > 0 ? p.togetherWinPct : 50;
-      total  += pct * (weight + 1); // +1 so unplayed pairs still count
+      total  += pct * (weight + 1);
       count  += (weight + 1);
     }
   }
   return count > 0 ? total / count : 50;
 }
 
-// Balance score: penalises strength imbalance, rewards chemistry equality
 function balanceScore(
   teamA: PlayerStats[], teamB: PlayerStats[],
   pairMap: Map<string, PairStats>
 ): number {
-  const strA = teamA.reduce((s, p) => s + playerStrength(p), 0) / teamA.length;
-  const strB = teamB.reduce((s, p) => s + playerStrength(p), 0) / teamB.length;
+  const strA = teamA.length ? teamA.reduce((s, p) => s + playerStrength(p), 0) / teamA.length : 0;
+  const strB = teamB.length ? teamB.reduce((s, p) => s + playerStrength(p), 0) / teamB.length : 0;
   const chemA = teamChemistry(teamA, pairMap);
   const chemB = teamChemistry(teamB, pairMap);
-  // Lower is better: sum of squared differences
   return Math.pow(strA - strB, 2) + Math.pow(chemA - chemB, 2) * 0.1;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TEAM BUILDING — snake draft + chemistry-swap optimisation
+// TEAM BUILDING — combination-based with locks
 // ─────────────────────────────────────────────────────────────────────────────
 
-function buildBalancedTeams(
-  selected: PlayerStats[],
-  pairMap: Map<string, PairStats>
+function fillBestBalance(
+  teamA: PlayerStats[], teamB: PlayerStats[],
+  unassigned: PlayerStats[],
+  pairMap: Map<string, PairStats>,
+  teamSize: number
 ): { teamA: PlayerStats[]; teamB: PlayerStats[] } {
-  // 1. Snake draft seed
-  const sorted = [...selected].sort((a, b) => playerStrength(b) - playerStrength(a));
-  let teamA: PlayerStats[] = [];
-  let teamB: PlayerStats[] = [];
-  sorted.forEach((player, i) => {
-    const pick = i % 4;
-    if (pick === 0 || pick === 3) teamA.push(player);
-    else teamB.push(player);
-  });
+  let bestScore = Infinity;
+  let bestA: PlayerStats[] = [];
+  let bestB: PlayerStats[] = [];
 
-  // 2. Greedy swap optimisation
-  let best = balanceScore(teamA, teamB, pairMap);
-  let improved = true;
-  while (improved) {
-    improved = false;
-    for (let i = 0; i < teamA.length; i++) {
-      for (let j = 0; j < teamB.length; j++) {
-        const newA = [...teamA];
-        const newB = [...teamB];
-        [newA[i], newB[j]] = [newB[j], newA[i]];
-        const score = balanceScore(newA, newB, pairMap);
-        if (score < best - 0.01) {
-          best = score;
-          teamA = newA;
-          teamB = newB;
-          improved = true;
+  const neededA = teamSize - teamA.length;
+  const neededB = teamSize - teamB.length;
+
+  if (unassigned.length > 12) {
+    const sorted = [...unassigned].sort((a,b) => playerStrength(b) - playerStrength(a));
+    const currA = [...teamA];
+    const currB = [...teamB];
+    for(const p of sorted) {
+      if(currA.length < teamSize && currB.length < teamSize) {
+         if(currA.length <= currB.length) currA.push(p); else currB.push(p);
+      } else if (currA.length < teamSize) currA.push(p);
+      else currB.push(p);
+    }
+    
+    let improved = true;
+    while (improved) {
+      improved = false;
+      for (let i = teamA.length; i < currA.length; i++) {
+        for (let j = teamB.length; j < currB.length; j++) {
+           const newA = [...currA];
+           const newB = [...currB];
+           [newA[i], newB[j]] = [newB[j], newA[i]];
+           const score = balanceScore(newA, newB, pairMap);
+           if(score < bestScore - 0.01) {
+             bestScore = score;
+             currA[i] = newA[i];
+             currB[j] = newB[j];
+             improved = true;
+           }
         }
       }
     }
+    return { teamA: currA, teamB: currB };
   }
 
-  return { teamA, teamB };
+  function backtrack(index: number, currentA: PlayerStats[], currentB: PlayerStats[]) {
+    if (currentA.length === neededA) {
+      const remainingB = currentB.concat(unassigned.slice(index));
+      const fullA = teamA.concat(currentA);
+      const fullB = teamB.concat(remainingB);
+      const score = balanceScore(fullA, fullB, pairMap);
+      if (score < bestScore) {
+        bestScore = score;
+        bestA = [...currentA];
+        bestB = [...remainingB];
+      }
+      return;
+    }
+    if (currentB.length === neededB) {
+      const remainingA = currentA.concat(unassigned.slice(index));
+      const fullA = teamA.concat(remainingA);
+      const fullB = teamB.concat(currentB);
+      const score = balanceScore(fullA, fullB, pairMap);
+      if (score < bestScore) {
+        bestScore = score;
+        bestA = [...remainingA];
+        bestB = [...currentB];
+      }
+      return;
+    }
+    
+    currentA.push(unassigned[index]);
+    backtrack(index + 1, currentA, currentB);
+    currentA.pop();
+    
+    currentB.push(unassigned[index]);
+    backtrack(index + 1, currentA, currentB);
+    currentB.pop();
+  }
+
+  backtrack(0, [], []);
+  
+  return { teamA: teamA.concat(bestA), teamB: teamB.concat(bestB) };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// NOTABLE PAIRS — synergies & rivalries
+// NOTABLE PAIRS 
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface NotablePair {
-  nameA: string;
-  nameB: string;
-  type: 'synergy' | 'rivalry' | 'nemesis';
-  label: string;
-  detail: string;
-  pct: number;
-  games: number;
+  nameA: string; nameB: string; type: 'synergy' | 'rivalry' | 'nemesis';
+  label: string; detail: string; pct: number; games: number;
 }
 
 function getNotablePairs(
   teamA: PlayerStats[], teamB: PlayerStats[],
-  pairMap: Map<string, PairStats>,
-  playerById: Map<string, Player>
+  pairMap: Map<string, PairStats>
 ): { internal: NotablePair[]; clashes: NotablePair[] } {
   const internal: NotablePair[] = [];
   const clashes: NotablePair[] = [];
 
-  // Internal synergies within each team
   const processTeam = (team: PlayerStats[]) => {
     for (let i = 0; i < team.length; i++) {
       for (let j = i + 1; j < team.length; j++) {
@@ -221,13 +241,11 @@ function getNotablePairs(
         const pct = p.togetherWinPct;
         if (pct >= 70 || pct <= 35) {
           internal.push({
-            nameA: team[i].player.name,
-            nameB: team[j].player.name,
+            nameA: team[i].player.name, nameB: team[j].player.name,
             type: pct >= 70 ? 'synergy' : 'rivalry',
             label: pct >= 70 ? '🔥 Dupla ganadora' : '⚠️ Dupla complicada',
             detail: `${p.togetherWins}/${p.togetherTotal} juntos (${pct.toFixed(0)}%)`,
-            pct,
-            games: p.togetherTotal,
+            pct, games: p.togetherTotal,
           });
         }
       }
@@ -237,7 +255,6 @@ function getNotablePairs(
   processTeam(teamB);
   internal.sort((a, b) => Math.abs(b.pct - 50) - Math.abs(a.pct - 50));
 
-  // Cross-team clashes (nemesis / victim)
   teamA.forEach(pa => {
     teamB.forEach(pb => {
       const p = getPair(pairMap, pa.player.id, pb.player.id);
@@ -251,31 +268,22 @@ function getNotablePairs(
           type: 'nemesis',
           label: aWins ? '⚔️ Domina históricamente' : '⚔️ Duelo desequilibrado',
           detail: `${aWins
-            ? `${pa.player.name} gana ${aWinPct.toFixed(0)}% de sus cruces vs ${pb.player.name}`
-            : `${pb.player.name} gana ${(100 - aWinPct).toFixed(0)}% de sus cruces vs ${pa.player.name}`
+            ? `${pa.player.name} gana ${aWinPct.toFixed(0)}% de cruces vs ${pb.player.name}`
+            : `${pb.player.name} gana ${(100 - aWinPct).toFixed(0)}% de cruces vs ${pa.player.name}`
           } (${p.vsTotal} PJ)`,
-          pct: Math.max(aWinPct, 100 - aWinPct),
-          games: p.vsTotal,
+          pct: Math.max(aWinPct, 100 - aWinPct), games: p.vsTotal,
         });
       }
     });
   });
   clashes.sort((a, b) => b.pct - a.pct);
 
-  return {
-    internal: internal.slice(0, 5),
-    clashes:  clashes.slice(0, 5),
-  };
+  return { internal: internal.slice(0, 4), clashes: clashes.slice(0, 4) };
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// EXPLANATION — extended with pairwise analysis
-// ─────────────────────────────────────────────────────────────────────────────
 
 function generateExplanation(
   teamA: PlayerStats[], teamB: PlayerStats[],
-  pairMap: Map<string, PairStats>,
-  isPadel: boolean
+  pairMap: Map<string, PairStats>, isPadel: boolean
 ): string[] {
   const avgA   = teamA.reduce((s, p) => s + playerStrength(p), 0) / teamA.length;
   const avgB   = teamB.reduce((s, p) => s + playerStrength(p), 0) / teamB.length;
@@ -290,277 +298,37 @@ function generateExplanation(
 
   lines.push(
     isPadel
-      ? `🎯 La simulación ordenó a los jugadores por nivel de juego y buscó equilibrar las parejas. Luego probó combinaciones cruzadas para tener un partido justo.`
-      : `🎯 El draft inicial ordenó a los jugadores por puntaje de fuerza y los distribuyó en serpentina. Luego, un optimizador probó todos los intercambios posibles para minimizar la diferencia de nivel.`
+      ? `🎯 La simulación ordenó a los jugadores por nivel de juego y buscó el equilibrio perfecto analizando cruces y duplas históricas.`
+      : `🎯 El algoritmo evaluó exhaustivamente las posibles combinaciones de jugadores para minimizar las diferencias de nivel entre los equipos.`
   );
   lines.push(
     isPadel 
       ? `📊 Nivel individual = % victorias + bono de experiencia + rachas. Química = promedio de % victorias cuando jugaron juntos como pareja.`
-      : `📊 Puntaje de fuerza = % victorias + bono de experiencia (hasta +10 pts con 20 PJ) + bono de racha histórica (×1.5 por win). Química = promedio ponderado de % de victorias jugando juntos.`
+      : `📊 Puntaje de fuerza = % victorias + bono de exp. (hasta +10 pts) + bono de racha jugada (×1.5 por win). Química = win rate ponderado en dúo.`
   );
-  lines.push(
-    `⚖️ Fuerza promedio — Equipo A: ${avgA.toFixed(1)} pts · Equipo B: ${avgB.toFixed(1)} pts (diferencia: ${diff} pts).`
-  );
-  lines.push(
-    `🤝 Química histórica — Equipo A: ${chemA.toFixed(1)}% win juntos · Equipo B: ${chemB.toFixed(1)}% win juntos.`
-  );
+  lines.push(`⚖️ Fuerza promedio — Equipo A: ${avgA.toFixed(1)} pts · Equipo B: ${avgB.toFixed(1)} pts (diferencia: ${diff} pts).`);
+  lines.push(`🤝 Química histórica — Equipo A: ${chemA.toFixed(1)}% win juntos · Equipo B: ${chemB.toFixed(1)}% win juntos.`);
 
-  if (topA) lines.push(
-    `⭐ Figura del Equipo A: ${topA.player.name} (${topA.winPercentage.toFixed(1)}% victorias, racha récord ${topA.bestStreak}, ${topA.matchesPlayed} PJ).`
-  );
-  if (topB) lines.push(
-    `⭐ Figura del Equipo B: ${topB.player.name} (${topB.winPercentage.toFixed(1)}% victorias, racha récord ${topB.bestStreak}, ${topB.matchesPlayed} PJ).`
-  );
+  if (topA) lines.push(`⭐ Figura del Equipo A: ${topA.player.name} (${topA.winPercentage.toFixed(1)}% win, racha máx ${topA.bestStreak}, ${topA.matchesPlayed} PJ).`);
+  if (topB) lines.push(`⭐ Figura del Equipo B: ${topB.player.name} (${topB.winPercentage.toFixed(1)}% win, racha máx ${topB.bestStreak}, ${topB.matchesPlayed} PJ).`);
 
   const winPctA = teamA.reduce((s, p) => s + p.winPercentage, 0) / teamA.length;
   const winPctB = teamB.reduce((s, p) => s + p.winPercentage, 0) / teamB.length;
   const favored = winPctA > winPctB ? 'A' : winPctA < winPctB ? 'B' : null;
   if (favored) {
-    lines.push(
-      `🏆 Ligero favorito en papel: Equipo ${favored} (${Math.abs(winPctA - winPctB).toFixed(1)}% más de victoria promedio), pero el partido se gana en la cancha.`
-    );
+    lines.push(`🏆 Ligero favorito matemático: Equipo ${favored} (${Math.abs(winPctA - winPctB).toFixed(1)}% más de victoria promedio).`);
   } else {
-    lines.push(`🏆 Ambos equipos están perfectamente igualados en % de victoria promedio. ¡Va a ser un partido muy parejo!`);
+    lines.push(`🏆 Ambos equipos están matemáticamente empatados en victoria promedio.`);
   }
 
   return lines;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// COMPONENT
+// COMPONENTS
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MANUAL BUILDER — sub-component
-// ─────────────────────────────────────────────────────────────────────────────
-
-const MANUAL_TEAM_SIZE = 5;
-
-function ManualBuilder({ allStats, pairMap, onReset, teamSize }: {
-  allStats: PlayerStats[];
-  pairMap: Map<string, PairStats>;
-  onReset: () => void;
-  teamSize: number;
-}) {
-  const [teamA, setTeamA] = useState<PlayerStats[]>([]);
-  const [teamB, setTeamB] = useState<PlayerStats[]>([]);
-  const [revealed, setRevealed] = useState(false);
-
-  const assignedIds = useMemo(
-    () => new Set([...teamA.map(p => p.player.id), ...teamB.map(p => p.player.id)]),
-    [teamA, teamB]
-  );
-
-  const available = useMemo(
-    () => allStats.filter(s => !assignedIds.has(s.player.id)),
-    [allStats, assignedIds]
-  );
-
-  const addTo = (team: 'A' | 'B', s: PlayerStats) => {
-    if (revealed) return;
-    if (team === 'A' && teamA.length < teamSize) setTeamA(prev => [...prev, s]);
-    if (team === 'B' && teamB.length < teamSize) setTeamB(prev => [...prev, s]);
-  };
-
-  const removeFrom = (team: 'A' | 'B', id: string) => {
-    if (revealed) return;
-    if (team === 'A') setTeamA(prev => prev.filter(p => p.player.id !== id));
-    if (team === 'B') setTeamB(prev => prev.filter(p => p.player.id !== id));
-  };
-
-  const isComplete = teamA.length === teamSize && teamB.length === teamSize;
-
-  // Use parent pairMap for the analysis (it contains all match history)
-  const notablePairs = useMemo(() => {
-    if (!revealed || !isComplete) return { internal: [], clashes: [] };
-    return getNotablePairs(teamA, teamB, pairMap, new Map(allStats.map(s => [s.player.id, s.player])));
-  }, [revealed, isComplete, teamA, teamB, pairMap, allStats]);
-
-  const explanation = useMemo(() => {
-    if (!revealed || !isComplete) return [];
-    const isPadel = teamSize === 2;
-    return generateExplanation(teamA, teamB, pairMap, isPadel);
-  }, [revealed, isComplete, teamA, teamB, pairMap, teamSize]);
-
-  return (
-    <>
-      {!revealed && (
-        <>
-          {/* ── Team panels ── */}
-          <div className={styles.manualLayout}>
-            {/* Team A panel */}
-            <ManualTeamPanel
-              label="Equipo A"
-              color="green"
-              team={teamA}
-              available={available}
-              teamSize={teamSize}
-              onAdd={(s) => addTo('A', s)}
-              onRemove={(id) => removeFrom('A', id)}
-            />
-            {/* Team B panel */}
-            <ManualTeamPanel
-              label="Equipo B"
-              color="blue"
-              team={teamB}
-              available={available}
-              teamSize={teamSize}
-              onAdd={(s) => addTo('B', s)}
-              onRemove={(id) => removeFrom('B', id)}
-            />
-          </div>
-
-          <div className={styles.simulateWrapper}>
-            <button
-              className={styles.simulateBtn}
-              onClick={() => setRevealed(true)}
-              disabled={!isComplete}
-            >
-              {!isComplete
-                ? `Faltan jugadores (A: ${teamA.length}/${teamSize} · B: ${teamB.length}/${teamSize})`
-                : '📊 Ver Análisis'}
-            </button>
-          </div>
-        </>
-      )}
-
-      {revealed && isComplete && (
-        <div className={styles.resultSection}>
-          <div className={styles.teamsGrid}>
-            <TeamCard label="Equipo A" color="green" players={teamA} pairMap={pairMap} />
-            <div className={styles.vsDivider}><span className={styles.vsText}>VS</span></div>
-            <TeamCard label="Equipo B" color="blue" players={teamB} pairMap={pairMap} />
-          </div>
-
-          {(notablePairs.internal.length > 0 || notablePairs.clashes.length > 0) && (
-            <div className={styles.pairsSection}>
-              <h3 className={styles.pairsSectionTitle}>🔍 Análisis Individual entre Jugadores</h3>
-              {notablePairs.internal.length > 0 && (
-                <div className={styles.pairsGroup}>
-                  <span className={styles.pairsGroupLabel}>Compañeros destacados (dentro del mismo equipo)</span>
-                  <div className={styles.pairsGrid}>
-                    {notablePairs.internal.map((pair, i) => <PairCard key={i} pair={pair} />)}
-                  </div>
-                </div>
-              )}
-              {notablePairs.clashes.length > 0 && (
-                <div className={styles.pairsGroup}>
-                  <span className={styles.pairsGroupLabel}>Duelos históricos (equipos enfrentados)</span>
-                  <div className={styles.pairsGrid}>
-                    {notablePairs.clashes.map((pair, i) => <PairCard key={i} pair={pair} />)}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className={styles.explanationBox}>
-            <h3 className={styles.explanationTitle}>📋 Análisis de los equipos</h3>
-            <ul className={styles.explanationList}>
-              {explanation.map((line, i) => (
-                <li key={i} className={styles.explanationItem}>{line}</li>
-              ))}
-            </ul>
-          </div>
-
-          <div className={styles.resetWrapper}>
-            <button className={styles.resetBtn} onClick={() => { setTeamA([]); setTeamB([]); setRevealed(false); }}>
-              ✏️ Rehacer equipos
-            </button>
-            <button className={styles.resetBtn} onClick={onReset}>
-              🔄 Nueva Simulación
-            </button>
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
-
-function ManualTeamPanel({ label, color, team, available, onAdd, onRemove, teamSize }: {
-  label: string;
-  color: 'green' | 'blue';
-  team: PlayerStats[];
-  available: PlayerStats[];
-  onAdd: (s: PlayerStats) => void;
-  onRemove: (id: string) => void;
-  teamSize: number;
-}) {
-  const full = team.length === teamSize;
-  const isGreen = color === 'green';
-
-  return (
-    <div className={`${styles.manualTeamBox} ${isGreen ? styles.manualTeamGreen : styles.manualTeamBlue}`}>
-      <div className={styles.manualTeamHeader}>
-        <span className={styles.teamIcon}>{isGreen ? '🟢' : '🔵'}</span>
-        <h3 className={styles.manualTeamTitle}>{label}</h3>
-        <span className={`${styles.counter} ${full ? styles.counterFull : ''}`}>
-          {team.length}/{teamSize}
-        </span>
-      </div>
-
-      {/* Progress bar */}
-      <div className={styles.manualProgressTrack}>
-        <div
-          className={`${styles.manualProgressBar} ${isGreen ? styles.manualProgressGreen : styles.manualProgressBlue}`}
-          style={{ width: `${(team.length / teamSize) * 100}%` }}
-        />
-      </div>
-
-      {/* Current team roster */}
-      <div className={styles.manualRoster}>
-        {team.map((s, i) => (
-          <div key={s.player.id} className={styles.manualRosterSlot}>
-            <span className={styles.manualRosterNum}>{i + 1}</span>
-            <span className={styles.manualRosterName}>{s.player.name}</span>
-            <span className={styles.manualRosterStat}>{s.winPercentage.toFixed(0)}%</span>
-            <button className={styles.manualRemoveBtn} onClick={() => onRemove(s.player.id)}>✕</button>
-          </div>
-        ))}
-        {Array.from({ length: teamSize - team.length }).map((_, i) => (
-          <div key={`empty-${i}`} className={styles.manualRosterEmpty}>
-            <span className={styles.manualRosterNum}>{team.length + i + 1}</span>
-            <span className={styles.manualRosterPlaceholder}>Vacío</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Available players */}
-      {!full && available.length > 0 && (
-        <>
-          <div className={styles.manualDivider}>
-            <span className={styles.manualDividerLabel}>Agregar jugador</span>
-          </div>
-          <div className={styles.manualAvailableList}>
-            {available.map(s => (
-              <button
-                key={s.player.id}
-                className={`${styles.manualAvailableRow} ${isGreen ? styles.manualAvailableGreen : styles.manualAvailableBlue}`}
-                onClick={() => onAdd(s)}
-              >
-                <span className={styles.manualAvailableName}>{s.player.name}</span>
-                <span className={styles.manualAvailableStat}>{s.winPercentage.toFixed(0)}%</span>
-                <span className={`${styles.manualAddBtn} ${isGreen ? styles.manualAddGreen : styles.manualAddBlue}`}>+</span>
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-
-      {full && (
-        <div className={`${styles.manualCompleteMsg} ${isGreen ? styles.manualCompleteMsgGreen : styles.manualCompleteMsgBlue}`}>
-          ¡Equipo completo!
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// MAIN COMPONENT
-// ─────────────────────────────────────────────────────────────────────────────
-
-type SimMode = null | 'auto' | 'manual';
+type SimStep = 'selection' | 'distribution' | 'results';
 
 export default function TeamSimulator() {
   const { players, matches } = useAppContext();
@@ -574,74 +342,70 @@ export default function TeamSimulator() {
   const allStats = useMemo(() => {
     const stats = calculateStats(players, matches);
     return stats.sort((a, b) => 
-      b.wins - a.wins || 
-      b.draws - a.draws || 
-      b.winPercentage - a.winPercentage || 
-      a.player.name.localeCompare(b.player.name)
+      b.wins - a.wins || b.draws - a.draws || b.winPercentage - a.winPercentage || a.player.name.localeCompare(b.player.name)
     );
   }, [players, matches]);
-  const playerById = useMemo(() => new Map(players.map(p => [p.id, p])), [players]);
+  
+  const [step, setStep] = useState<SimStep>('selection');
 
-  const [mode, setMode] = useState<SimMode>(null);
+  // step 1: pool
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  // ── AUTO mode state ──
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [simulated, setSimulated] = useState(false);
+  // step 2 & 3: teams
+  const [teamAIds, setTeamAIds] = useState<string[]>([]);
+  const [teamBIds, setTeamBIds] = useState<string[]>([]);
 
-  const toggle = (id: string) => {
-    if (simulated) return;
-    setSelected(prev => {
+  // Computed states
+  const selectedStats = useMemo(() => allStats.filter(s => selectedIds.has(s.player.id)), [allStats, selectedIds]);
+  const teamA = useMemo(() => teamAIds.map(id => allStats.find(s => s.player.id === id)!), [teamAIds, allStats]);
+  const teamB = useMemo(() => teamBIds.map(id => allStats.find(s => s.player.id === id)!), [teamBIds, allStats]);
+  const unassigned = useMemo(() => selectedStats.filter(s => !teamAIds.includes(s.player.id) && !teamBIds.includes(s.player.id)), [selectedStats, teamAIds, teamBIds]);
+
+  const pairMap = useMemo(() => computePairwise(Array.from(selectedIds), matches), [selectedIds, matches]);
+  const fullPairMap = useMemo(() => computePairwise(players.map(p=>p.id), matches), [players, matches]);
+
+  const explanation = useMemo(() => {
+    if (step !== 'results') return [];
+    return generateExplanation(teamA, teamB, fullPairMap, isPadel);
+  }, [step, teamA, teamB, fullPairMap, isPadel]);
+
+  const notablePairs = useMemo(() => {
+    if (step !== 'results') return { internal: [], clashes: [] };
+    return getNotablePairs(teamA, teamB, fullPairMap);
+  }, [step, teamA, teamB, fullPairMap]);
+
+  // Actions
+  const handleTypeChange = (newSize: number) => {
+    setTeamSize(newSize);
+    setSelectedIds(new Set());
+    setTeamAIds([]);
+    setTeamBIds([]);
+    setStep('selection');
+  };
+
+  const toggleSelection = (id: string) => {
+    setSelectedIds(prev => {
       const next = new Set(prev);
-      if (next.has(id)) { next.delete(id); }
-      else if (next.size < totalRequired) { next.add(id); }
+      if (next.has(id)) next.delete(id);
+      else if (next.size < totalRequired) next.add(id);
       return next;
     });
   };
 
-  const selectedStats = useMemo(
-    () => allStats.filter(s => selected.has(s.player.id)),
-    [allStats, selected]
-  );
-
-  const pairMap = useMemo(
-    () => computePairwise(Array.from(selected), matches),
-    [selected, matches]
-  );
-
-  const result = useMemo(() => {
-    if (!simulated || selectedStats.length !== totalRequired) return null;
-    return buildBalancedTeams(selectedStats, pairMap);
-  }, [simulated, selectedStats, pairMap, totalRequired]);
-
-  const explanation = useMemo(() => {
-    if (!result) return [];
-    return generateExplanation(result.teamA, result.teamB, pairMap, isPadel);
-  }, [result, pairMap, isPadel]);
-
-  const notablePairs = useMemo(() => {
-    if (!result) return { internal: [], clashes: [] };
-    return getNotablePairs(result.teamA, result.teamB, pairMap, playerById);
-  }, [result, pairMap, playerById]);
-
-  const handleSimulate = () => { if (selected.size === totalRequired) setSimulated(true); };
-
-  // Full pair map for manual mode (all players, all history)
-  const fullPairMap = useMemo(
-    () => computePairwise(players.map(p => p.id), matches),
-    [players, matches]
-  );
-
-  const handleTypeChange = (newSize: number) => {
-    setTeamSize(newSize);
-    setSelected(new Set());
-    setSimulated(false);
+  const moveToDistribution = () => {
+    if (selectedIds.size === totalRequired) setStep('distribution');
   };
-  
-  const handleReset = () => {
-    setMode(null);
-    setSelected(new Set());
-    setSimulated(false);
+
+  const handleBackToSel = () => {
+    setStep('selection');
   };
+
+  const clearTeams = () => {
+    setTeamAIds([]);
+    setTeamBIds([]);
+  };
+
+  const isFormed = teamAIds.length === teamSize && teamBIds.length === teamSize;
 
   if (players.length === 0) {
     return (
@@ -657,13 +421,13 @@ export default function TeamSimulator() {
     <div className={styles.container}>
       <div className={styles.pageHeader}>
         <h1 className={styles.pageTitle}>{activeTournament?.type_icon || '⚽'} Simulación de Equipos</h1>
-        {!mode && (
+        {step === 'selection' && (
           <p className={styles.pageSubtitle}>
-            Elegí cómo querés armar los equipos para el partido.
+            Paso 1: Elegí a los {totalRequired} jugadores para el partido.
           </p>
         )}
         
-        {mode && matchTypes.length > 1 && !simulated && (
+        {step === 'selection' && matchTypes.length > 1 && (
           <div className={styles.formatSelector} style={{marginTop: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center'}}>
             <span style={{color: '#94a3b8', fontSize: '0.9rem'}}>Formato:</span>
             {matchTypes.map(size => (
@@ -687,59 +451,20 @@ export default function TeamSimulator() {
         )}
       </div>
 
-      {/* ── Mode picker ── */}
-      {!mode && (
-        <div className={styles.modePicker}>
-          <button
-            className={`${styles.modeCard} ${styles.modeCardAuto}`}
-            onClick={() => setMode('auto')}
-          >
-            <span className={styles.modeIcon}>🤖</span>
-            <span className={styles.modeTitle}>Automático</span>
-            <span className={styles.modeDesc}>
-              Seleccionás 10 jugadores y el algoritmo forma los equipos más equilibrados usando estadísticas, química histórica y head-to-head.
-            </span>
-          </button>
-
-          <button
-            className={`${styles.modeCard} ${styles.modeCardManual}`}
-            onClick={() => setMode('manual')}
-          >
-            <span className={styles.modeIcon}>✋</span>
-            <span className={styles.modeTitle}>Manual</span>
-            <span className={styles.modeDesc}>
-              Armás vos mismo los dos equipos eligiendo qué jugador va en cada lado. Después podés ver el análisis estadístico.
-            </span>
-          </button>
-        </div>
-      )}
-
-      {/* ── Back button ── */}
-      {mode && (
-        <div className={styles.modeBackRow}>
-          <button className={styles.modeBackBtn} onClick={handleReset}>
-            ← Cambiar modo
-          </button>
-          <span className={styles.modeBadge}>
-            {mode === 'auto' ? '🤖 Automático' : '✋ Manual'}
-          </span>
-        </div>
-      )}
-
-      {/* ── AUTO mode ── */}
-      {mode === 'auto' && !simulated && (
+      {/* ── Selection Step ── */}
+      {step === 'selection' && (
         <div className={styles.pickerSection}>
           <div className={styles.pickerHeader}>
             <span className={styles.pickerLabel}>Jugadores seleccionados</span>
-            <span className={`${styles.counter} ${selected.size === totalRequired ? styles.counterFull : ''}`}>
-              {selected.size} / {totalRequired}
+            <span className={`${styles.counter} ${selectedIds.size === totalRequired ? styles.counterFull : ''}`}>
+              {selectedIds.size} / {totalRequired}
             </span>
           </div>
 
           <div className={styles.playerGrid}>
             {allStats.map((s, index) => {
-              const isSelected  = selected.has(s.player.id);
-              const isDisabled  = !isSelected && selected.size >= totalRequired;
+              const isSelected  = selectedIds.has(s.player.id);
+              const isDisabled  = !isSelected && selectedIds.size >= totalRequired;
               const strength    = playerStrength(s);
               const strengthPct = Math.min(strength, 120) / 120 * 100;
 
@@ -747,7 +472,7 @@ export default function TeamSimulator() {
                 <button
                   key={s.player.id}
                   className={`${styles.playerCard} ${isSelected ? styles.playerCardSelected : ''} ${isDisabled ? styles.playerCardDisabled : ''}`}
-                  onClick={() => toggle(s.player.id)}
+                  onClick={() => toggleSelection(s.player.id)}
                   disabled={isDisabled}
                 >
                   {isSelected && <span className={styles.checkmark}>✓</span>}
@@ -768,23 +493,49 @@ export default function TeamSimulator() {
           <div className={styles.simulateWrapper}>
             <button
               className={styles.simulateBtn}
-              onClick={handleSimulate}
-              disabled={selected.size !== totalRequired}
+              onClick={moveToDistribution}
+              disabled={selectedIds.size !== totalRequired}
             >
-              {selected.size < totalRequired
-                ? `Falta elegir ${totalRequired - selected.size} jugador${totalRequired - selected.size !== 1 ? 'es' : ''}`
-                : '⚡ Generar Equipos'}
+              {selectedIds.size < totalRequired
+                ? `Falta elegir ${totalRequired - selectedIds.size} jugador${totalRequired - selectedIds.size !== 1 ? 'es' : ''}`
+                : 'Siguiente: Distribuir Equipos →'}
             </button>
           </div>
         </div>
       )}
 
-      {mode === 'auto' && simulated && result && (
+      {/* ── Distribution Step ── */}
+      {step === 'distribution' && (
+        <TacticalBoard 
+          players={selectedStats}
+          teamSize={teamSize}
+          pairMap={pairMap}
+          fillBestBalance={fillBestBalance}
+          onComplete={(newTeamA, newTeamB) => {
+             setTeamAIds(newTeamA.map(p => p.player.id));
+             setTeamBIds(newTeamB.map(p => p.player.id));
+             setStep('results');
+          }}
+          onBack={handleBackToSel}
+        />
+      )}
+
+      {/* ── Results Step ── */}
+      {step === 'results' && (
         <div className={styles.resultSection}>
+          <div className={styles.modeBackRow}>
+            <button className={styles.modeBackBtn} onClick={() => setStep('distribution')}>
+              ← Volver a Distribución
+            </button>
+            <span className={styles.modeBadge}>
+              📊 Análisis de Simulación
+            </span>
+          </div>
+
           <div className={styles.teamsGrid}>
-            <TeamCard label="Equipo A" color="green" players={result.teamA} pairMap={pairMap} />
+            <TeamCard label="Equipo A" color="green" players={teamA} pairMap={fullPairMap} />
             <div className={styles.vsDivider}><span className={styles.vsText}>VS</span></div>
-            <TeamCard label="Equipo B" color="blue"  players={result.teamB} pairMap={pairMap} />
+            <TeamCard label="Equipo B" color="blue" players={teamB} pairMap={fullPairMap} />
           </div>
 
           {(notablePairs.internal.length > 0 || notablePairs.clashes.length > 0) && (
@@ -810,49 +561,33 @@ export default function TeamSimulator() {
           )}
 
           <div className={styles.explanationBox}>
-            <h3 className={styles.explanationTitle}>🧠 Por qué se armaron así los equipos</h3>
+            <h3 className={styles.explanationTitle}>📝 Resumen Estadístico</h3>
             <ul className={styles.explanationList}>
-              {explanation.map((line, i) => (
-                <li key={i} className={styles.explanationItem}>{line}</li>
-              ))}
+              {explanation.map((line, i) => <li key={i} className={styles.explanationItem}>{line}</li>)}
             </ul>
           </div>
 
           <div className={styles.resetWrapper}>
-            <button className={styles.resetBtn} onClick={() => { setSelected(new Set()); setSimulated(false); }}>✏️ Reelegir jugadores</button>
-            <button className={styles.resetBtn} onClick={handleReset}>🔄 Nueva Simulación</button>
+            <button className={styles.resetBtn} onClick={() => { setStep('selection'); setSelectedIds(new Set()); clearTeams(); }}>
+              🔄 Nueva Simulación Desde Cero
+            </button>
           </div>
         </div>
-      )}
-
-      {/* ── MANUAL mode ── */}
-      {mode === 'manual' && (
-        <ManualBuilder
-          allStats={allStats}
-          pairMap={fullPairMap}
-          onReset={handleReset}
-          teamSize={teamSize}
-        />
       )}
     </div>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SUB-COMPONENTS
+// UI EXTRACTS
 // ─────────────────────────────────────────────────────────────────────────────
 
-function TeamCard({
-  label, color, players, pairMap,
-}: {
-  label: string;
-  color: 'green' | 'blue';
-  players: PlayerStats[];
-  pairMap: Map<string, PairStats>;
-}) {
-  const avgWin      = players.reduce((s, p) => s + p.winPercentage, 0) / players.length;
+// DistributionTeamPanel removed completely
+
+function TeamCard({ label, color, players, pairMap }: { label: string; color: 'green'|'blue'; players: PlayerStats[]; pairMap: Map<string, PairStats> }) {
+  const avgWin      = players.length ? players.reduce((s, p) => s + p.winPercentage, 0) / players.length : 0;
   const totalPJ     = players.reduce((s, p) => s + p.matchesPlayed, 0);
-  const avgStrength = players.reduce((s, p) => s + playerStrength(p), 0) / players.length;
+  const avgStrength = players.length ? players.reduce((s, p) => s + playerStrength(p), 0) / players.length : 0;
   const chem        = teamChemistry(players, pairMap);
   const sorted      = [...players].sort((a, b) => playerStrength(b) - playerStrength(a));
 
@@ -862,7 +597,6 @@ function TeamCard({
         <span className={styles.teamIcon}>{color === 'green' ? '🟢' : '🔵'}</span>
         <h2 className={styles.teamLabel}>{label}</h2>
       </div>
-
       <div className={styles.teamMetaRow}>
         <div className={styles.teamMeta}>
           <span className={styles.metaValue}>{avgWin.toFixed(1)}%</span>
@@ -881,7 +615,6 @@ function TeamCard({
           <span className={styles.metaLabel}>PJ totales</span>
         </div>
       </div>
-
       <ul className={styles.playerList}>
         {sorted.map((s, i) => {
           const strength = playerStrength(s);
@@ -908,11 +641,8 @@ function TeamCard({
 function PairCard({ pair }: { pair: NotablePair }) {
   const isSynergy  = pair.type === 'synergy';
   const isClash    = pair.type === 'nemesis';
-  const barColor   = isSynergy ? 'var(--accent-primary)'
-                   : isClash   ? 'var(--danger)'
-                   : 'var(--warning)';
+  const barColor   = isSynergy ? 'var(--accent-primary)' : isClash ? 'var(--danger)' : 'var(--warning)';
   const barWidth   = isSynergy ? pair.pct : isClash ? pair.pct : (100 - pair.pct);
-
   return (
     <div className={`${styles.pairCard} ${isSynergy ? styles.pairSynergy : isClash ? styles.pairNemesis : styles.pairWarning}`}>
       <div className={styles.pairLabel}>{pair.label}</div>
