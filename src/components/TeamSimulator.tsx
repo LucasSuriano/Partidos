@@ -3,9 +3,10 @@
 import { useMemo, useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { calculateStats } from '@/lib/stats';
+import { Match, Player, PlayerStats } from '@/types';
 import { useTournament } from '@/context/TournamentContext';
 import styles from './TeamSimulator.module.css';
-import { TacticalBoard } from './TacticalBoard';
+import { TacticalBoard, TacticalConfig, FinalPitchRenderer } from './TacticalBoard';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -354,6 +355,7 @@ export default function TeamSimulator() {
   // step 2 & 3: teams
   const [teamAIds, setTeamAIds] = useState<string[]>([]);
   const [teamBIds, setTeamBIds] = useState<string[]>([]);
+  const [tacticalConfig, setTacticalConfig] = useState<TacticalConfig | null>(null);
 
   // Computed states
   const selectedStats = useMemo(() => allStats.filter(s => selectedIds.has(s.player.id)), [allStats, selectedIds]);
@@ -403,6 +405,7 @@ export default function TeamSimulator() {
   const clearTeams = () => {
     setTeamAIds([]);
     setTeamBIds([]);
+    setTacticalConfig(null);
   };
 
   const isFormed = teamAIds.length === teamSize && teamBIds.length === teamSize;
@@ -511,9 +514,10 @@ export default function TeamSimulator() {
           teamSize={teamSize}
           pairMap={pairMap}
           fillBestBalance={fillBestBalance}
-          onComplete={(newTeamA, newTeamB) => {
+          onComplete={(newTeamA, newTeamB, config) => {
              setTeamAIds(newTeamA.map(p => p.player.id));
              setTeamBIds(newTeamB.map(p => p.player.id));
+             setTacticalConfig(config);
              setStep('results');
           }}
           onBack={handleBackToSel}
@@ -523,7 +527,7 @@ export default function TeamSimulator() {
       {/* ── Results Step ── */}
       {step === 'results' && (
         <div className={styles.resultSection}>
-          <div className={styles.modeBackRow}>
+          <div className={styles.modeBackRow} style={{marginBottom: '1rem'}}>
             <button className={styles.modeBackBtn} onClick={() => setStep('distribution')}>
               ← Volver a Distribución
             </button>
@@ -531,6 +535,12 @@ export default function TeamSimulator() {
               📊 Análisis de Simulación
             </span>
           </div>
+
+          {tacticalConfig && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
+              <FinalPitchRenderer players={selectedStats} config={tacticalConfig} />
+            </div>
+          )}
 
           <div className={styles.teamsGrid}>
             <TeamCard label="Equipo A" color="green" players={teamA} pairMap={fullPairMap} />

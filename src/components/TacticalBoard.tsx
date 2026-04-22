@@ -17,6 +17,14 @@ interface PairStats {
   vsTotal: number; vsWins: number; vsWinPct: number;
 }
 
+export interface TacticalConfig {
+  locations: Record<string, string>;
+  fmtA: string; fmtB: string;
+  colorA1: string; colorA2: string; patA: JerseyPattern;
+  colorB1: string; colorB2: string; patB: JerseyPattern;
+  teamSize: number;
+}
+
 interface TacticalBoardProps {
   players: PlayerStats[];
   teamSize: number;
@@ -25,7 +33,7 @@ interface TacticalBoardProps {
     teamA: PlayerStats[], teamB: PlayerStats[],
     unassigned: PlayerStats[], pairMap: Map<string, PairStats>, teamSize: number
   ) => { teamA: PlayerStats[]; teamB: PlayerStats[] };
-  onComplete: (teamA: PlayerStats[], teamB: PlayerStats[]) => void;
+  onComplete: (teamA: PlayerStats[], teamB: PlayerStats[], config: TacticalConfig) => void;
   onBack: () => void;
 }
 
@@ -232,7 +240,13 @@ export function TacticalBoard({ players, teamSize, pairMap, fillBestBalance, onC
         </DroppablePool>
 
         <div className={styles.completionRow}>
-           <button onClick={() => { if(isComplete) onComplete(formedA, formedB); }} disabled={!isComplete}
+           <button onClick={() => { 
+             if(isComplete) {
+               onComplete(formedA, formedB, {
+                 locations, fmtA, fmtB, colorA1, colorA2, patA, colorB1, colorB2, patB, teamSize
+               });
+             }
+           }} disabled={!isComplete}
              className={`${styles.generateBtn} ${isComplete ? styles.generateBtnReady : ''}`}>
              📊 Analizar Equipos Formados
            </button>
@@ -256,33 +270,67 @@ export function TacticalBoard({ players, teamSize, pairMap, fillBestBalance, onC
   );
 }
 
-function PitchSlot({ id, x, y, player, teamColor1, teamColor2, teamPattern }: { 
+function PitchSlot({ id, x, y, player, teamColor1, teamColor2, teamPattern, readOnly = false }: { 
   id: string; x: number; y: number; player?: PlayerStats; 
   teamColor1: string; teamColor2: string; teamPattern: JerseyPattern;
+  readOnly?: boolean;
 }) {
-  const { setNodeRef, isOver } = useDroppable({ id });
+  const { setNodeRef, isOver } = useDroppable({ id, disabled: readOnly });
   
   return (
-    <div ref={setNodeRef} className={`${styles.slot} ${isOver ? styles.slotOver : ''}`} style={{ left: `${x}%`, top: `${y}%` }}>
+    <div ref={setNodeRef} className={`${styles.slot} ${isOver ? styles.slotOver : ''} ${readOnly ? styles.slotReadOnly : ''}`} style={{ left: `${x}%`, top: `${y}%` }}>
       {player ? (
-         <DraggableToken player={player} c1={teamColor1} c2={teamColor2} pat={teamPattern} />
+         <DraggableToken player={player} c1={teamColor1} c2={teamColor2} pat={teamPattern} readOnly={readOnly} />
       ) : (
-         <span style={{ color: 'rgba(255,255,255,0.1)', fontSize: '0.75rem', fontWeight: 'bold' }}>{id.includes('teamA') ? 'A' : 'B'}</span>
+         !readOnly && <span style={{ color: 'rgba(255,255,255,0.1)', fontSize: '0.75rem', fontWeight: 'bold' }}>{id.includes('teamA') ? 'A' : 'B'}</span>
       )}
     </div>
   );
 }
 
-function DraggableToken({ player, c1, c2, pat }: { player: PlayerStats; c1: string; c2: string; pat: JerseyPattern }) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: player.player.id });
+function DraggableToken({ player, c1, c2, pat, readOnly = false }: { player: PlayerStats; c1: string; c2: string; pat: JerseyPattern; readOnly?: boolean }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: player.player.id, disabled: readOnly });
   
   return (
-    <div ref={setNodeRef} {...listeners} {...attributes} className={`${styles.playerTokenWrapper} ${isDragging ? styles.tokenDragging : ''}`}>
+    <div ref={setNodeRef} {...(readOnly ? {} : listeners)} {...(readOnly ? {} : attributes)} className={`${styles.playerTokenWrapper} ${isDragging ? styles.tokenDragging : ''} ${readOnly ? styles.tokenReadOnly : ''}`}>
        <JerseySVG primaryColor={c1} secondaryColor={c2} pattern={pat} width={48} height={48} />
        <div className={styles.jerseyLabel}>
           <span className={styles.jerseyName}>{player.player.name}</span>
           <span className={styles.jerseyStat}>{player.winPercentage.toFixed(0)}</span>
        </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// READ ONLY RENDERER FOR RESULTS SECTION
+// ─────────────────────────────────────────────────────────────────────────────
+export function FinalPitchRenderer({ players, config }: { players: PlayerStats[], config: TacticalConfig }) {
+  const formations = getFormationsForSize(config.teamSize);
+  const formationA = formations.find(f => f.id === config.fmtA) || formations[0];
+  const formationB = formations.find(f => f.id === config.fmtB) || formations[0];
+
+  return (
+    <div className={styles.pitchWrapper} style={{ maxWidth: '800px', marginBottom: '2rem' }}>
+      <div className={styles.grassTexture} />
+      <div className={styles.lineCenter} />
+      <div className={styles.lineCircle} />
+      <div className={styles.goalAreaLeft} />
+      <div className={styles.goalAreaRight} />
+
+      {formationA.pos.map((coord, i) => {
+         const locId = `teamA-${i}`;
+         const ply = players.find(p => config.locations[p.player.id] === locId);
+         return <PitchSlot key={locId} id={locId} x={coord.x} y={coord.y} player={ply} 
+                   teamColor1={config.colorA1} teamColor2={config.colorA2} teamPattern={config.patA} readOnly={true} />;
+      })}
+      {formationB.pos.map((coord, i) => {
+         const locId = `teamB-${i}`;
+         const mirroredX = 100 - coord.x;
+         const ply = players.find(p => config.locations[p.player.id] === locId);
+         return <PitchSlot key={locId} id={locId} x={mirroredX} y={coord.y} player={ply} 
+                   teamColor1={config.colorB1} teamColor2={config.colorB2} teamPattern={config.patB} readOnly={true} />;
+      })}
     </div>
   );
 }
