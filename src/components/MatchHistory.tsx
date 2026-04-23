@@ -296,47 +296,49 @@ export default function MatchHistory() {
                       </div>
 
                       {/* VS central o Score */}
-                      {match.scoreA != null && match.scoreB != null ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                          <div className={styles.scorePill}>
-                            <div className={styles.scoreBox}>{match.scoreA}</div>
-                            <div className={styles.scoreSeparator} />
-                            <div className={styles.scoreBox}>{match.scoreB}</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                        {match.scoreA != null && match.scoreB != null ? (
+                          <>
+                            <div className={styles.scorePill}>
+                              <div className={styles.scoreBox}>{match.scoreA}</div>
+                              <div className={styles.scoreSeparator} />
+                              <div className={styles.scoreBox}>{match.scoreB}</div>
+                            </div>
+                            {match.metadata?.sets && match.metadata.sets.length > 0 && (
+                              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                                {match.metadata.sets.map((setInfo: any, sIdx: number) => (
+                                  <div key={sIdx} style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px', color: 'rgba(255,255,255,0.8)' }}>
+                                    {setInfo.scoreA}-{setInfo.scoreB}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <div className={styles.vsSeparator}>
+                            <span className={styles.vsIcon}>{tIcon}</span>
+                            <span className={styles.vsText}>VS</span>
                           </div>
-                          {match.metadata?.sets && match.metadata.sets.length > 0 && (
-                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                              {match.metadata.sets.map((setInfo: any, sIdx: number) => (
-                                <div key={sIdx} style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px', color: 'rgba(255,255,255,0.8)' }}>
-                                  {setInfo.scoreA}-{setInfo.scoreB}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          
-                          {match.metadata?.mvp_id && (
-                            <div style={{ 
-                              marginTop: '8px',
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              gap: '6px', 
-                              background: 'rgba(245, 158, 11, 0.1)', 
-                              border: '1px solid rgba(245, 158, 11, 0.2)',
-                              padding: '2px 10px', 
-                              borderRadius: '20px',
-                              color: '#f59e0b',
-                              fontSize: '0.75rem',
-                              fontWeight: 700
-                            }}>
-                              ⭐ MVP: {players.find(p => p.id === match.metadata?.mvp_id)?.name || 'Desconocido'}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className={styles.vsSeparator}>
-                          <span className={styles.vsIcon}>{tIcon}</span>
-                          <span className={styles.vsText}>VS</span>
-                        </div>
-                      )}
+                        )}
+
+                        {match.metadata?.mvp_id && (
+                          <div style={{ 
+                            marginTop: '0',
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '6px', 
+                            background: 'rgba(245, 158, 11, 0.1)', 
+                            border: '1px solid rgba(245, 158, 11, 0.2)',
+                            padding: '2px 10px', 
+                            borderRadius: '20px',
+                            color: '#f59e0b',
+                            fontSize: '0.75rem',
+                            fontWeight: 700
+                          }}>
+                            ⭐ MVP: {players.find(p => p.id === match.metadata?.mvp_id)?.name || 'Desconocido'}
+                          </div>
+                        )}
+                      </div>
 
                       {/* Equipo B */}
                       <div className={`${styles.teamSide} ${styles.teamSideRight}`}>
