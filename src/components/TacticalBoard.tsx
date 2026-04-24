@@ -10,6 +10,7 @@ import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { PlayerStats } from '@/types';
 import styles from './TacticalBoard.module.css';
 import { JerseySVG, JerseyPattern } from './JerseySVG';
+import { useTranslation } from 'react-i18next';
 
 interface PairStats {
   idA: string; idB: string;
@@ -80,6 +81,7 @@ function getFormationsForSize(size: number): Formation[] {
 }
 
 export function TacticalBoard({ players, teamSize, pairMap, fillBestBalance, onComplete, onBack, isPadel }: TacticalBoardProps) {
+  const { t } = useTranslation();
   const formations = getFormationsForSize(teamSize);
   
   const [fmtA, setFmtA] = useState(formations[0].id);
@@ -175,55 +177,55 @@ export function TacticalBoard({ players, teamSize, pairMap, fillBestBalance, onC
       <div className={styles.boardContainer}>
         
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <button onClick={onBack} className={styles.backBtn}>← Volver a Selección</button>
+          <button onClick={onBack} className={styles.backBtn}>{t('teamSimulator.back')}</button>
           
           <div style={{ display: 'flex', gap: '1rem' }}>
              {!isComplete && (
-               <button onClick={handleAiCompletion} className={styles.aiBtn}>🪄 Completar con IA</button>
+               <button onClick={handleAiCompletion} className={styles.aiBtn}>{t('tacticalBoard.aiFill')}</button>
              )}
              <button onClick={() => {
                 const init: Record<string, string> = {};
                 players.forEach(p => { init[p.player.id] = 'pool'; });
                 setLocations(init);
-             }} className={styles.clearBtn}>Limpiar Todo</button>
+             }} className={styles.clearBtn}>{t('tacticalBoard.clearAll')}</button>
           </div>
         </div>
 
         {/* Configuration Bars */}
         <div className={styles.configRows}>
            <div className={styles.teamConfigBar} style={{ borderLeftColor: colorA1 }}>
-              <span className={styles.teamConfigLabel}>Equipo A</span>
+              <span className={styles.teamConfigLabel}>{t('tacticalBoard.teamA')}</span>
               <select className={styles.configSelect} value={fmtA} onChange={e=>setFmtA(e.target.value)}>
                 {formations.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
               </select>
               <input type="color" value={colorA1} onChange={e=>setColorA1(e.target.value)} title="Color Principal" className={styles.colorPicker}/>
               <input type="color" value={colorA2} onChange={e=>setColorA2(e.target.value)} title="Color Secundario" className={styles.colorPicker}/>
               <select className={styles.configSelect} value={patA} onChange={e=>setPatA(e.target.value as JerseyPattern)}>
-                <option value="solid">Liso</option>
-                <option value="stripes">Rayas Vet.</option>
-                <option value="hoops">Franjas Hor.</option>
-                <option value="halves">Mitades</option>
-                <option value="chevron">Pico en V</option>
-                <option value="sash">Banda cruzada</option>
-                <option value="band">Franja ancha</option>
+                <option value="solid">{t('tacticalBoard.patterns.solid')}</option>
+                <option value="stripes">{t('tacticalBoard.patterns.stripes')}</option>
+                <option value="hoops">{t('tacticalBoard.patterns.hoops')}</option>
+                <option value="halves">{t('tacticalBoard.patterns.halves')}</option>
+                <option value="chevron">{t('tacticalBoard.patterns.chevron')}</option>
+                <option value="sash">{t('tacticalBoard.patterns.sash')}</option>
+                <option value="band">{t('tacticalBoard.patterns.band')}</option>
               </select>
            </div>
            
            <div className={styles.teamConfigBar} style={{ borderLeftColor: colorB1 }}>
-              <span className={styles.teamConfigLabel}>Equipo B</span>
+              <span className={styles.teamConfigLabel}>{t('tacticalBoard.teamB')}</span>
               <select className={styles.configSelect} value={fmtB} onChange={e=>setFmtB(e.target.value)}>
                 {formations.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
               </select>
               <input type="color" value={colorB1} onChange={e=>setColorB1(e.target.value)} title="Color Principal" className={styles.colorPicker}/>
               <input type="color" value={colorB2} onChange={e=>setColorB2(e.target.value)} title="Color Secundario" className={styles.colorPicker}/>
               <select className={styles.configSelect} value={patB} onChange={e=>setPatB(e.target.value as JerseyPattern)}>
-                <option value="solid">Liso</option>
-                <option value="stripes">Rayas Vet.</option>
-                <option value="hoops">Franjas Hor.</option>
-                <option value="halves">Mitades</option>
-                <option value="chevron">Pico en V</option>
-                <option value="sash">Banda cruzada</option>
-                <option value="band">Franja ancha</option>
+                <option value="solid">{t('tacticalBoard.patterns.solid')}</option>
+                <option value="stripes">{t('tacticalBoard.patterns.stripes')}</option>
+                <option value="hoops">{t('tacticalBoard.patterns.hoops')}</option>
+                <option value="halves">{t('tacticalBoard.patterns.halves')}</option>
+                <option value="chevron">{t('tacticalBoard.patterns.chevron')}</option>
+                <option value="sash">{t('tacticalBoard.patterns.sash')}</option>
+                <option value="band">{t('tacticalBoard.patterns.band')}</option>
               </select>
            </div>
         </div>
@@ -268,12 +270,12 @@ export function TacticalBoard({ players, teamSize, pairMap, fillBestBalance, onC
 
         {/* Bench / Pool Area */}
         <DroppablePool id="pool">
-           <div className={styles.benchTitle}>BOLSA DE JUGADORES ({poolPlayers.length})</div>
+           <div className={styles.benchTitle}>{t('tacticalBoard.pool').replace('{{count}}', poolPlayers.length.toString())}</div>
            <div className={styles.benchGrid}>
              {poolPlayers.map(p => (
                <DraggableBenchCard key={p.player.id} player={p} />
              ))}
-             {poolPlayers.length === 0 && <span style={{ color: '#64748b', fontSize: '0.9rem' }}>Todos asignados en cancha.</span>}
+             {poolPlayers.length === 0 && <span style={{ color: '#64748b', fontSize: '0.9rem' }}>{t('tacticalBoard.allAssigned')}</span>}
            </div>
         </DroppablePool>
 
@@ -286,7 +288,7 @@ export function TacticalBoard({ players, teamSize, pairMap, fillBestBalance, onC
              }
            }} disabled={!isComplete}
              className={`${styles.generateBtn} ${isComplete ? styles.generateBtnReady : ''}`}>
-             📊 Analizar Equipos Formados
+             {t('tacticalBoard.analyze')}
            </button>
         </div>
       </div>

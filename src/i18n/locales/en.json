@@ -1,0 +1,412 @@
+{
+  "nav": {
+    "stats": "📊 Statistics",
+    "history": "🗂️ History",
+    "simulator": "Simulation",
+    "players": "👥 Players",
+    "config": "⚙️ Configuration",
+    "users": "🔐 Users"
+  },
+  "action": {
+    "registerMatch": "Register Match"
+  },
+  "userMenu": {
+    "changePassword": "Change Password",
+    "logout": "Log out",
+    "modal": {
+      "title": "🔑 Change Password",
+      "success": "✅ Password updated successfully.",
+      "currentPassword": "Current Password",
+      "currentPasswordPlaceholder": "Your current password",
+      "newPassword": "New Password",
+      "newPasswordPlaceholder": "Minimum 6 characters",
+      "confirmPassword": "Confirm Password",
+      "confirmPasswordPlaceholder": "Repeat the new password",
+      "cancel": "Cancel",
+      "save": "Save changes",
+      "saving": "Saving...",
+      "errorLength": "The new password must be at least 6 characters long.",
+      "errorMismatch": "The passwords do not match."
+    }
+  },
+  "statsTable": {
+    "emptyState": {
+      "title": "No registered players",
+      "desc": "Add players in the \"Players\" tab to begin."
+    },
+    "headers": {
+      "player": "Player",
+      "badge": "Profile",
+      "played": "P",
+      "wld": "W - D - L",
+      "winPct": "Win %",
+      "bestStreak": "Best Streak",
+      "worstStreak": "Worst Streak",
+      "currentStreak": "Current Streak",
+      "stats": "Stats"
+    },
+    "viewReport": "📊 View Report"
+  },
+  "reportModal": {
+    "headers": {
+      "player": "Player",
+      "played": "P",
+      "wld": "W - D - L",
+      "pct": "%"
+    },
+    "of": "of",
+    "matches": "matches",
+    "presence": "presence",
+    "vote": "vote",
+    "votes": "votes",
+    "kpi": {
+      "wins": "Wins",
+      "draws": "Draws",
+      "losses": "Losses",
+      "winPct": "Win %",
+      "bestStreak": "Best Streak",
+      "currentStreak": "Current Streak"
+    },
+    "summary": {
+      "bestTeammate": "Best Teammate",
+      "winsTogether": "wins together",
+      "worstTeammate": "Worst Teammate",
+      "lossesTogether": "losses together",
+      "favoriteVictim": "Fav. Victim",
+      "timesWonAgainst": "times won against",
+      "nemesis": "Nemesis"
+    },
+    "sections": {
+      "teammates": "As Teammates",
+      "opponents": "As Opponents",
+      "noData": "No data yet."
+    }
+  },
+  "matchHistory": {
+    "emptyState": {
+      "title": "No matches played yet",
+      "desc": "Register a match for the history to appear here."
+    },
+    "result": {
+      "draw": "Draw",
+      "winner": "Winning Team",
+      "loser": "Losing Team"
+    },
+    "matchNumber": "Match #",
+    "viewVideo": "WATCH VIDEO",
+    "editTitle": "Edit result",
+    "deleteConfirm": "Are you sure you want to delete this match?",
+    "deleteTitle": "Delete match",
+    "edit": {
+      "winA": "Team A Won",
+      "draw": "Draw",
+      "winB": "Team B Won",
+      "mvp": "⭐ MVP (OPTIONAL)",
+      "none": "None",
+      "video": "📹 VIDEO (OPTIONAL)",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "unknown": "Unknown"
+  },
+  "matchBuilder": {
+    "panel": {
+      "available": "Available",
+      "complete": "Team complete!",
+      "empty": "Empty",
+      "remove": "Remove player"
+    },
+    "title": "Register Match",
+    "subtitle": "Set up teams and save the result.",
+    "format": "Format:",
+    "dateLabel": "Match Date",
+    "padel": {
+      "setsTitle": "Sets Results",
+      "teamA": "Team A (Set ",
+      "teamB": "Team B (Set ",
+      "autoCalc": "Final score will be automatically calculated based on sets won."
+    },
+    "resultTitle": "How did the match end?",
+    "winA": "Team A Wins",
+    "draw": "Draw",
+    "winB": "Team B Wins",
+    "scoreLabel": "Final Score (Optional)",
+    "teamA": "Team A",
+    "teamB": "Team B",
+    "mvpLabel": "Match MVP (Optional)",
+    "mvpPlaceholder": "Select MVP...",
+    "videoLabel": "Recording Link (Optional)",
+    "submitDraw": "🤝 Save Draw",
+    "submitMatch": "⚽ Save Match",
+    "hint": "Select {{size}} players per team to continue."
+  },
+  "tournamentSelector": {
+    "modal": {
+      "title": "New Tournament",
+      "nameLabel": "Tournament Name *",
+      "namePlaceholder": "Ex: Spring Tournament 2025",
+      "descLabel": "Description (optional)",
+      "descPlaceholder": "Description or details of the tournament...",
+      "ownerLabel": "Tournament Owner *",
+      "loadingUsers": "Loading users...",
+      "selectUser": "— Select a user —",
+      "ownerHint": "This user will be able to register matches and manage players in this tournament.",
+      "typeLabel": "Tournament Type *",
+      "loadingTypes": "Loading types...",
+      "noTypes": "⚠️ No tournament types found",
+      "cancel": "Cancel",
+      "creating": "Creating...",
+      "createBtn": "Create Tournament"
+    },
+    "errors": {
+      "loadTypes": "Error loading tournament types. Check the database.",
+      "connection": "Connection or configuration error.",
+      "nameRequired": "Name is required",
+      "ownerRequired": "You must assign an owner",
+      "typeRequired": "You must select a tournament type",
+      "createFailed": "Could not create the tournament. Try again.",
+      "invalidCode": "Invalid or not found code.",
+      "alreadyMember": "You are already a member of that tournament.",
+      "requestPending": "You already sent a request. Wait for the owner to approve it.",
+      "joinFailed": "Error sending the request. Try again."
+    },
+    "join": {
+      "label": "Do you have an invite code?",
+      "placeholder": "Enter your code...",
+      "button": "Join",
+      "success": "Request sent! The tournament owner must approve it."
+    },
+    "hero": {
+      "title": "Select a Tournament",
+      "loading": "Loading tournaments...",
+      "tournamentsAvailable": "{{count}} tournaments available",
+      "oneTournamentAvailable": "1 tournament available"
+    },
+    "empty": {
+      "noTournaments": "You don't have any assigned tournaments.",
+      "createFirst": "Create your first one with the button below."
+    },
+    "createCard": "New Tournament"
+  },
+  "teamSimulator": {
+    "pairs": {
+      "synergyTitle": "🔥 Winning Duo",
+      "rivalryTitle": "⚠️ Complicated Duo",
+      "togetherDetail": "{{wins}}/{{total}} together ({{pct}}%)",
+      "nemesisTitleWin": "⚔️ Historically Dominates",
+      "nemesisTitleLoss": "⚔️ Unbalanced Duel",
+      "nemesisDetail": "{{nameA}} wins {{pct}}% of matches vs {{nameB}} ({{total}} P)"
+    },
+    "explanation": {
+      "introPadel": "🎯 The simulation ordered players by skill level and sought the perfect balance by analyzing historical matchups and pairings.",
+      "introFootball": "🎯 The algorithm exhaustively evaluated possible player combinations to minimize level differences between teams.",
+      "calcPadel": "📊 Individual level = win % + experience bonus + streaks. Chemistry = average win % when playing together as a pair.",
+      "calcFootball": "📊 Strength score = win % + exp. bonus (up to +10 pts) + streak bonus (×1.5 per win). Chemistry = weighted win rate in duo.",
+      "strength": "⚖️ Average strength — Team A: {{avgA}} pts · Team B: {{avgB}} pts (difference: {{diff}} pts).",
+      "chemistry": "🤝 Historical chemistry — Team A: {{chemA}}% win together · Team B: {{chemB}}% win together.",
+      "starA": "⭐ Team A Star: {{name}} ({{winPct}}% win, max streak {{streak}}, {{matches}} P).",
+      "starB": "⭐ Team B Star: {{name}} ({{winPct}}% win, max streak {{streak}}, {{matches}} P).",
+      "favored": "🏆 Slight mathematical favorite: Team {{team}} ({{diff}}% more average victory).",
+      "tied": "🏆 Both teams are mathematically tied in average victory."
+    },
+    "empty": {
+      "title": "No registered players",
+      "desc": "Add players in the \"Players\" tab to use the simulator."
+    },
+    "title": "Team Simulation",
+    "step1": "Step 1: Choose the {{total}} players for the match.",
+    "format": "Format:",
+    "selected": "Selected players",
+    "missing": "Need to choose {{count}} player",
+    "missingPlural": "Need to choose {{count}} players",
+    "next": "Next: Distribute Teams →",
+    "back": "← Back to Distribution",
+    "analysis": "📊 Simulation Analysis",
+    "teamA": "Team A",
+    "teamB": "Team B",
+    "vs": "VS",
+    "analysisTitle": "🔍 Individual Analysis between Players",
+    "synergyGroup": "Outstanding teammates (within the same team)",
+    "nemesisGroup": "Historical duels (opposing teams)",
+    "summaryTitle": "📝 Statistical Summary",
+    "reset": "🔄 New Simulation From Scratch",
+    "stats": {
+      "winPct": "Avg Win %",
+      "strength": "Avg Strength",
+      "chemistry": "Chemistry",
+      "matches": "Total P"
+    }
+  },
+  "tacticalBoard": {
+    "title": "Tactical Configuration",
+    "subtitle": "Drag players to adjust their positions. The simulator will calculate strength and chemistry automatically.",
+    "colorsA": "Team A Colors",
+    "colorsB": "Team B Colors",
+    "confirm": "Confirm Tactics and View Analysis",
+    "cancel": "Cancel",
+    "padelCourt": "Padel Court"
+  },
+  "playerManager": {
+    "title": "Player Management",
+    "subtitle": "Manage the tournament players.",
+    "registered": "Registered Players",
+    "searchPlaceholder": "Search player...",
+    "addTitle": "Register New Player",
+    "nameLabel": "Full Name",
+    "namePlaceholder": "Enter full name",
+    "cancel": "Cancel",
+    "save": "Save",
+    "add": "Add",
+    "emptySearch": "No matching players found.",
+    "emptyState": "There are no players registered in the tournament.",
+    "delete": {
+      "title": "⚠️ Warning",
+      "warning": "Delete {{name}}?",
+      "confirm": "Yes, delete"
+    },
+    "subtitle": "{{total}} players · {{active}} active",
+    "newPlayer": "New player",
+    "editName": "Edit name",
+    "voteBadges": "Vote badges",
+    "cantDelete": "Cannot delete: has matches",
+    "deleteTitle": "Delete player",
+    "badges": {
+      "title": "Vote Badges"
+    },
+    "activity": {
+      "high": "Very active",
+      "mid": "Active",
+      "low": "New/Occasional"
+    }
+  },
+  "tacticalBoard": {
+    "title": "Tactical Configuration",
+    "subtitle": "Drag players to adjust their positions. The simulator will calculate strength and chemistry automatically.",
+    "colorsA": "Team A Colors",
+    "colorsB": "Team B Colors",
+    "confirm": "Confirm Tactics and View Analysis",
+    "cancel": "Cancel",
+    "padelCourt": "Padel Court",
+    "aiFill": "🪄 Auto-fill with AI",
+    "clearAll": "Clear All",
+    "teamA": "Team A",
+    "teamB": "Team B",
+    "pool": "PLAYER POOL ({{count}})",
+    "allAssigned": "All assigned to court.",
+    "analyze": "📊 Analyze Formed Teams",
+    "patterns": {
+      "solid": "Solid",
+      "stripes": "Stripes",
+      "hoops": "Hoops",
+      "halves": "Halves",
+      "chevron": "Chevron",
+      "sash": "Sash",
+      "band": "Band"
+    }
+  },
+  "tournamentSettings": {
+    "title": "Tournament Configuration",
+    "subtitle": "Manage rules and modalities of this tournament. Changes will affect all participants.",
+    "noPermission": "You do not have permission to view this section.",
+    "options": {
+      "football5": "5-a-side (5v5)",
+      "football7": "7-a-side (7v7)",
+      "football11": "11-a-side (11v11)"
+    },
+    "padel": {
+      "title": "Match Formats (Padel)",
+      "desc": "Padel is played by default in 2v2 (Pairs) modality. Currently, the platform does not support other modalities for this sport.",
+      "optTitle": "Padel Doubles (2v2)",
+      "optSub": "4 players on court"
+    },
+    "football": {
+      "title": "Match Formats (Football)",
+      "desc": "Select the game modalities allowed in this tournament. You can have more than one active. The app will ask you to choose the format when registering a match or simulating.",
+      "optSub": "{{val}} players on court"
+    },
+    "success": "Changes saved successfully!",
+    "error": "Error saving. Try again.",
+    "saving": "Saving...",
+    "saveBtn": "Save Configuration"
+  },
+  "tournamentUsers": {
+    "pageTitle": "User Management",
+    "refresh": "Refresh",
+    "unknown": "Unknown",
+    "timeAgo": {
+      "moment": "just now",
+      "mins": "{{mins}} mins ago",
+      "hours": "{{hours}}h ago",
+      "days": "{{days}}d ago"
+    },
+    "confirmModal": {
+      "title": "Remove user from tournament",
+      "body": "You are about to remove {{username}} from tournament {{name}}.",
+      "rule1": "❌ Will lose access to the tournament",
+      "rule2": "🗳️ All their badge votes will be deleted",
+      "cancel": "Cancel",
+      "removing": "Removing...",
+      "confirm": "Yes, remove user"
+    },
+    "invite": {
+      "title": "🔑 Invitation Code",
+      "desc": "Share this code with someone so they can request to join the tournament.",
+      "copied": "✓ Copied",
+      "copy": "📋 Copy",
+      "generated": "Generated {{timeAgo}}",
+      "noCode": "No active code for this tournament.",
+      "generating": "Generating...",
+      "generateNew": "🔄 Generate new code",
+      "generate": "✨ Generate code"
+    },
+    "requests": {
+      "title": "📥 Pending Requests",
+      "empty": "No pending requests.",
+      "approve": "✓ Approve",
+      "reject": "✕ Reject"
+    },
+    "members": {
+      "title": "👥 Members ({{count}})",
+      "me": "you",
+      "owner": "👑 Tournament Owner",
+      "superadmin": "⭐ Superadmin",
+      "member": "Member",
+      "kick": "Remove"
+    }
+  },
+  "login": {
+    "tagline": "Match management · Statistics · History",
+    "debug": {
+      "connecting": "Connecting to Supabase...",
+      "registering": "Registering user...",
+      "validating": "Validating credentials...",
+      "regError": "User already exists or server error.",
+      "loginError": "Incorrect credentials.",
+      "success": "Completed",
+      "genericError": "Error: {{message}}"
+    },
+    "error": {
+      "reg": "Error registering (user already exists)",
+      "login": "Incorrect username or password."
+    },
+    "labels": {
+      "username": "Username",
+      "password": "Password"
+    },
+    "placeholders": {
+      "username": "Enter your username"
+    },
+    "eye": {
+      "hide": "Hide password",
+      "show": "Show password"
+    },
+    "btn": {
+      "register": "Create account",
+      "login": "Sign in"
+    },
+    "toggle": {
+      "toLogin": "Already have an account? Sign in here",
+      "toRegister": "Don't have an account? Register from scratch"
+    }
+  }
+}

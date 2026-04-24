@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import styles from './UserMenu.module.css';
 
 interface Props {
@@ -14,6 +15,7 @@ function getInitials(username: string) {
 
 export default function UserMenu({ hue }: Props) {
   const { user, logout } = useAuth();
+  const { t, i18n } = useTranslation();
   const [open, setOpen] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -89,9 +91,32 @@ export default function UserMenu({ hue }: Props) {
 
             <div className={styles.dropdownDivider} />
 
+            <div className={styles.dropdownItem} style={{ justifyContent: 'space-between' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className={styles.dropdownIcon}>🌐</span>
+                Idioma / Lang
+              </span>
+              <div style={{ display: 'flex', gap: '4px' }}>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); i18n.changeLanguage('es'); }}
+                  style={{ padding: '2px 6px', borderRadius: '4px', background: i18n.language === 'es' ? '#3b82f6' : 'transparent', color: i18n.language === 'es' ? '#fff' : '#94a3b8', border: '1px solid #334155', cursor: 'pointer', fontSize: '12px' }}
+                >
+                  ES
+                </button>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); i18n.changeLanguage('en'); }}
+                  style={{ padding: '2px 6px', borderRadius: '4px', background: i18n.language === 'en' ? '#3b82f6' : 'transparent', color: i18n.language === 'en' ? '#fff' : '#94a3b8', border: '1px solid #334155', cursor: 'pointer', fontSize: '12px' }}
+                >
+                  EN
+                </button>
+              </div>
+            </div>
+
+            <div className={styles.dropdownDivider} />
+
             <button className={styles.dropdownItem} onClick={openChangePassword}>
               <span className={styles.dropdownIcon}>🔑</span>
-              Cambiar contraseña
+              {t('userMenu.changePassword')}
             </button>
 
             <div className={styles.dropdownDivider} />
@@ -104,7 +129,7 @@ export default function UserMenu({ hue }: Props) {
                   <line x1="21" y1="12" x2="9" y2="12" />
                 </svg>
               </span>
-              Cerrar sesión
+              {t('userMenu.logout')}
             </button>
           </div>
         )}
@@ -123,6 +148,7 @@ export default function UserMenu({ hue }: Props) {
 
 /* ── Change Password Modal ── */
 function ChangePasswordModal({ userId, onClose }: { userId: string; onClose: () => void }) {
+  const { t } = useTranslation();
   const [currentPw, setCurrentPw] = useState('');
   const [newPw, setNewPw] = useState('');
   const [confirmPw, setConfirmPw] = useState('');
@@ -135,11 +161,11 @@ function ChangePasswordModal({ userId, onClose }: { userId: string; onClose: () 
     setError('');
 
     if (newPw.length < 6) {
-      setError('La nueva contraseña debe tener al menos 6 caracteres.');
+      setError(t('userMenu.modal.errorLength'));
       return;
     }
     if (newPw !== confirmPw) {
-      setError('Las contraseñas no coinciden.');
+      setError(t('userMenu.modal.errorMismatch'));
       return;
     }
 
@@ -165,48 +191,48 @@ function ChangePasswordModal({ userId, onClose }: { userId: string; onClose: () 
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modal} onClick={e => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <h3 className={styles.modalTitle}>🔑 Cambiar contraseña</h3>
+          <h3 className={styles.modalTitle}>{t('userMenu.modal.title')}</h3>
           <button className={styles.modalClose} onClick={onClose}>✕</button>
         </div>
 
         {success ? (
           <div className={styles.successMsg}>
-            ✅ Contraseña actualizada correctamente.
+            {t('userMenu.modal.success')}
           </div>
         ) : (
           <form className={styles.form} onSubmit={handleSubmit}>
             <label className={styles.label}>
-              Contraseña actual
+              {t('userMenu.modal.currentPassword')}
               <input
                 type="password"
                 className={styles.input}
                 value={currentPw}
                 onChange={e => setCurrentPw(e.target.value)}
-                placeholder="Tu contraseña actual"
+                placeholder={t('userMenu.modal.currentPasswordPlaceholder')}
                 required
                 autoComplete="current-password"
               />
             </label>
             <label className={styles.label}>
-              Nueva contraseña
+              {t('userMenu.modal.newPassword')}
               <input
                 type="password"
                 className={styles.input}
                 value={newPw}
                 onChange={e => setNewPw(e.target.value)}
-                placeholder="Mínimo 6 caracteres"
+                placeholder={t('userMenu.modal.newPasswordPlaceholder')}
                 required
                 autoComplete="new-password"
               />
             </label>
             <label className={styles.label}>
-              Confirmar contraseña
+              {t('userMenu.modal.confirmPassword')}
               <input
                 type="password"
                 className={styles.input}
                 value={confirmPw}
                 onChange={e => setConfirmPw(e.target.value)}
-                placeholder="Repetí la nueva contraseña"
+                placeholder={t('userMenu.modal.confirmPasswordPlaceholder')}
                 required
                 autoComplete="new-password"
               />
@@ -216,7 +242,7 @@ function ChangePasswordModal({ userId, onClose }: { userId: string; onClose: () 
 
             <div className={styles.formActions}>
               <button type="button" className={styles.cancelBtn} onClick={onClose} disabled={loading}>
-                Cancelar
+                {t('userMenu.modal.cancel')}
               </button>
               <button
                 type="submit"
@@ -224,7 +250,7 @@ function ChangePasswordModal({ userId, onClose }: { userId: string; onClose: () 
                 disabled={loading || !currentPw || !newPw || !confirmPw}
               >
                 {loading ? <span className={styles.spinner} /> : null}
-                {loading ? 'Guardando...' : 'Guardar cambios'}
+                {loading ? t('userMenu.modal.saving') : t('userMenu.modal.save')}
               </button>
             </div>
           </form>

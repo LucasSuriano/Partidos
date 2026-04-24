@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useTournament } from '@/context/TournamentContext';
 import styles from './TournamentUsers.module.css';
+import { useTranslation } from 'react-i18next';
 
 interface JoinRequest {
   id: string;
@@ -38,19 +39,20 @@ function generateCode(prefix: string): string {
   return `${head}-${tail}`;
 }
 
-function timeAgo(iso: string) {
+function timeAgo(iso: string, t: any) {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'hace un momento';
-  if (mins < 60) return `hace ${mins} min`;
+  if (mins < 1) return t('tournamentUsers.timeAgo.moment');
+  if (mins < 60) return t('tournamentUsers.timeAgo.mins', { mins });
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `hace ${hrs}h`;
-  return `hace ${Math.floor(hrs / 24)}d`;
+  if (hrs < 24) return t('tournamentUsers.timeAgo.hours', { hours: hrs });
+  return t('tournamentUsers.timeAgo.days', { days: Math.floor(hrs / 24) });
 }
 
 export default function TournamentUsers() {
   const { user } = useAuth();
   const { activeTournament } = useTournament();
+  const { t } = useTranslation();
 
   const [inviteCode, setInviteCode] = useState<InviteCode | null>(null);
   const [requests, setRequests] = useState<JoinRequest[]>([]);
@@ -97,7 +99,7 @@ export default function TournamentUsers() {
       setRequests(reqData.map((r: any) => ({
         id: r.id,
         user_id: r.user_id,
-        username: usernameMap[r.user_id] ?? 'Desconocido',
+        username: usernameMap[r.user_id] ?? t('tournamentUsers.unknown'),
         created_at: r.created_at,
       })));
     } else {
@@ -119,7 +121,7 @@ export default function TournamentUsers() {
 
       setMembers((memberUsers ?? []).map((u: any) => ({
         user_id: u.id,
-        username: u.username ?? 'Desconocido',
+        username: u.username ?? t('tournamentUsers.unknown'),
         role: u.role ?? 'user',
       })));
     } else {
@@ -236,14 +238,13 @@ export default function TournamentUsers() {
         <div className={styles.modalOverlay} onClick={() => !removing && setConfirmRemove(null)}>
           <div className={styles.confirmModal} onClick={e => e.stopPropagation()}>
             <div className={styles.confirmIcon}>⚠️</div>
-            <h3 className={styles.confirmTitle}>Quitar usuario del torneo</h3>
+            <h3 className={styles.confirmTitle}>{t('tournamentUsers.confirmModal.title')}</h3>
             <p className={styles.confirmBody}>
-              Estás por quitar a <strong>{confirmRemove.username}</strong> del torneo
-              {' '}<strong>{activeTournament?.name}</strong>.
+              {t('tournamentUsers.confirmModal.body', { username: confirmRemove.username, name: activeTournament?.name })}
             </p>
             <ul className={styles.confirmList}>
-              <li>❌ Perderá acceso al torneo</li>
-              <li>🗳️ Se eliminarán todos sus votos de insignias</li>
+              <li>{t('tournamentUsers.confirmModal.rule1')}</li>
+              <li>{t('tournamentUsers.confirmModal.rule2')}</li>
             </ul>
             <div className={styles.confirmActions}>
               <button
@@ -251,7 +252,7 @@ export default function TournamentUsers() {
                 onClick={() => setConfirmRemove(null)}
                 disabled={removing}
               >
-                Cancelar
+                {t('tournamentUsers.confirmModal.cancel')}
               </button>
               <button
                 className={styles.confirmDeleteBtn}
@@ -259,7 +260,7 @@ export default function TournamentUsers() {
                 disabled={removing}
               >
                 {removing ? <span className={styles.spinner} /> : null}
-                {removing ? 'Quitando...' : 'Sí, quitar usuario'}
+                {removing ? t('tournamentUsers.confirmModal.removing') : t('tournamentUsers.confirmModal.confirm')}
               </button>
             </div>
           </div>
@@ -267,18 +268,18 @@ export default function TournamentUsers() {
       )}
 
       <div className={styles.topBar}>
-        <h1 className={styles.pageTitle}>Gestión de Usuarios</h1>
-        <button className={styles.refreshBtn} onClick={fetchData} title="Actualizar">
-          🔄 Actualizar
+        <h1 className={styles.pageTitle}>{t('tournamentUsers.pageTitle')}</h1>
+        <button className={styles.refreshBtn} onClick={fetchData} title={t('tournamentUsers.refresh')}>
+          🔄 {t('tournamentUsers.refresh')}
         </button>
       </div>
 
       {/* ── Invite Code ── */}
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>🔑 Código de Invitación</h2>
+          <h2 className={styles.sectionTitle}>{t('tournamentUsers.invite.title')}</h2>
           <p className={styles.sectionDesc}>
-            Compartí este código con alguien para que pueda solicitar unirse al torneo.
+            {t('tournamentUsers.invite.desc')}
           </p>
         </div>
         <div className={styles.codeCard}>
@@ -289,15 +290,15 @@ export default function TournamentUsers() {
                 <button
                   className={`${styles.codeBtn} ${copiedCode ? styles.codeBtnCopied : ''}`}
                   onClick={handleCopyCode}
-                  title="Copiar código"
+                  title={t('tournamentUsers.invite.copy')}
                 >
-                  {copiedCode ? '✓ Copiado' : '📋 Copiar'}
+                  {copiedCode ? t('tournamentUsers.invite.copied') : t('tournamentUsers.invite.copy')}
                 </button>
               </div>
-              <p className={styles.codeCreatedAt}>Generado {timeAgo(inviteCode.created_at)}</p>
+              <p className={styles.codeCreatedAt}>{t('tournamentUsers.invite.generated', { timeAgo: timeAgo(inviteCode.created_at, t) })}</p>
             </>
           ) : (
-            <p className={styles.codeEmpty}>No hay código activo para este torneo.</p>
+            <p className={styles.codeEmpty}>{t('tournamentUsers.invite.noCode')}</p>
           )}
           <button
             className={styles.generateBtn}
@@ -305,9 +306,9 @@ export default function TournamentUsers() {
             disabled={generatingCode}
           >
             {generatingCode ? (
-              <><span className={styles.spinner} /> Generando...</>
+              <><span className={styles.spinner} /> {t('tournamentUsers.invite.generating')}</>
             ) : (
-              <>{inviteCode ? '🔄 Generar nuevo código' : '✨ Generar código'}</>
+              <>{inviteCode ? t('tournamentUsers.invite.generateNew') : t('tournamentUsers.invite.generate')}</>
             )}
           </button>
         </div>
@@ -317,13 +318,13 @@ export default function TournamentUsers() {
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>
-            📥 Solicitudes Pendientes
+            {t('tournamentUsers.requests.title')}
             {requests.length > 0 && (
               <span className={styles.badge}>{requests.length}</span>
             )}
           </h2>
           {requests.length === 0 && (
-            <p className={styles.sectionDesc}>No hay solicitudes pendientes.</p>
+            <p className={styles.sectionDesc}>{t('tournamentUsers.requests.empty')}</p>
           )}
         </div>
 
@@ -336,7 +337,7 @@ export default function TournamentUsers() {
                 </div>
                 <div>
                   <p className={styles.requestName}>{req.username}</p>
-                  <p className={styles.requestTime}>{timeAgo(req.created_at)}</p>
+                  <p className={styles.requestTime}>{timeAgo(req.created_at, t)}</p>
                 </div>
               </div>
               <div className={styles.requestActions}>
@@ -344,17 +345,17 @@ export default function TournamentUsers() {
                   className={styles.approveBtn}
                   onClick={() => handleApprove(req)}
                   disabled={processingId === req.id}
-                  title="Aprobar"
+                  title={t('tournamentUsers.requests.approve')}
                 >
-                  ✓ Aprobar
+                  {t('tournamentUsers.requests.approve')}
                 </button>
                 <button
                   className={styles.rejectBtn}
                   onClick={() => handleReject(req)}
                   disabled={processingId === req.id}
-                  title="Rechazar"
+                  title={t('tournamentUsers.requests.reject')}
                 >
-                  ✕ Rechazar
+                  {t('tournamentUsers.requests.reject')}
                 </button>
               </div>
             </div>
@@ -365,7 +366,7 @@ export default function TournamentUsers() {
       {/* ── Members ── */}
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>👥 Miembros ({members.length})</h2>
+          <h2 className={styles.sectionTitle}>{t('tournamentUsers.members.title', { count: members.length })}</h2>
         </div>
         <div className={styles.memberList}>
           {members.map(m => {
@@ -380,10 +381,10 @@ export default function TournamentUsers() {
                   <div>
                     <p className={styles.requestName}>
                       {m.username}
-                      {isMe && <span className={styles.meBadge}>tú</span>}
+                      {isMe && <span className={styles.meBadge}>{t('tournamentUsers.members.me')}</span>}
                     </p>
                     <p className={styles.requestTime}>
-                      {isOwner ? '👑 Dueño del torneo' : m.role === 'superadmin' ? '⭐ Superadmin' : 'Miembro'}
+                      {isOwner ? t('tournamentUsers.members.owner') : m.role === 'superadmin' ? t('tournamentUsers.members.superadmin') : t('tournamentUsers.members.member')}
                     </p>
                   </div>
                 </div>
@@ -391,9 +392,9 @@ export default function TournamentUsers() {
                   <button
                     className={styles.kickBtn}
                     onClick={() => handleRemoveMember(m.user_id)}
-                    title="Eliminar del torneo"
+                    title={t('tournamentUsers.members.kick')}
                   >
-                    Quitar
+                    {t('tournamentUsers.members.kick')}
                   </button>
                 )}
               </div>

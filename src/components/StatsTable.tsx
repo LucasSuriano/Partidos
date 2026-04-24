@@ -5,6 +5,7 @@ import { useAppContext } from '@/context/AppContext';
 import { calculateStats } from '@/lib/stats';
 import styles from './StatsTable.module.css';
 import PlayerReportModal from './PlayerReportModal';
+import { useTranslation } from 'react-i18next';
 
 const PODIO_ICONS = ['🥇', '🥈', '🥉'];
 const PODIO_CLASSES = ['podioGold', 'podioSilver', 'podioBronze'];
@@ -13,6 +14,7 @@ const PODIO_CLASSES = ['podioGold', 'podioSilver', 'podioBronze'];
 export default function StatsTable() {
   const { players, matches, badges } = useAppContext();
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   type SortField = 'name' | 'badge' | 'matchesPlayed' | 'wins' | 'winPercentage' | 'bestStreak' | 'worstStreak' | 'currentStreak';
   const [sortField, setSortField] = useState<SortField | null>(null);
@@ -116,8 +118,8 @@ export default function StatsTable() {
   if (players.length === 0) {
     return (
       <div className={`${styles.container} glass-panel ${styles.emptyState}`}>
-        <h2>No hay jugadores registrados</h2>
-        <p>Agrega jugadores en la pestaña &quot;Jugadores&quot; para comenzar.</p>
+        <h2>{t('statsTable.emptyState.title')}</h2>
+        <p>{t('statsTable.emptyState.desc')}</p>
       </div>
     );
   }
@@ -128,15 +130,15 @@ export default function StatsTable() {
         <table className={styles.table}>
           <thead className={styles.stickyHead}>
             <tr>
-              {renderSortHeader('Jugador', 'name')}
-              {renderSortHeader('Perfil', 'badge')}
-              {renderSortHeader('PJ', 'matchesPlayed')}
-              {renderSortHeader('G - E - P', 'wins')}
-              {renderSortHeader('% Victoria', 'winPercentage')}
-              {renderSortHeader('Mejor Racha', 'bestStreak')}
-              {renderSortHeader('Peor Racha', 'worstStreak')}
-              {renderSortHeader('Racha Actual', 'currentStreak')}
-              <th className={styles.th} style={{ textAlign: 'center' }}>Estadísticas</th>
+              {renderSortHeader(t('statsTable.headers.player'), 'name')}
+              {renderSortHeader(t('statsTable.headers.badge'), 'badge')}
+              {renderSortHeader(t('statsTable.headers.played'), 'matchesPlayed')}
+              {renderSortHeader(t('statsTable.headers.wld'), 'wins')}
+              {renderSortHeader(t('statsTable.headers.winPct'), 'winPercentage')}
+              {renderSortHeader(t('statsTable.headers.bestStreak'), 'bestStreak')}
+              {renderSortHeader(t('statsTable.headers.worstStreak'), 'worstStreak')}
+              {renderSortHeader(t('statsTable.headers.currentStreak'), 'currentStreak')}
+              <th className={styles.th} style={{ textAlign: 'center' }}>{t('statsTable.headers.stats')}</th>
             </tr>
           </thead>
           <tbody>
@@ -262,7 +264,7 @@ export default function StatsTable() {
                       onClick={(e) => { e.stopPropagation(); setSelectedPlayerId(s.player.id); }}
                       title="Ver reporte detallado"
                     >
-                      📊 Ver Reporte
+                      {t('statsTable.viewReport')}
                     </button>
                   </td>
                 </tr>

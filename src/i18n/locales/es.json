@@ -1,0 +1,412 @@
+{
+  "nav": {
+    "stats": "📊 Estadísticas",
+    "history": "🗂️ Historial",
+    "simulator": "Simulación",
+    "players": "👥 Jugadores",
+    "config": "⚙️ Configuración",
+    "users": "🔐 Usuarios"
+  },
+  "action": {
+    "registerMatch": "Registrar Partido"
+  },
+  "userMenu": {
+    "changePassword": "Cambiar contraseña",
+    "logout": "Cerrar sesión",
+    "modal": {
+      "title": "🔑 Cambiar contraseña",
+      "success": "✅ Contraseña actualizada correctamente.",
+      "currentPassword": "Contraseña actual",
+      "currentPasswordPlaceholder": "Tu contraseña actual",
+      "newPassword": "Nueva contraseña",
+      "newPasswordPlaceholder": "Mínimo 6 caracteres",
+      "confirmPassword": "Confirmar contraseña",
+      "confirmPasswordPlaceholder": "Repetí la nueva contraseña",
+      "cancel": "Cancelar",
+      "save": "Guardar cambios",
+      "saving": "Guardando...",
+      "errorLength": "La nueva contraseña debe tener al menos 6 caracteres.",
+      "errorMismatch": "Las contraseñas no coinciden."
+    }
+  },
+  "statsTable": {
+    "emptyState": {
+      "title": "No hay jugadores registrados",
+      "desc": "Agrega jugadores en la pestaña \"Jugadores\" para comenzar."
+    },
+    "headers": {
+      "player": "Jugador",
+      "badge": "Perfil",
+      "played": "PJ",
+      "wld": "G - E - P",
+      "winPct": "% Victoria",
+      "bestStreak": "Mejor Racha",
+      "worstStreak": "Peor Racha",
+      "currentStreak": "Racha Actual",
+      "stats": "Estadísticas"
+    },
+    "viewReport": "📊 Ver Reporte"
+  },
+  "reportModal": {
+    "headers": {
+      "player": "Jugador",
+      "played": "PJ",
+      "wld": "G - E - P",
+      "pct": "%"
+    },
+    "of": "de",
+    "matches": "partidos",
+    "presence": "presencia",
+    "vote": "voto",
+    "votes": "votos",
+    "kpi": {
+      "wins": "Ganados",
+      "draws": "Empates",
+      "losses": "Perdidos",
+      "winPct": "% Victoria",
+      "bestStreak": "Mejor Racha",
+      "currentStreak": "Racha Actual"
+    },
+    "summary": {
+      "bestTeammate": "Mejor Compañero",
+      "winsTogether": "victorias juntos",
+      "worstTeammate": "Peor Compañero",
+      "lossesTogether": "derrotas juntos",
+      "favoriteVictim": "Víctima Fav.",
+      "timesWonAgainst": "veces le ganó",
+      "nemesis": "Némesis"
+    },
+    "sections": {
+      "teammates": "Como Compañeros",
+      "opponents": "Como Rivales",
+      "noData": "Sin datos todavía."
+    }
+  },
+  "matchHistory": {
+    "emptyState": {
+      "title": "No se han jugado partidos aún",
+      "desc": "Registra un partido para que aparezca aquí el historial."
+    },
+    "result": {
+      "draw": "Empate",
+      "winner": "Equipo Ganador",
+      "loser": "Equipo Perdedor"
+    },
+    "matchNumber": "Partido #",
+    "viewVideo": "VER VIDEO",
+    "editTitle": "Editar resultado",
+    "deleteConfirm": "¿Estás seguro de eliminar este partido?",
+    "deleteTitle": "Eliminar partido",
+    "edit": {
+      "winA": "Ganó Eq. A",
+      "draw": "Empate",
+      "winB": "Ganó Eq. B",
+      "mvp": "⭐ MVP (OPCIONAL)",
+      "none": "Ninguno",
+      "video": "📹 VIDEO (OPCIONAL)",
+      "save": "Guardar",
+      "cancel": "Cancelar"
+    },
+    "unknown": "Desconocido"
+  },
+  "matchBuilder": {
+    "panel": {
+      "available": "Disponibles",
+      "complete": "¡Equipo completo!",
+      "empty": "Vacío",
+      "remove": "Quitar jugador"
+    },
+    "title": "Registrar Partido",
+    "subtitle": "Armá los equipos y guardá el resultado.",
+    "format": "Formato:",
+    "dateLabel": "Fecha del Partido",
+    "padel": {
+      "setsTitle": "Resultados de los Sets",
+      "teamA": "Eq. A (Set ",
+      "teamB": "Eq. B (Set ",
+      "autoCalc": "Puntaje Final será calculado automáticamente en base a sets ganados."
+    },
+    "resultTitle": "¿Cómo terminó el partido?",
+    "winA": "Gana Equipo A",
+    "draw": "Empate",
+    "winB": "Gana Equipo B",
+    "scoreLabel": "Marcador Final (Opcional)",
+    "teamA": "Equipo A",
+    "teamB": "Equipo B",
+    "mvpLabel": "MVP del Partido (Opcional)",
+    "mvpPlaceholder": "Seleccionar MVP...",
+    "videoLabel": "Link de Grabación (Opcional)",
+    "submitDraw": "🤝 Guardar Empate",
+    "submitMatch": "⚽ Guardar Partido",
+    "hint": "Selecciona {{size}} jugadores por equipo para continuar."
+  },
+  "tournamentSelector": {
+    "modal": {
+      "title": "Nuevo Torneo",
+      "nameLabel": "Nombre del torneo *",
+      "namePlaceholder": "Ej: Torneo Primavera 2025",
+      "descLabel": "Descripción (opcional)",
+      "descPlaceholder": "Descripción o detalle del torneo...",
+      "ownerLabel": "Dueño del torneo *",
+      "loadingUsers": "Cargando usuarios...",
+      "selectUser": "— Seleccioná un usuario —",
+      "ownerHint": "Este usuario podrá registrar partidos y gestionar jugadores en este torneo.",
+      "typeLabel": "Tipo de Torneo *",
+      "loadingTypes": "Cargando tipos...",
+      "noTypes": "⚠️ No se encontraron tipos de torneo",
+      "cancel": "Cancelar",
+      "creating": "Creando...",
+      "createBtn": "Crear Torneo"
+    },
+    "errors": {
+      "loadTypes": "Error al cargar tipos de torneo. Verificá la base de datos.",
+      "connection": "Error de conexión o configuración.",
+      "nameRequired": "El nombre es obligatorio",
+      "ownerRequired": "Tenés que designar un dueño",
+      "typeRequired": "Tenés que elegir un tipo de torneo",
+      "createFailed": "No se pudo crear el torneo. Intentá de nuevo.",
+      "invalidCode": "Código no encontrado o inválido.",
+      "alreadyMember": "Ya sos miembro de ese torneo.",
+      "requestPending": "Ya enviaste una solicitud. Esperá que el owner la apruebe.",
+      "joinFailed": "Error al enviar la solicitud. Intentá de nuevo."
+    },
+    "join": {
+      "label": "¿Tenés un código de invitación?",
+      "placeholder": "Ingresá tu código...",
+      "button": "Unirse",
+      "success": "¡Solicitud enviada! El owner del torneo deberá aprobarla."
+    },
+    "hero": {
+      "title": "Seleccioná un Torneo",
+      "loading": "Cargando torneos...",
+      "tournamentsAvailable": "{{count}} torneos disponibles",
+      "oneTournamentAvailable": "1 torneo disponible"
+    },
+    "empty": {
+      "noTournaments": "No tenés torneos asignados.",
+      "createFirst": "Creá el primero con el botón de abajo."
+    },
+    "createCard": "Nuevo Torneo"
+  },
+  "teamSimulator": {
+    "pairs": {
+      "synergyTitle": "🔥 Dupla ganadora",
+      "rivalryTitle": "⚠️ Dupla complicada",
+      "togetherDetail": "{{wins}}/{{total}} juntos ({{pct}}%)",
+      "nemesisTitleWin": "⚔️ Domina históricamente",
+      "nemesisTitleLoss": "⚔️ Duelo desequilibrado",
+      "nemesisDetail": "{{nameA}} gana {{pct}}% de cruces vs {{nameB}} ({{total}} PJ)"
+    },
+    "explanation": {
+      "introPadel": "🎯 La simulación ordenó a los jugadores por nivel de juego y buscó el equilibrio perfecto analizando cruces y duplas históricas.",
+      "introFootball": "🎯 El algoritmo evaluó exhaustivamente las posibles combinaciones de jugadores para minimizar las diferencias de nivel entre los equipos.",
+      "calcPadel": "📊 Nivel individual = % victorias + bono de experiencia + rachas. Química = promedio de % victorias cuando jugaron juntos como pareja.",
+      "calcFootball": "📊 Puntaje de fuerza = % victorias + bono de exp. (hasta +10 pts) + bono de racha jugada (×1.5 por win). Química = win rate ponderado en dúo.",
+      "strength": "⚖️ Fuerza promedio — Equipo A: {{avgA}} pts · Equipo B: {{avgB}} pts (diferencia: {{diff}} pts).",
+      "chemistry": "🤝 Química histórica — Equipo A: {{chemA}}% win juntos · Equipo B: {{chemB}}% win juntos.",
+      "starA": "⭐ Figura del Equipo A: {{name}} ({{winPct}}% win, racha máx {{streak}}, {{matches}} PJ).",
+      "starB": "⭐ Figura del Equipo B: {{name}} ({{winPct}}% win, racha máx {{streak}}, {{matches}} PJ).",
+      "favored": "🏆 Ligero favorito matemático: Equipo {{team}} ({{diff}}% más de victoria promedio).",
+      "tied": "🏆 Ambos equipos están matemáticamente empatados en victoria promedio."
+    },
+    "empty": {
+      "title": "No hay jugadores registrados",
+      "desc": "Agrega jugadores en la pestaña \"Jugadores\" para usar el simulador."
+    },
+    "title": "Simulación de Equipos",
+    "step1": "Paso 1: Elegí a los {{total}} jugadores para el partido.",
+    "format": "Formato:",
+    "selected": "Jugadores seleccionados",
+    "missing": "Falta elegir {{count}} jugador",
+    "missingPlural": "Falta elegir {{count}} jugadores",
+    "next": "Siguiente: Distribuir Equipos →",
+    "back": "← Volver a Distribución",
+    "analysis": "📊 Análisis de Simulación",
+    "teamA": "Equipo A",
+    "teamB": "Equipo B",
+    "vs": "VS",
+    "analysisTitle": "🔍 Análisis Individual entre Jugadores",
+    "synergyGroup": "Compañeros destacados (dentro del mismo equipo)",
+    "nemesisGroup": "Duelos históricos (equipos enfrentados)",
+    "summaryTitle": "📝 Resumen Estadístico",
+    "reset": "🔄 Nueva Simulación Desde Cero",
+    "stats": {
+      "winPct": "% Vic. prom.",
+      "strength": "Fuerza prom.",
+      "chemistry": "Química",
+      "matches": "PJ totales"
+    }
+  },
+  "tacticalBoard": {
+    "title": "Configuración Táctica",
+    "subtitle": "Arrastrá los jugadores para ajustar sus posiciones. El simulador calculará la fuerza y química automáticamente.",
+    "colorsA": "Colores del Equipo A",
+    "colorsB": "Colores del Equipo B",
+    "confirm": "Confirmar Táctica y Ver Análisis",
+    "cancel": "Cancelar",
+    "padelCourt": "Pista de Pádel"
+  },
+  "playerManager": {
+    "title": "Gestión de Jugadores",
+    "subtitle": "Administrá los jugadores del torneo.",
+    "registered": "Jugadores Registrados",
+    "searchPlaceholder": "Buscar jugador...",
+    "addTitle": "Registrar Nuevo Jugador",
+    "nameLabel": "Nombre Completo",
+    "namePlaceholder": "Ingresá el nombre completo",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "add": "Añadir",
+    "emptySearch": "No se encontraron jugadores que coincidan.",
+    "emptyState": "No hay jugadores registrados en el torneo.",
+    "delete": {
+      "title": "⚠️ Advertencia",
+      "warning": "¿Eliminar a {{name}}?",
+      "confirm": "Sí, eliminar"
+    },
+    "subtitle": "{{total}} jugadores · {{active}} activos",
+    "newPlayer": "Nuevo jugador",
+    "editName": "Editar nombre",
+    "voteBadges": "Votar insignias",
+    "cantDelete": "No se puede eliminar: tiene partidos",
+    "deleteTitle": "Eliminar jugador",
+    "badges": {
+      "title": "Votar Insignias"
+    },
+    "activity": {
+      "high": "Muy activo",
+      "mid": "Activo",
+      "low": "Nuevo/Ocasional"
+    }
+  },
+  "tacticalBoard": {
+    "title": "Configuración Táctica",
+    "subtitle": "Arrastrá los jugadores para ajustar sus posiciones. El simulador calculará la fuerza y química automáticamente.",
+    "colorsA": "Colores del Equipo A",
+    "colorsB": "Colores del Equipo B",
+    "confirm": "Confirmar Táctica y Ver Análisis",
+    "cancel": "Cancelar",
+    "padelCourt": "Pista de Pádel",
+    "aiFill": "🪄 Completar con IA",
+    "clearAll": "Limpiar Todo",
+    "teamA": "Equipo A",
+    "teamB": "Equipo B",
+    "pool": "BOLSA DE JUGADORES ({{count}})",
+    "allAssigned": "Todos asignados en cancha.",
+    "analyze": "📊 Analizar Equipos Formados",
+    "patterns": {
+      "solid": "Liso",
+      "stripes": "Rayas Vet.",
+      "hoops": "Franjas Hor.",
+      "halves": "Mitades",
+      "chevron": "Pico en V",
+      "sash": "Banda cruzada",
+      "band": "Franja ancha"
+    }
+  },
+  "tournamentSettings": {
+    "title": "Configuración del Torneo",
+    "subtitle": "Administra las reglas y modalidades de este torneo. Estos cambios afectarán a todos los participantes.",
+    "noPermission": "No tienes permisos para ver esta sección.",
+    "options": {
+      "football5": "Fútbol 5 (5v5)",
+      "football7": "Fútbol 7 (7v7)",
+      "football11": "Fútbol 11 (11v11)"
+    },
+    "padel": {
+      "title": "Formatos de Partido (Pádel)",
+      "desc": "El pádel se juega por defecto en modalidad 2v2 (Parejas). Actualmente, la plataforma no soporta otras modalidades para este deporte.",
+      "optTitle": "Pádel Dobles (2v2)",
+      "optSub": "4 jugadores en cancha"
+    },
+    "football": {
+      "title": "Formatos de Partido (Fútbol)",
+      "desc": "Selecciona las modalidades de juego que están permitidas en este torneo. Puedes tener más de una activa a la vez. Cuando haya más de una, la aplicación te pedirá elegir el formato al registrar un partido o simular.",
+      "optSub": "{{val}} jugadores en cancha"
+    },
+    "success": "¡Cambios guardados con éxito!",
+    "error": "Error al guardar. Intenta nuevamente.",
+    "saving": "Guardando...",
+    "saveBtn": "Guardar Configuración"
+  },
+  "tournamentUsers": {
+    "pageTitle": "Gestión de Usuarios",
+    "refresh": "Actualizar",
+    "unknown": "Desconocido",
+    "timeAgo": {
+      "moment": "hace un momento",
+      "mins": "hace {{mins}} min",
+      "hours": "hace {{hours}}h",
+      "days": "hace {{days}}d"
+    },
+    "confirmModal": {
+      "title": "Quitar usuario del torneo",
+      "body": "Estás por quitar a {{username}} del torneo {{name}}.",
+      "rule1": "❌ Perderá acceso al torneo",
+      "rule2": "🗳️ Se eliminarán todos sus votos de insignias",
+      "cancel": "Cancelar",
+      "removing": "Quitando...",
+      "confirm": "Sí, quitar usuario"
+    },
+    "invite": {
+      "title": "🔑 Código de Invitación",
+      "desc": "Compartí este código con alguien para que pueda solicitar unirse al torneo.",
+      "copied": "✓ Copiado",
+      "copy": "📋 Copiar",
+      "generated": "Generado {{timeAgo}}",
+      "noCode": "No hay código activo para este torneo.",
+      "generating": "Generando...",
+      "generateNew": "🔄 Generar nuevo código",
+      "generate": "✨ Generar código"
+    },
+    "requests": {
+      "title": "📥 Solicitudes Pendientes",
+      "empty": "No hay solicitudes pendientes.",
+      "approve": "✓ Aprobar",
+      "reject": "✕ Rechazar"
+    },
+    "members": {
+      "title": "👥 Miembros ({{count}})",
+      "me": "tú",
+      "owner": "👑 Dueño del torneo",
+      "superadmin": "⭐ Superadmin",
+      "member": "Miembro",
+      "kick": "Quitar"
+    }
+  },
+  "login": {
+    "tagline": "Gestión de partidos · Estadísticas · Historial",
+    "debug": {
+      "connecting": "Conectando a Supabase...",
+      "registering": "Registrando usuario...",
+      "validating": "Validando credenciales...",
+      "regError": "El usuario ya existe o hubo un error en el servidor.",
+      "loginError": "Credenciales incorrectas.",
+      "success": "Completado",
+      "genericError": "Error: {{message}}"
+    },
+    "error": {
+      "reg": "Error al registrar (usuario ya existe)",
+      "login": "Usuario o contraseña incorrectos."
+    },
+    "labels": {
+      "username": "Usuario",
+      "password": "Contraseña"
+    },
+    "placeholders": {
+      "username": "Ingresa tu usuario"
+    },
+    "eye": {
+      "hide": "Ocultar contraseña",
+      "show": "Mostrar contraseña"
+    },
+    "btn": {
+      "register": "Crear cuenta",
+      "login": "Ingresar"
+    },
+    "toggle": {
+      "toLogin": "¿Ya tienes cuenta? Ingresa aquí",
+      "toRegister": "¿No tienes cuenta? Regístrate de cero"
+    }
+  }
+}

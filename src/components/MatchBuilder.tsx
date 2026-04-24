@@ -7,6 +7,7 @@ import styles from './MatchBuilder.module.css';
 import DatePicker from './DatePicker';
 import CustomSelect from './CustomSelect';
 import { useTournament } from '@/context/TournamentContext';
+import { useTranslation } from 'react-i18next';
 
 interface TeamPanelProps {
   label: string;
@@ -19,6 +20,7 @@ interface TeamPanelProps {
 }
 
 function TeamPanel({ label, team, availablePlayers, variant, onAdd, onRemove, teamSize }: TeamPanelProps) {
+  const { t } = useTranslation();
   const full = team.length === teamSize;
   const progress = team.length / teamSize;
   const isDraw = variant === 'draw';
@@ -57,7 +59,7 @@ function TeamPanel({ label, team, availablePlayers, variant, onAdd, onRemove, te
               <button
                 className={styles.removeBtn}
                 onClick={() => onRemove(player.id)}
-                title="Quitar jugador"
+                title={t('matchBuilder.panel.remove')}
               >
                 ✕
               </button>
@@ -65,7 +67,7 @@ function TeamPanel({ label, team, availablePlayers, variant, onAdd, onRemove, te
           ) : (
             <div key={`empty-${i}`} className={styles.slotEmpty}>
               <span className={styles.slotNumber}>{i + 1}</span>
-              <span className={styles.slotPlaceholder}>Vacío</span>
+              <span className={styles.slotPlaceholder}>{t('matchBuilder.panel.empty')}</span>
             </div>
           );
         })}
@@ -75,7 +77,7 @@ function TeamPanel({ label, team, availablePlayers, variant, onAdd, onRemove, te
       {!full && availablePlayers.length > 0 && (
         <>
           <div className={styles.divider}>
-            <span className={styles.dividerLabel}>Disponibles</span>
+            <span className={styles.dividerLabel}>{t('matchBuilder.panel.available')}</span>
           </div>
           <div className={styles.availableList}>
             {availablePlayers.map(p => (
@@ -94,7 +96,7 @@ function TeamPanel({ label, team, availablePlayers, variant, onAdd, onRemove, te
 
       {full && (
         <div className={`${styles.completeMsg} ${isRed ? styles.completeMsgRed : ''} ${isDraw ? styles.completeMsgDraw : ''}`}>
-          ¡Equipo completo!
+          {t('matchBuilder.panel.complete')}
         </div>
       )}
     </div>
@@ -104,6 +106,7 @@ function TeamPanel({ label, team, availablePlayers, variant, onAdd, onRemove, te
 export default function MatchBuilder({ onComplete }: { onComplete: () => void }) {
   const { players, matches, addMatch } = useAppContext();
   const { activeTournament } = useTournament();
+  const { t } = useTranslation();
 
   const isPadel = activeTournament?.type_slug === 'paddle';
   const matchTypes = isPadel ? [2] : (activeTournament?.match_types?.length ? activeTournament.match_types.sort((a,b)=>a-b) : [5]);
@@ -230,12 +233,12 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
     <div className={styles.container}>
 
       <div className={styles.pageHeader}>
-        <h1 className={styles.pageTitle}>{activeTournament?.type_icon || '⚽'} Registrar Partido</h1>
-        <p className={styles.pageSubtitle}>Armá los equipos y guardá el resultado.</p>
+        <h1 className={styles.pageTitle}>{activeTournament?.type_icon || '⚽'} {t('matchBuilder.title')}</h1>
+        <p className={styles.pageSubtitle}>{t('matchBuilder.subtitle')}</p>
         
         {matchTypes.length > 1 && (
           <div className={styles.formatSelector}>
-            <span className={styles.formatLabel}>Formato:</span>
+            <span className={styles.formatLabel}>{t('matchBuilder.format')}</span>
             <div className={styles.formatGroup}>
               {matchTypes.map(size => (
                 <button
@@ -253,19 +256,19 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
 
       <div className={`${styles.datePanelBox} glass-panel`}>
         <div className={styles.datePickerContainer}>
-          <label className={styles.dateLabel}>Fecha del Partido</label>
+          <label className={styles.dateLabel}>{t('matchBuilder.dateLabel')}</label>
           <DatePicker value={matchDate} onChange={setMatchDate} />
         </div>
       </div>
 
       {teamsFull && isPadel && (
         <div className={`${styles.resultPicker} glass-panel`}>
-          <span className={styles.resultPickerLabel} style={{ marginBottom: '0.5rem', display: 'block' }}>Resultados de los Sets</span>
+          <span className={styles.resultPickerLabel} style={{ marginBottom: '0.5rem', display: 'block' }}>{t('matchBuilder.padel.setsTitle')}</span>
           <div className={styles.padelSetsWrapper} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
             {padelSets.map((set, index) => (
               <div key={index} className={styles.scoreInputsWrapper} style={{ gap: '10px' }}>
                 <div className={styles.scoreInputBox} style={{ flex: '1', padding: '10px' }}>
-                  <span className={styles.scoreTeamName} style={{ fontSize: '0.75rem', opacity: 0.7 }}>Eq. A (Set {index + 1})</span>
+                  <span className={styles.scoreTeamName} style={{ fontSize: '0.75rem', opacity: 0.7 }}>{t('matchBuilder.padel.teamA')}{index + 1})</span>
                   <input
                     type="number"
                     min="0"
@@ -278,7 +281,7 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
                 </div>
                 <span className={styles.scoreSeparator} style={{ fontSize: '1.2rem' }}>—</span>
                 <div className={styles.scoreInputBox} style={{ flex: '1', padding: '10px' }}>
-                  <span className={styles.scoreTeamName} style={{ fontSize: '0.75rem', opacity: 0.7 }}>Eq. B (Set {index + 1})</span>
+                  <span className={styles.scoreTeamName} style={{ fontSize: '0.75rem', opacity: 0.7 }}>{t('matchBuilder.padel.teamB')}{index + 1})</span>
                   <input
                     type="number"
                     min="0"
@@ -293,43 +296,43 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
             ))}
           </div>
           <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.85rem', color: 'var(--accent-primary)', background: 'rgba(16, 185, 129, 0.1)', padding: '10px', borderRadius: '8px' }}>
-            Puntaje Final será calculado automáticamente en base a sets ganados.
+            {t('matchBuilder.padel.autoCalc')}
           </div>
         </div>
       )}
 
       {teamsFull && !isPadel && (
         <div className={`${styles.resultPicker} glass-panel`}>
-          <span className={styles.resultPickerLabel}>¿Cómo terminó el partido?</span>
+          <span className={styles.resultPickerLabel}>{t('matchBuilder.resultTitle')}</span>
           <div className={styles.resultOptions}>
             <button
               className={`${styles.resultOption} ${result === 'A_WIN' ? styles.resultOptionActiveGreen : ''}`}
               onClick={() => setResult('A_WIN')}
             >
               <span className={styles.resultOptionIcon}>🟢</span>
-              <span className={styles.resultOptionText}>Gana Equipo A</span>
+              <span className={styles.resultOptionText}>{t('matchBuilder.winA')}</span>
             </button>
             <button
               className={`${styles.resultOption} ${result === 'DRAW' ? styles.resultOptionActiveDraw : ''}`}
               onClick={() => setResult('DRAW')}
             >
               <span className={styles.resultOptionIcon}>🤝</span>
-              <span className={styles.resultOptionText}>Empate</span>
+              <span className={styles.resultOptionText}>{t('matchBuilder.draw')}</span>
             </button>
             <button
               className={`${styles.resultOption} ${result === 'B_WIN' ? styles.resultOptionActiveRed : ''}`}
               onClick={() => setResult('B_WIN')}
             >
               <span className={styles.resultOptionIcon}>🔴</span>
-              <span className={styles.resultOptionText}>Gana Equipo B</span>
+              <span className={styles.resultOptionText}>{t('matchBuilder.winB')}</span>
             </button>
           </div>
 
           <div className={styles.scoreSection}>
-            <span className={styles.scoreLabel}>Marcador Final (Opcional)</span>
+            <span className={styles.scoreLabel}>{t('matchBuilder.scoreLabel')}</span>
             <div className={styles.scoreInputsWrapper}>
               <div className={styles.scoreInputBox}>
-                <span className={styles.scoreTeamName}>Equipo A</span>
+                <span className={styles.scoreTeamName}>{t('matchBuilder.teamA')}</span>
                 <input 
                   type="number" 
                   min="0" 
@@ -341,7 +344,7 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
               </div>
               <span className={styles.scoreSeparator}>—</span>
               <div className={styles.scoreInputBox}>
-                <span className={styles.scoreTeamName}>Equipo B</span>
+                <span className={styles.scoreTeamName}>{t('matchBuilder.teamB')}</span>
                 <input 
                   type="number" 
                   min="0" 
@@ -356,17 +359,17 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
             <div>
-              <span className={styles.scoreLabel} style={{ marginBottom: '0.6rem', display: 'block' }}>MVP del Partido (Opcional)</span>
+              <span className={styles.scoreLabel} style={{ marginBottom: '0.6rem', display: 'block' }}>{t('matchBuilder.mvpLabel')}</span>
               <CustomSelect 
                 options={[...teamA, ...teamB].map(p => ({ id: p.id, label: p.name }))}
                 value={mvpId}
                 onChange={setMvpId}
-                placeholder="Seleccionar MVP..."
+                placeholder={t('matchBuilder.mvpPlaceholder')}
                 icon="⭐"
               />
             </div>
             <div>
-              <span className={styles.scoreLabel} style={{ marginBottom: '0.6rem', display: 'block' }}>Link de Grabación (Opcional)</span>
+              <span className={styles.scoreLabel} style={{ marginBottom: '0.6rem', display: 'block' }}>{t('matchBuilder.videoLabel')}</span>
               <input 
                 type="url" 
                 className={styles.scoreInput} 
@@ -382,7 +385,7 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
 
       <div className={styles.teamsLayout}>
         <TeamPanel
-          label="Equipo A"
+          label={t('matchBuilder.teamA')}
           variant={result === 'A_WIN' ? 'green' : result === 'B_WIN' ? 'red' : result === 'DRAW' ? 'draw' : 'green'}
           team={teamA}
           teamSize={teamSize}
@@ -391,7 +394,7 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
           onRemove={(id) => removeFrom('A', id)}
         />
         <TeamPanel
-          label="Equipo B"
+          label={t('matchBuilder.teamB')}
           variant={result === 'B_WIN' ? 'green' : result === 'A_WIN' ? 'red' : result === 'DRAW' ? 'draw' : 'green'}
           team={teamB}
           teamSize={teamSize}
@@ -406,11 +409,11 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
           className={`${styles.submitBtn} ${result === 'DRAW' ? styles.submitBtnDraw : ''}`}
           onClick={handleSubmit}
         >
-          {result === 'DRAW' ? '🤝 Guardar Empate' : '⚽ Guardar Partido'}
+          {result === 'DRAW' ? t('matchBuilder.submitDraw') : t('matchBuilder.submitMatch')}
         </button>
       ) : (
         <p className={styles.hint}>
-          Selecciona {teamSize} jugadores por equipo para continuar.
+          {t('matchBuilder.hint', { size: teamSize })}
         </p>
       )}
 

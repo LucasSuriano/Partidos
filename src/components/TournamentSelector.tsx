@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import type { Tournament } from '@/types';
 import UserMenu from './UserMenu';
 import Brand from './Brand';
+import { useTranslation } from 'react-i18next';
 
 function getInitials(name: string) {
   return name.slice(0, 2).toUpperCase();
@@ -19,10 +20,10 @@ function nameToHue(s: string) {
   return Math.abs(h) % 360;
 }
 
-function formatDate(iso?: string) {
+function formatDate(iso?: string, lang: string = 'es-AR') {
   if (!iso) return '';
   const d = new Date(iso);
-  return d.toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' });
+  return new Intl.DateTimeFormat(lang, { day: '2-digit', month: 'short', year: 'numeric' }).format(d);
 }
 
 interface AppUser { id: string; username: string; }
@@ -36,6 +37,7 @@ interface TournamentType { id: string; name: string; slug: string; icon: string;
 function CreateModal({ onClose, onCreated }: CreateModalProps) {
   const { createTournament } = useTournament();
   const { user: currentUser } = useAuth();
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [ownerId, setOwnerId] = useState('');
@@ -54,7 +56,7 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
       if (userError) console.error('Error loading users:', userError);
       if (typeError) {
         console.error('Error loading tournament types:', typeError);
-        setError('Error al cargar tipos de torneo. Verificá la base de datos.');
+        setError(t('tournamentSelector.errors.loadTypes'));
       }
 
       if (userData) {
@@ -79,22 +81,22 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
     }).catch(err => {
       console.error('Initial load failed:', err);
       setLoadingInitial(false);
-      setError('Error de conexión o configuración.');
+      setError(t('tournamentSelector.errors.connection'));
     });
   }, [currentUser]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) { setError('El nombre es obligatorio'); return; }
-    if (!ownerId) { setError('Tenés que designar un dueño'); return; }
-    if (!typeId) { setError('Tenés que elegir un tipo de torneo'); return; }
+    if (!name.trim()) { setError(t('tournamentSelector.errors.nameRequired')); return; }
+    if (!ownerId) { setError(t('tournamentSelector.errors.ownerRequired')); return; }
+    if (!typeId) { setError(t('tournamentSelector.errors.typeRequired')); return; }
     setLoading(true);
     const result = await createTournament(name.trim(), description.trim(), ownerId, typeId);
     setLoading(false);
     if (result) {
       onCreated(result);
     } else {
-      setError('No se pudo crear el torneo. Intentá de nuevo.');
+      setError(t('tournamentSelector.errors.createFailed'));
     }
   };
 
@@ -105,60 +107,60 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
       <div className={styles.modal} onClick={e => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <span className={styles.modalIcon}>🏆</span>
-          <h2 className={styles.modalTitle}>Nuevo Torneo</h2>
+          <h2 className={styles.modalTitle}>{t('tournamentSelector.modal.title')}</h2>
           <button className={styles.modalClose} onClick={onClose}>✕</button>
         </div>
         <form className={styles.modalForm} onSubmit={handleSubmit}>
           <div className={styles.formGroup}>
-            <label className={styles.formLabel}>Nombre del torneo *</label>
+            <label className={styles.formLabel}>{t('tournamentSelector.modal.nameLabel')}</label>
             <input
               className={styles.formInput}
               value={name}
               onChange={e => setName(e.target.value)}
-              placeholder="Ej: Torneo Primavera 2025"
+              placeholder={t('tournamentSelector.modal.namePlaceholder')}
               autoFocus
               maxLength={60}
             />
           </div>
           <div className={styles.formGroup}>
-            <label className={styles.formLabel}>Descripción (opcional)</label>
+            <label className={styles.formLabel}>{t('tournamentSelector.modal.descLabel')}</label>
             <textarea
               className={styles.formTextarea}
               value={description}
               onChange={e => setDescription(e.target.value)}
-              placeholder="Descripción o detalle del torneo..."
+              placeholder={t('tournamentSelector.modal.descPlaceholder')}
               rows={3}
               maxLength={200}
             />
           </div>
           <div className={styles.formGroup}>
-            <label className={styles.formLabel}>Dueño del torneo *</label>
+            <label className={styles.formLabel}>{t('tournamentSelector.modal.ownerLabel')}</label>
             {loadingInitial ? (
-              <div className={styles.formInput} style={{ color: '#475569' }}>Cargando usuarios...</div>
+              <div className={styles.formInput} style={{ color: '#475569' }}>{t('tournamentSelector.modal.loadingUsers')}</div>
             ) : (
               <select
                 className={styles.formSelect}
                 value={ownerId}
                 onChange={e => setOwnerId(e.target.value)}
               >
-                <option value="">— Seleccioná un usuario —</option>
+                <option value="">{t('tournamentSelector.modal.selectUser')}</option>
                 {users.map(u => (
                   <option key={u.id} value={u.id}>{u.username}</option>
                 ))}
               </select>
             )}
             <p className={styles.formHint}>
-              Este usuario podrá registrar partidos y gestionar jugadores en este torneo.
+              {t('tournamentSelector.modal.ownerHint')}
             </p>
           </div>
 
           <div className={styles.formGroup}>
-            <label className={styles.formLabel}>Tipo de Torneo *</label>
+            <label className={styles.formLabel}>{t('tournamentSelector.modal.typeLabel')}</label>
             {loadingInitial ? (
-              <div className={styles.formInput} style={{ color: '#475569' }}>Cargando tipos...</div>
+              <div className={styles.formInput} style={{ color: '#475569' }}>{t('tournamentSelector.modal.loadingTypes')}</div>
             ) : types.length === 0 ? (
               <div className={styles.formInput} style={{ color: '#f87171', borderColor: 'rgba(248, 113, 113, 0.3)' }}>
-                ⚠️ No se encontraron tipos de torneo
+                {t('tournamentSelector.modal.noTypes')}
               </div>
             ) : (
               <select
@@ -174,10 +176,10 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
           </div>
           {error && <p className={styles.formError}>{error}</p>}
           <div className={styles.modalActions}>
-            <button type="button" className={styles.cancelBtn} onClick={onClose}>Cancelar</button>
+            <button type="button" className={styles.cancelBtn} onClick={onClose}>{t('tournamentSelector.modal.cancel')}</button>
             <button type="submit" className={styles.createBtn} disabled={loading || loadingInitial}>
               {loading ? <span className={styles.btnSpinner} /> : typeIcon}
-              {loading ? 'Creando...' : 'Crear Torneo'}
+              {loading ? t('tournamentSelector.modal.creating') : t('tournamentSelector.modal.createBtn')}
             </button>
           </div>
         </form>
@@ -190,6 +192,7 @@ function JoinWithCode({ userId }: { userId: string }) {
   const [code, setCode] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
+  const { t } = useTranslation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -209,7 +212,7 @@ function JoinWithCode({ userId }: { userId: string }) {
 
     if (inviteErr || !invite) {
       setStatus('error');
-      setMessage('Código no encontrado o inválido.');
+      setMessage(t('tournamentSelector.errors.invalidCode'));
       return;
     }
 
@@ -223,7 +226,7 @@ function JoinWithCode({ userId }: { userId: string }) {
 
     if (existing) {
       setStatus('error');
-      setMessage('Ya sos miembro de ese torneo.');
+      setMessage(t('tournamentSelector.errors.alreadyMember'));
       return;
     }
 
@@ -238,7 +241,7 @@ function JoinWithCode({ userId }: { userId: string }) {
     if (existingReq) {
       if (existingReq.status === 'pending') {
         setStatus('error');
-        setMessage('Ya enviaste una solicitud. Esperá que el owner la apruebe.');
+        setMessage(t('tournamentSelector.errors.requestPending'));
       } else {
         // Re-submit if previously rejected
         await supabase
@@ -246,7 +249,7 @@ function JoinWithCode({ userId }: { userId: string }) {
           .update({ status: 'pending', created_at: new Date().toISOString() })
           .eq('id', existingReq.id);
         setStatus('success');
-        setMessage('¡Solicitud enviada! El owner del torneo deberá aprobarla.');
+        setMessage(t('tournamentSelector.join.success'));
         setCode('');
       }
       return;
@@ -259,24 +262,24 @@ function JoinWithCode({ userId }: { userId: string }) {
 
     if (reqErr) {
       setStatus('error');
-      setMessage('Error al enviar la solicitud. Intentá de nuevo.');
+      setMessage(t('tournamentSelector.errors.joinFailed'));
       return;
     }
 
     setStatus('success');
-    setMessage('¡Solicitud enviada! El owner del torneo deberá aprobarla.');
+    setMessage(t('tournamentSelector.join.success'));
     setCode('');
   };
 
   return (
     <div className={styles.joinWidget}>
-      <p className={styles.joinLabel}>¿Tenés un código de invitación?</p>
+      <p className={styles.joinLabel}>{t('tournamentSelector.join.label')}</p>
       <form className={styles.joinForm} onSubmit={handleSubmit}>
         <input
           className={styles.joinInput}
           value={code}
           onChange={e => { setCode(e.target.value); setStatus('idle'); }}
-          placeholder="Ingresá tu código..."
+          placeholder={t('tournamentSelector.join.placeholder')}
           maxLength={12}
           disabled={status === 'loading'}
         />
@@ -285,7 +288,7 @@ function JoinWithCode({ userId }: { userId: string }) {
           className={styles.joinBtn}
           disabled={!code.trim() || status === 'loading'}
         >
-          {status === 'loading' ? <span className={styles.joinSpinner} /> : 'Unirse'}
+          {status === 'loading' ? <span className={styles.joinSpinner} /> : t('tournamentSelector.join.button')}
         </button>
       </form>
       {status === 'success' && <p className={styles.joinSuccess}>{message}</p>}
@@ -299,6 +302,7 @@ export default function TournamentSelector() {
   const { tournaments, setActiveTournament, isLoading } = useTournament();
   const { user } = useAuth();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const { t, i18n } = useTranslation();
 
   const isSuperAdmin = user?.role === 'superadmin';
   const hue = user ? nameToHue(user.username) : 120;
@@ -328,9 +332,9 @@ export default function TournamentSelector() {
       {/* Hero section */}
       <section className={styles.hero}>
         <div className={styles.heroIcon}>🏆</div>
-        <h1 className={styles.heroTitle}>Seleccioná un Torneo</h1>
+        <h1 className={styles.heroTitle}>{t('tournamentSelector.hero.title')}</h1>
         <p className={styles.heroSubtitle}>
-          {isLoading ? 'Cargando torneos...' : `${tournaments.length} torneo${tournaments.length !== 1 ? 's' : ''} disponible${tournaments.length !== 1 ? 's' : ''}`}
+          {isLoading ? t('tournamentSelector.hero.loading') : tournaments.length === 1 ? t('tournamentSelector.hero.oneTournamentAvailable') : t('tournamentSelector.hero.tournamentsAvailable', { count: tournaments.length })}
         </p>
       </section>
 
@@ -343,8 +347,8 @@ export default function TournamentSelector() {
         ) : tournaments.length === 0 ? (
           <div className={styles.emptyState}>
             <span className={styles.emptyIcon}>🔍</span>
-            <p>No tenés torneos asignados.</p>
-            {isSuperAdmin && <p>Creá el primero con el botón de abajo.</p>}
+            <p>{t('tournamentSelector.empty.noTournaments')}</p>
+            {isSuperAdmin && <p>{t('tournamentSelector.empty.createFirst')}</p>}
           </div>
         ) : (
           tournaments.map(t => {
@@ -373,7 +377,7 @@ export default function TournamentSelector() {
                     {t.created_at && (
                       <p className={styles.cardDate}>
                         <span className={styles.calIcon}>📅</span>
-                        {formatDate(t.created_at)}
+                        {formatDate(t.created_at, i18n.language)}
                       </p>
                     )}
                     <p className={styles.cardType}>
@@ -395,7 +399,7 @@ export default function TournamentSelector() {
             onClick={() => setShowCreateModal(true)}
           >
             <div className={styles.createIcon}>+</div>
-            <span className={styles.createLabel}>Nuevo Torneo</span>
+            <span className={styles.createLabel}>{t('tournamentSelector.createCard')}</span>
           </button>
         )}
       </main>

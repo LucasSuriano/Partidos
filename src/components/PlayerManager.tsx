@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useTournament } from '@/context/TournamentContext';
 import { calculateStats } from '@/lib/stats';
 import styles from './PlayerManager.module.css';
+import { useTranslation } from 'react-i18next';
 
 // Generate a consistent hue from a name string
 function nameToHue(name: string): number {
@@ -25,6 +26,7 @@ export default function PlayerManager() {
   const { user } = useAuth();
   const { isAdminOfActiveTournament } = useTournament();
   const isAdmin = isAdminOfActiveTournament;
+  const { t } = useTranslation();
 
   const [name, setName] = useState('');
   const [search, setSearch] = useState('');
@@ -111,9 +113,9 @@ export default function PlayerManager() {
       {/* ── Header ── */}
       <div className={styles.pageHeader}>
         <div>
-          <h2 className={styles.title}>Gestionar Jugadores</h2>
+          <h2 className={styles.title}>{t('playerManager.title')}</h2>
           <p className={styles.subtitle}>
-            {players.length} jugadores · {activePlayers} activos
+            {t('playerManager.subtitle', { total: players.length, active: activePlayers })}
           </p>
         </div>
       </div>
@@ -125,11 +127,11 @@ export default function PlayerManager() {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Nombre del nuevo jugador"
+            placeholder={t('playerManager.namePlaceholder')}
             className={styles.input}
           />
           <button type="submit" disabled={!name.trim()} className={styles.btn}>
-            Agregar
+            {t('playerManager.add')}
           </button>
         </form>
       )}
@@ -142,7 +144,7 @@ export default function PlayerManager() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar jugador..."
+            placeholder={t('playerManager.searchPlaceholder')}
             className={styles.searchInput}
           />
           {search && (
@@ -180,17 +182,17 @@ export default function PlayerManager() {
                     onKeyDown={(e) => { if (e.key === 'Enter') handleSaveEdit(player.id); if (e.key === 'Escape') handleCancelEdit(); }}
                   />
                   <div className={styles.editActions}>
-                    <button onClick={() => handleSaveEdit(player.id)} className={styles.saveBtn} title="Guardar">✓</button>
-                    <button onClick={handleCancelEdit} className={styles.cancelBtn} title="Cancelar">✕</button>
+                    <button onClick={() => handleSaveEdit(player.id)} className={styles.saveBtn} title={t('playerManager.save')}>✓</button>
+                    <button onClick={handleCancelEdit} className={styles.cancelBtn} title={t('playerManager.cancel')}>✕</button>
                   </div>
                 </div>
               ) : isConfirming ? (
                 /* ── Confirm delete mode ── */
                 <div className={styles.confirmWrapper}>
-                  <span className={styles.confirmText}>¿Eliminar a <strong>{player.name}</strong>?</span>
+                  <span className={styles.confirmText}>{t('playerManager.delete.warning', { name: player.name })}</span>
                   <div className={styles.confirmActions}>
-                    <button onClick={() => handleConfirmDelete(player.id)} className={styles.confirmYes}>Sí, eliminar</button>
-                    <button onClick={() => setConfirmDeleteId(null)} className={styles.confirmNo}>Cancelar</button>
+                    <button onClick={() => handleConfirmDelete(player.id)} className={styles.confirmYes}>{t('playerManager.delete.confirm')}</button>
+                    <button onClick={() => setConfirmDeleteId(null)} className={styles.confirmNo}>{t('playerManager.cancel')}</button>
                   </div>
                 </div>
               ) : (
@@ -210,7 +212,7 @@ export default function PlayerManager() {
                       <span className={styles.playerName}>{player.name}</span>
                       <span
                         className={styles.activityDot}
-                        title={activity === 'high' ? 'Muy activo' : activity === 'mid' ? 'Activo' : 'Nuevo/Ocasional'}
+                        title={activity === 'high' ? t('playerManager.activity.high') : activity === 'mid' ? t('playerManager.activity.mid') : t('playerManager.activity.low')}
                         style={{
                           background: activity === 'high' ? 'var(--accent-primary)'
                             : activity === 'mid' ? 'var(--warning)'
@@ -244,14 +246,14 @@ export default function PlayerManager() {
                         </div>
                       </>
                     ) : (
-                      <span className={styles.newBadge}>Nuevo jugador</span>
+                      <span className={styles.newBadge}>{t('playerManager.newPlayer')}</span>
                     )}
                   </div>
 
                   {/* Actions */}
                   <div className={styles.cardActions}>
                     {isAdmin && (
-                      <button onClick={() => handleStartEdit(player)} className={styles.editBtn} title="Editar nombre">
+                      <button onClick={() => handleStartEdit(player)} className={styles.editBtn} title={t('playerManager.editName')}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
@@ -261,7 +263,7 @@ export default function PlayerManager() {
                     <button 
                       onClick={() => setManagingBadgesForId(player.id)} 
                       className={styles.badgeBtn} 
-                      title="Votar insignias"
+                      title={t('playerManager.voteBadges')}
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                         <path d="M12 15l-2 5l9-9l-9-9l2 5h-12v8h12z" />
@@ -273,7 +275,7 @@ export default function PlayerManager() {
                         onClick={() => handleDeleteClick(player.id)}
                         className={styles.deleteBtn}
                         disabled={hasMatches}
-                        title={hasMatches ? 'No se puede eliminar: tiene partidos' : 'Eliminar jugador'}
+                        title={hasMatches ? t('playerManager.cantDelete') : t('playerManager.deleteTitle')}
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                           <polyline points="3 6 5 6 21 6" />
@@ -291,10 +293,10 @@ export default function PlayerManager() {
         })}
 
         {filtered.length === 0 && players.length > 0 && (
-          <p className={styles.emptySearch}>No se encontraron jugadores con &quot;{search}&quot;.</p>
+          <p className={styles.emptySearch}>{t('playerManager.emptySearch').replace('{{search}}', search)}</p>
         )}
         {players.length === 0 && (
-          <p style={{ color: 'var(--text-secondary)' }}>No hay jugadores registrados.</p>
+          <p style={{ color: 'var(--text-secondary)' }}>{t('playerManager.emptyState')}</p>
         )}
       </div>
 
@@ -304,7 +306,7 @@ export default function PlayerManager() {
           <div className={styles.badgesModal} onClick={e => e.stopPropagation()}>
             <div className={styles.badgesHeader}>
               <div>
-                <h3 className={styles.badgesTitle}>Votar Insignias</h3>
+                <h3 className={styles.badgesTitle}>{t('playerManager.badges.title')}</h3>
                 <p className={styles.badgesSubtitle}>{managingBadgesFor.name}</p>
               </div>
               <button className={styles.badgesCloseBtn} onClick={handleCloseBadges}>

@@ -9,6 +9,7 @@ const inter = Inter({
 
 import { AuthProvider } from "@/context/AuthContext";
 import { TournamentProvider } from "@/context/TournamentContext";
+import I18nProvider from "@/components/I18nProvider";
 
 export const viewport: Viewport = {
   themeColor: "#101729",
@@ -39,11 +40,13 @@ export default function RootLayout({
     <html lang="es" className={inter.variable}>
       <body>
         <main>
-          <AuthProvider>
-            <TournamentProvider>
-              {children}
-            </TournamentProvider>
-          </AuthProvider>
+          <I18nProvider>
+            <AuthProvider>
+              <TournamentProvider>
+                {children}
+              </TournamentProvider>
+            </AuthProvider>
+          </I18nProvider>
         </main>
       </body>
     </html>

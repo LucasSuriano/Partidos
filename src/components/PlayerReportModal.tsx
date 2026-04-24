@@ -5,6 +5,7 @@ import { useAppContext } from '@/context/AppContext';
 import { getPlayerReport } from '@/lib/stats';
 import styles from './PlayerReportModal.module.css';
 import { RelationStats } from '@/types';
+import { useTranslation } from 'react-i18next';
 
 interface PlayerReportModalProps {
   playerId: string;
@@ -13,6 +14,7 @@ interface PlayerReportModalProps {
 
 export default function PlayerReportModal({ playerId, onClose }: PlayerReportModalProps) {
   const { players, matches, badges } = useAppContext();
+  const { t } = useTranslation();
 
   const report = useMemo(() => {
     try { return getPlayerReport(playerId, players, matches); }
@@ -30,10 +32,10 @@ export default function PlayerReportModal({ playerId, onClose }: PlayerReportMod
       <table className={styles.table}>
         <thead>
           <tr>
-            <th className={styles.th}>Jugador</th>
-            <th className={styles.th}>PJ</th>
-            <th className={styles.th}>G - E - P</th>
-            <th className={styles.th}>%</th>
+            <th className={styles.th}>{t('reportModal.headers.player')}</th>
+            <th className={styles.th}>{t('reportModal.headers.played')}</th>
+            <th className={styles.th}>{t('reportModal.headers.wld')}</th>
+            <th className={styles.th}>{t('reportModal.headers.pct')}</th>
           </tr>
         </thead>
         <tbody>
@@ -87,9 +89,9 @@ export default function PlayerReportModal({ playerId, onClose }: PlayerReportMod
         <div className={styles.header}>
           <div>
             <div className={styles.headerMeta}>
-              <span className={styles.rankBadge}>#{report.rank} de {report.totalPlayers}</span>
+              <span className={styles.rankBadge}>#{report.rank} {t('reportModal.of')} {report.totalPlayers}</span>
               <span className={styles.presenceBadge}>
-                {report.matchesPlayed}/{report.totalMatchesInHistory} partidos · {pct(report.presencePercentage)} presencia
+                {report.matchesPlayed}/{report.totalMatchesInHistory} {t('reportModal.matches')} · {pct(report.presencePercentage)} {t('reportModal.presence')}
               </span>
             </div>
             <h2 className={styles.headerTitle}>{report.player.name}</h2>
@@ -127,7 +129,7 @@ export default function PlayerReportModal({ playerId, onClose }: PlayerReportMod
                           <span className={styles.badgeHexIcon}>{badgeDef.icon}</span>
                         </div>
                         <span className={styles.badgeHexLabel}>{badgeDef.label}</span>
-                        <span className={styles.badgeVoteCountText}>{count} {count === 1 ? 'voto' : 'votos'}</span>
+                        <span className={styles.badgeVoteCountText}>{count} {count === 1 ? t('reportModal.vote') : t('reportModal.votes')}</span>
                       </div>
                     );
                   })}
@@ -145,36 +147,36 @@ export default function PlayerReportModal({ playerId, onClose }: PlayerReportMod
         {/* ── KPI strip ── */}
         <div className={styles.kpiStrip}>
           <div className={styles.kpiItem}>
-            <span className={styles.kpiLabel}>Ganados</span>
+            <span className={styles.kpiLabel}>{t('reportModal.kpi.wins')}</span>
             <span className={styles.kpiValue} style={{ color: 'var(--accent-primary)' }}>{report.wins}</span>
           </div>
           <div className={styles.kpiDivider} />
           <div className={styles.kpiItem}>
-            <span className={styles.kpiLabel}>Empates</span>
+            <span className={styles.kpiLabel}>{t('reportModal.kpi.draws')}</span>
             <span className={styles.kpiValue} style={{ color: 'var(--warning)' }}>{report.draws}</span>
           </div>
           <div className={styles.kpiDivider} />
           <div className={styles.kpiItem}>
-            <span className={styles.kpiLabel}>Perdidos</span>
+            <span className={styles.kpiLabel}>{t('reportModal.kpi.losses')}</span>
             <span className={styles.kpiValue} style={{ color: 'var(--danger)' }}>{report.losses}</span>
           </div>
           <div className={styles.kpiDivider} />
           <div className={styles.kpiItem}>
-            <span className={styles.kpiLabel}>% Victoria</span>
+            <span className={styles.kpiLabel}>{t('reportModal.kpi.winPct')}</span>
             <span className={styles.kpiValue} style={{ color: winColor(report.winPercentage) }}>
               {pct(report.winPercentage)}
             </span>
           </div>
           <div className={styles.kpiDivider} />
           <div className={styles.kpiItem}>
-            <span className={styles.kpiLabel}>Mejor Racha</span>
+            <span className={styles.kpiLabel}>{t('reportModal.kpi.bestStreak')}</span>
             <span className={styles.kpiValue} style={{ color: 'var(--accent-primary)' }}>
               {report.bestStreak > 0 ? report.bestStreak : '-'}
             </span>
           </div>
           <div className={styles.kpiDivider} />
           <div className={styles.kpiItem}>
-            <span className={styles.kpiLabel}>Racha Actual</span>
+            <span className={styles.kpiLabel}>{t('reportModal.kpi.currentStreak')}</span>
             <span className={styles.kpiValue} style={{
               color: report.currentStreak.type === 'WIN' ? 'var(--accent-primary)'
                 : report.currentStreak.type === 'LOSS' ? 'var(--danger)'
@@ -190,42 +192,42 @@ export default function PlayerReportModal({ playerId, onClose }: PlayerReportMod
         {/* ── Summary cards row 1: compa + nemesis ── */}
         <div className={styles.summaryCards}>
           <div className={styles.summaryCard}>
-            <span className={styles.summaryLabel}>Mejor Compañero</span>
+            <span className={styles.summaryLabel}>{t('reportModal.summary.bestTeammate')}</span>
             <div className={styles.summaryContent}>
               <span className={styles.summaryValue}>
                 {report.bestTeammate ? report.bestTeammate.players.map(p => p.name).join(', ') : '-'}
               </span>
-              {report.bestTeammate && <span className={styles.summaryDetail}>{report.bestTeammate.matches} victorias juntos</span>}
+              {report.bestTeammate && <span className={styles.summaryDetail}>{report.bestTeammate.matches} {t('reportModal.summary.winsTogether')}</span>}
             </div>
           </div>
 
           <div className={styles.summaryCard}>
-            <span className={styles.summaryLabel}>Peor Compañero</span>
+            <span className={styles.summaryLabel}>{t('reportModal.summary.worstTeammate')}</span>
             <div className={styles.summaryContent}>
               <span className={styles.summaryValue}>
                 {report.worstTeammate ? report.worstTeammate.players.map(p => p.name).join(', ') : '-'}
               </span>
-              {report.worstTeammate && <span className={styles.summaryDetail}>{report.worstTeammate.matches} derrotas juntos</span>}
+              {report.worstTeammate && <span className={styles.summaryDetail}>{report.worstTeammate.matches} {t('reportModal.summary.lossesTogether')}</span>}
             </div>
           </div>
 
           <div className={styles.summaryCard}>
-            <span className={styles.summaryLabel}>Víctima Fav.</span>
+            <span className={styles.summaryLabel}>{t('reportModal.summary.favoriteVictim')}</span>
             <div className={styles.summaryContent}>
               <span className={styles.summaryValue} style={{ color: 'var(--accent-primary)' }}>
                 {report.favoriteVictim ? report.favoriteVictim.players.map(p => p.name).join(', ') : '-'}
               </span>
-              {report.favoriteVictim && <span className={styles.summaryDetail}>{report.favoriteVictim.winsAgainst} veces le ganó</span>}
+              {report.favoriteVictim && <span className={styles.summaryDetail}>{report.favoriteVictim.winsAgainst} {t('reportModal.summary.timesWonAgainst')}</span>}
             </div>
           </div>
 
           <div className={styles.summaryCard}>
-            <span className={styles.summaryLabel}>Némesis</span>
+            <span className={styles.summaryLabel}>{t('reportModal.summary.nemesis')}</span>
             <div className={styles.summaryContent}>
               <span className={styles.summaryValue} style={{ color: 'var(--danger)' }}>
                 {report.nemesis ? report.nemesis.players.map(p => p.name).join(', ') : '-'}
               </span>
-              {report.nemesis && <span className={styles.summaryDetail}>{report.nemesis.lossesAgainst} veces le ganó</span>}
+              {report.nemesis && <span className={styles.summaryDetail}>{report.nemesis.lossesAgainst} {t('reportModal.summary.timesWonAgainst')}</span>}
             </div>
           </div>
         </div>
@@ -233,12 +235,12 @@ export default function PlayerReportModal({ playerId, onClose }: PlayerReportMod
         {/* ── Tables ── */}
         <div className={styles.sections}>
           <div className={styles.section}>
-            <h3>Como Compañeros</h3>
-            {report.teammates.length > 0 ? renderTable(report.teammates, 'var(--accent-primary)') : <p>Sin datos todavía.</p>}
+            <h3>{t('reportModal.sections.teammates')}</h3>
+            {report.teammates.length > 0 ? renderTable(report.teammates, 'var(--accent-primary)') : <p>{t('reportModal.sections.noData')}</p>}
           </div>
           <div className={styles.section}>
-            <h3>Como Rivales</h3>
-            {report.opponents.length > 0 ? renderTable(report.opponents, 'var(--danger)') : <p>Sin datos todavía.</p>}
+            <h3>{t('reportModal.sections.opponents')}</h3>
+            {report.opponents.length > 0 ? renderTable(report.opponents, 'var(--danger)') : <p>{t('reportModal.sections.noData')}</p>}
           </div>
         </div>
 

@@ -3,9 +3,11 @@
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import styles from './Login.module.css';
+import { useTranslation } from 'react-i18next';
 
 export default function Login() {
   const { login, loginWithGoogle, register } = useAuth();
+  const { t } = useTranslation();
   const [isRegistering, setIsRegistering] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -19,7 +21,7 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     setError(false);
-    setDebugMsg('Conectando a Supabase...');
+    setDebugMsg(t('login.debug.connecting'));
     
     try {
       let success = false;
@@ -33,7 +35,7 @@ export default function Login() {
         ? register(username, password)
         : login(username, password);
 
-      setDebugMsg(isRegistering ? 'Registrando usuario...' : 'Validando credenciales...');
+      setDebugMsg(isRegistering ? t('login.debug.registering') : t('login.debug.validating'));
       
       // Esperamos que termine de loguear o que pasen 8 segundos
       success = await Promise.race([authPromise, timeoutPromise]);
@@ -42,15 +44,15 @@ export default function Login() {
       
       if (!success) {
         setError(true);
-        setDebugMsg(isRegistering ? 'El usuario ya existe o hubo un error en el servidor.' : 'Credenciales incorrectas.');
+        setDebugMsg(isRegistering ? t('login.debug.regError') : t('login.debug.loginError'));
         setShakeKey(k => k + 1);
       } else {
-        setDebugMsg('Completado');
+        setDebugMsg(t('login.debug.success'));
       }
     } catch (err: any) {
       setLoading(false);
       setError(true);
-      setDebugMsg('Error: ' + err.message);
+      setDebugMsg(t('login.debug.genericError', { message: err.message }));
       setShakeKey(k => k + 1);
     }
   };
@@ -67,19 +69,19 @@ export default function Login() {
             <img src="/logo.png" alt="Logo" className={styles.logo} />
           </div>
           <h1 className={styles.appName}>Entiendanla</h1>
-          <p className={styles.tagline}>Gestión de partidos · Estadísticas · Historial</p>
+          <p className={styles.tagline}>{t('login.tagline')}</p>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form} noValidate>
           {error && (
             <div className={styles.errorBanner}>
               <span>⚠️</span>
-              <span>{isRegistering ? "Error al registrar (usuario ya existe)" : "Usuario o contraseña incorrectos."}</span>
+              <span>{isRegistering ? t('login.error.reg') : t('login.error.login')}</span>
             </div>
           )}
 
           <div className={styles.inputGroup}>
-            <label htmlFor="username" className={styles.label}>Usuario</label>
+            <label htmlFor="username" className={styles.label}>{t('login.labels.username')}</label>
             <div className={styles.inputWrapper}>
               <span className={styles.inputIcon}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -90,7 +92,7 @@ export default function Login() {
               <input
                 id="username"
                 type="text"
-                placeholder="Ingresa tu usuario"
+                placeholder={t('login.placeholders.username')}
                 value={username}
                 onChange={e => { setUsername(e.target.value); setError(false); }}
                 className={styles.input}
@@ -101,7 +103,7 @@ export default function Login() {
           </div>
 
           <div className={styles.inputGroup}>
-            <label htmlFor="password" className={styles.label}>Contraseña</label>
+            <label htmlFor="password" className={styles.label}>{t('login.labels.password')}</label>
             <div className={styles.inputWrapper}>
               <span className={styles.inputIcon}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -123,7 +125,7 @@ export default function Login() {
                 className={styles.eyeBtn}
                 onClick={() => setShowPassword(v => !v)}
                 tabIndex={-1}
-                title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                title={showPassword ? t('login.eye.hide') : t('login.eye.show')}
               >
                 {showPassword ? (
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -155,7 +157,7 @@ export default function Login() {
                   {isRegistering ? <line x1="10" y1="12" x2="20" y2="12" /> : <polyline points="10 17 15 12 10 7"/>}
                   {isRegistering ? <line x1="15" y1="7" x2="15" y2="17" /> : <line x1="15" y1="12" x2="3" y2="12"/>}
                 </svg>
-                {isRegistering ? "Crear cuenta" : "Ingresar"}
+                {isRegistering ? t('login.btn.register') : t('login.btn.login')}
               </>
             )}
           </button>
@@ -173,7 +175,7 @@ export default function Login() {
             onClick={() => { setIsRegistering(!isRegistering); setError(false); }}
             style={{ background: 'none', border: 'none', color: '#10b981', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, textDecoration: 'underline' }}
           >
-            {isRegistering ? "¿Ya tienes cuenta? Ingresa aquí" : "¿No tienes cuenta? Regístrate de cero"}
+            {isRegistering ? t('login.toggle.toLogin') : t('login.toggle.toRegister')}
           </button>
         </div>
 

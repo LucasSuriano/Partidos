@@ -7,6 +7,7 @@ import { Match, Player, PlayerStats } from '@/types';
 import { useTournament } from '@/context/TournamentContext';
 import styles from './TeamSimulator.module.css';
 import { TacticalBoard, TacticalConfig, FinalPitchRenderer } from './TacticalBoard';
+import { useTranslation } from 'react-i18next';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -229,7 +230,8 @@ interface NotablePair {
 
 function getNotablePairs(
   teamA: PlayerStats[], teamB: PlayerStats[],
-  pairMap: Map<string, PairStats>
+  pairMap: Map<string, PairStats>,
+  t: any
 ): { internal: NotablePair[]; clashes: NotablePair[] } {
   const internal: NotablePair[] = [];
   const clashes: NotablePair[] = [];
@@ -241,13 +243,13 @@ function getNotablePairs(
         if (!p || p.togetherTotal < 2) continue;
         const pct = p.togetherWinPct;
         if (pct >= 70 || pct <= 35) {
-          internal.push({
-            nameA: team[i].player.name, nameB: team[j].player.name,
-            type: pct >= 70 ? 'synergy' : 'rivalry',
-            label: pct >= 70 ? '🔥 Dupla ganadora' : '⚠️ Dupla complicada',
-            detail: `${p.togetherWins}/${p.togetherTotal} juntos (${pct.toFixed(0)}%)`,
-            pct, games: p.togetherTotal,
-          });
+            internal.push({
+              nameA: team[i].player.name, nameB: team[j].player.name,
+              type: pct >= 70 ? 'synergy' : 'rivalry',
+              label: pct >= 70 ? t('teamSimulator.pairs.synergyTitle') : t('teamSimulator.pairs.rivalryTitle'),
+              detail: t('teamSimulator.pairs.togetherDetail').replace('{{wins}}', p.togetherWins.toString()).replace('{{total}}', p.togetherTotal.toString()).replace('{{pct}}', pct.toFixed(0)),
+              pct, games: p.togetherTotal,
+            });
         }
       }
     }
@@ -267,11 +269,8 @@ function getNotablePairs(
           nameA: aWins ? pa.player.name : pb.player.name,
           nameB: aWins ? pb.player.name : pa.player.name,
           type: 'nemesis',
-          label: aWins ? '⚔️ Domina históricamente' : '⚔️ Duelo desequilibrado',
-          detail: `${aWins
-            ? `${pa.player.name} gana ${aWinPct.toFixed(0)}% de cruces vs ${pb.player.name}`
-            : `${pb.player.name} gana ${(100 - aWinPct).toFixed(0)}% de cruces vs ${pa.player.name}`
-          } (${p.vsTotal} PJ)`,
+          label: aWins ? t('teamSimulator.pairs.nemesisTitleWin') : t('teamSimulator.pairs.nemesisTitleLoss'),
+          detail: t('teamSimulator.pairs.nemesisDetail').replace('{{nameA}}', aWins ? pa.player.name : pb.player.name).replace('{{pct}}', (aWins ? aWinPct : 100 - aWinPct).toFixed(0)).replace('{{nameB}}', aWins ? pb.player.name : pa.player.name).replace('{{total}}', p.vsTotal.toString()),
           pct: Math.max(aWinPct, 100 - aWinPct), games: p.vsTotal,
         });
       }
@@ -284,7 +283,7 @@ function getNotablePairs(
 
 function generateExplanation(
   teamA: PlayerStats[], teamB: PlayerStats[],
-  pairMap: Map<string, PairStats>, isPadel: boolean
+  pairMap: Map<string, PairStats>, isPadel: boolean, t: any
 ): string[] {
   const avgA   = teamA.reduce((s, p) => s + playerStrength(p), 0) / teamA.length;
   const avgB   = teamB.reduce((s, p) => s + playerStrength(p), 0) / teamB.length;
@@ -297,29 +296,21 @@ function generateExplanation(
 
   const lines: string[] = [];
 
-  lines.push(
-    isPadel
-      ? `🎯 La simulación ordenó a los jugadores por nivel de juego y buscó el equilibrio perfecto analizando cruces y duplas históricas.`
-      : `🎯 El algoritmo evaluó exhaustivamente las posibles combinaciones de jugadores para minimizar las diferencias de nivel entre los equipos.`
-  );
-  lines.push(
-    isPadel 
-      ? `📊 Nivel individual = % victorias + bono de experiencia + rachas. Química = promedio de % victorias cuando jugaron juntos como pareja.`
-      : `📊 Puntaje de fuerza = % victorias + bono de exp. (hasta +10 pts) + bono de racha jugada (×1.5 por win). Química = win rate ponderado en dúo.`
-  );
-  lines.push(`⚖️ Fuerza promedio — Equipo A: ${avgA.toFixed(1)} pts · Equipo B: ${avgB.toFixed(1)} pts (diferencia: ${diff} pts).`);
-  lines.push(`🤝 Química histórica — Equipo A: ${chemA.toFixed(1)}% win juntos · Equipo B: ${chemB.toFixed(1)}% win juntos.`);
+  lines.push(isPadel ? t('teamSimulator.explanation.introPadel') : t('teamSimulator.explanation.introFootball'));
+  lines.push(isPadel ? t('teamSimulator.explanation.calcPadel') : t('teamSimulator.explanation.calcFootball'));
+  lines.push(t('teamSimulator.explanation.strength').replace('{{avgA}}', avgA.toFixed(1)).replace('{{avgB}}', avgB.toFixed(1)).replace('{{diff}}', diff));
+  lines.push(t('teamSimulator.explanation.chemistry').replace('{{chemA}}', chemA.toFixed(1)).replace('{{chemB}}', chemB.toFixed(1)));
 
-  if (topA) lines.push(`⭐ Figura del Equipo A: ${topA.player.name} (${topA.winPercentage.toFixed(1)}% win, racha máx ${topA.bestStreak}, ${topA.matchesPlayed} PJ).`);
-  if (topB) lines.push(`⭐ Figura del Equipo B: ${topB.player.name} (${topB.winPercentage.toFixed(1)}% win, racha máx ${topB.bestStreak}, ${topB.matchesPlayed} PJ).`);
+  if (topA) lines.push(t('teamSimulator.explanation.starA').replace('{{name}}', topA.player.name).replace('{{winPct}}', topA.winPercentage.toFixed(1)).replace('{{streak}}', topA.bestStreak.toString()).replace('{{matches}}', topA.matchesPlayed.toString()));
+  if (topB) lines.push(t('teamSimulator.explanation.starB').replace('{{name}}', topB.player.name).replace('{{winPct}}', topB.winPercentage.toFixed(1)).replace('{{streak}}', topB.bestStreak.toString()).replace('{{matches}}', topB.matchesPlayed.toString()));
 
   const winPctA = teamA.reduce((s, p) => s + p.winPercentage, 0) / teamA.length;
   const winPctB = teamB.reduce((s, p) => s + p.winPercentage, 0) / teamB.length;
   const favored = winPctA > winPctB ? 'A' : winPctA < winPctB ? 'B' : null;
   if (favored) {
-    lines.push(`🏆 Ligero favorito matemático: Equipo ${favored} (${Math.abs(winPctA - winPctB).toFixed(1)}% más de victoria promedio).`);
+    lines.push(t('teamSimulator.explanation.favored').replace('{{team}}', favored).replace('{{diff}}', Math.abs(winPctA - winPctB).toFixed(1)));
   } else {
-    lines.push(`🏆 Ambos equipos están matemáticamente empatados en victoria promedio.`);
+    lines.push(t('teamSimulator.explanation.tied'));
   }
 
   return lines;
@@ -334,6 +325,7 @@ type SimStep = 'selection' | 'distribution' | 'results';
 export default function TeamSimulator() {
   const { players, matches } = useAppContext();
   const { activeTournament } = useTournament();
+  const { t } = useTranslation();
 
   const isPadel = activeTournament?.type_slug === 'paddle';
   const matchTypes = isPadel ? [2] : (activeTournament?.match_types?.length ? activeTournament.match_types.sort((a,b)=>a-b) : [5]);
@@ -368,13 +360,13 @@ export default function TeamSimulator() {
 
   const explanation = useMemo(() => {
     if (step !== 'results') return [];
-    return generateExplanation(teamA, teamB, fullPairMap, isPadel);
-  }, [step, teamA, teamB, fullPairMap, isPadel]);
+    return generateExplanation(teamA, teamB, fullPairMap, isPadel, t);
+  }, [step, teamA, teamB, fullPairMap, isPadel, t]);
 
   const notablePairs = useMemo(() => {
     if (step !== 'results') return { internal: [], clashes: [] };
-    return getNotablePairs(teamA, teamB, fullPairMap);
-  }, [step, teamA, teamB, fullPairMap]);
+    return getNotablePairs(teamA, teamB, fullPairMap, t);
+  }, [step, teamA, teamB, fullPairMap, t]);
 
   // Actions
   const handleTypeChange = (newSize: number) => {
@@ -414,8 +406,8 @@ export default function TeamSimulator() {
     return (
       <div className={styles.emptyState}>
         <span className={styles.emptyIcon}>👥</span>
-        <h2>No hay jugadores registrados</h2>
-        <p>Agrega jugadores en la pestaña "Jugadores" para usar el simulador.</p>
+        <h2>{t('teamSimulator.empty.title')}</h2>
+        <p>{t('teamSimulator.empty.desc')}</p>
       </div>
     );
   }
@@ -423,16 +415,16 @@ export default function TeamSimulator() {
   return (
     <div className={styles.container}>
       <div className={styles.pageHeader}>
-        <h1 className={styles.pageTitle}>{activeTournament?.type_icon || '⚽'} Simulación de Equipos</h1>
+        <h1 className={styles.pageTitle}>{activeTournament?.type_icon || '⚽'} {t('teamSimulator.title')}</h1>
         {step === 'selection' && (
           <p className={styles.pageSubtitle}>
-            Paso 1: Elegí a los {totalRequired} jugadores para el partido.
+            {t('teamSimulator.step1', { total: totalRequired })}
           </p>
         )}
         
         {step === 'selection' && matchTypes.length > 1 && (
           <div className={styles.formatSelector} style={{marginTop: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center'}}>
-            <span style={{color: '#94a3b8', fontSize: '0.9rem'}}>Formato:</span>
+            <span style={{color: '#94a3b8', fontSize: '0.9rem'}}>{t('teamSimulator.format')}</span>
             {matchTypes.map(size => (
               <button
                 key={size}
@@ -458,7 +450,7 @@ export default function TeamSimulator() {
       {step === 'selection' && (
         <div className={styles.pickerSection}>
           <div className={styles.pickerHeader}>
-            <span className={styles.pickerLabel}>Jugadores seleccionados</span>
+            <span className={styles.pickerLabel}>{t('teamSimulator.selected')}</span>
             <span className={`${styles.counter} ${selectedIds.size === totalRequired ? styles.counterFull : ''}`}>
               {selectedIds.size} / {totalRequired}
             </span>
@@ -500,8 +492,8 @@ export default function TeamSimulator() {
               disabled={selectedIds.size !== totalRequired}
             >
               {selectedIds.size < totalRequired
-                ? `Falta elegir ${totalRequired - selectedIds.size} jugador${totalRequired - selectedIds.size !== 1 ? 'es' : ''}`
-                : 'Siguiente: Distribuir Equipos →'}
+                ? t(totalRequired - selectedIds.size !== 1 ? 'teamSimulator.missingPlural' : 'teamSimulator.missing', { count: totalRequired - selectedIds.size })
+                : t('teamSimulator.next')}
             </button>
           </div>
         </div>
@@ -530,10 +522,10 @@ export default function TeamSimulator() {
         <div className={styles.resultSection}>
           <div className={styles.modeBackRow} style={{marginBottom: '1rem'}}>
             <button className={styles.modeBackBtn} onClick={() => setStep('distribution')}>
-              ← Volver a Distribución
+              {t('teamSimulator.back')}
             </button>
             <span className={styles.modeBadge}>
-              📊 Análisis de Simulación
+              {t('teamSimulator.analysis')}
             </span>
           </div>
 
@@ -544,17 +536,17 @@ export default function TeamSimulator() {
           )}
 
           <div className={styles.teamsGrid}>
-            <TeamCard label="Equipo A" color="green" dotColor={tacticalConfig?.colorA1} players={teamA} pairMap={fullPairMap} />
-            <div className={styles.vsDivider}><span className={styles.vsText}>VS</span></div>
-            <TeamCard label="Equipo B" color="blue" dotColor={tacticalConfig?.colorB1} players={teamB} pairMap={fullPairMap} />
+            <TeamCard label={t('teamSimulator.teamA')} color="green" dotColor={tacticalConfig?.colorA1} players={teamA} pairMap={fullPairMap} />
+            <div className={styles.vsDivider}><span className={styles.vsText}>{t('teamSimulator.vs')}</span></div>
+            <TeamCard label={t('teamSimulator.teamB')} color="blue" dotColor={tacticalConfig?.colorB1} players={teamB} pairMap={fullPairMap} />
           </div>
 
           {(notablePairs.internal.length > 0 || notablePairs.clashes.length > 0) && (
             <div className={styles.pairsSection}>
-              <h3 className={styles.pairsSectionTitle}>🔍 Análisis Individual entre Jugadores</h3>
+              <h3 className={styles.pairsSectionTitle}>{t('teamSimulator.analysisTitle')}</h3>
               {notablePairs.internal.length > 0 && (
                 <div className={styles.pairsGroup}>
-                  <span className={styles.pairsGroupLabel}>Compañeros destacados (dentro del mismo equipo)</span>
+                  <span className={styles.pairsGroupLabel}>{t('teamSimulator.synergyGroup')}</span>
                   <div className={styles.pairsGrid}>
                     {notablePairs.internal.map((pair, i) => <PairCard key={i} pair={pair} />)}
                   </div>
@@ -562,7 +554,7 @@ export default function TeamSimulator() {
               )}
               {notablePairs.clashes.length > 0 && (
                 <div className={styles.pairsGroup}>
-                  <span className={styles.pairsGroupLabel}>Duelos históricos (equipos enfrentados)</span>
+                  <span className={styles.pairsGroupLabel}>{t('teamSimulator.nemesisGroup')}</span>
                   <div className={styles.pairsGrid}>
                     {notablePairs.clashes.map((pair, i) => <PairCard key={i} pair={pair} />)}
                   </div>
@@ -572,7 +564,7 @@ export default function TeamSimulator() {
           )}
 
           <div className={styles.explanationBox}>
-            <h3 className={styles.explanationTitle}>📝 Resumen Estadístico</h3>
+            <h3 className={styles.explanationTitle}>{t('teamSimulator.summaryTitle')}</h3>
             <ul className={styles.explanationList}>
               {explanation.map((line, i) => <li key={i} className={styles.explanationItem}>{line}</li>)}
             </ul>
@@ -580,7 +572,7 @@ export default function TeamSimulator() {
 
           <div className={styles.resetWrapper}>
             <button className={styles.resetBtn} onClick={() => { setStep('selection'); setSelectedIds(new Set()); clearTeams(); }}>
-              🔄 Nueva Simulación Desde Cero
+              {t('teamSimulator.reset')}
             </button>
           </div>
         </div>
@@ -596,6 +588,7 @@ export default function TeamSimulator() {
 // DistributionTeamPanel removed completely
 
 function TeamCard({ label, color, dotColor, players, pairMap }: { label: string; color: 'green'|'blue'; dotColor?: string; players: PlayerStats[]; pairMap: Map<string, PairStats> }) {
+  const { t } = useTranslation();
   const avgWin      = players.length ? players.reduce((s, p) => s + p.winPercentage, 0) / players.length : 0;
   const totalPJ     = players.reduce((s, p) => s + p.matchesPlayed, 0);
   const avgStrength = players.length ? players.reduce((s, p) => s + playerStrength(p), 0) / players.length : 0;
@@ -615,19 +608,19 @@ function TeamCard({ label, color, dotColor, players, pairMap }: { label: string;
       <div className={styles.teamMetaRow}>
         <div className={styles.teamMeta}>
           <span className={styles.metaValue}>{avgWin.toFixed(1)}%</span>
-          <span className={styles.metaLabel}>% Vic. prom.</span>
+          <span className={styles.metaLabel}>{t('teamSimulator.stats.winPct')}</span>
         </div>
         <div className={styles.teamMeta}>
           <span className={styles.metaValue}>{avgStrength.toFixed(0)}</span>
-          <span className={styles.metaLabel}>Fuerza prom.</span>
+          <span className={styles.metaLabel}>{t('teamSimulator.stats.strength')}</span>
         </div>
         <div className={styles.teamMeta}>
           <span className={styles.metaValue}>{chem.toFixed(0)}%</span>
-          <span className={styles.metaLabel}>Química</span>
+          <span className={styles.metaLabel}>{t('teamSimulator.stats.chemistry')}</span>
         </div>
         <div className={styles.teamMeta}>
           <span className={styles.metaValue}>{totalPJ}</span>
-          <span className={styles.metaLabel}>PJ totales</span>
+          <span className={styles.metaLabel}>{t('teamSimulator.stats.matches')}</span>
         </div>
       </div>
       <ul className={styles.playerList}>

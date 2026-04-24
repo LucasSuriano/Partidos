@@ -8,15 +8,13 @@ import { Match, MatchResult } from '@/types';
 import styles from './MatchHistory.module.css';
 import DatePicker from './DatePicker';
 import CustomSelect from './CustomSelect';
-
-const MESES_CORTOS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-const MESES_LARGOS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+import { useTranslation } from 'react-i18next';
 
 export default function MatchHistory() {
   const { matches, players, removeMatch, updateMatchResult } = useAppContext();
   const { user } = useAuth();
   const { activeTournament, isAdminOfActiveTournament } = useTournament();
+  const { t, i18n } = useTranslation();
   const isAdmin = isAdminOfActiveTournament;
   const tIcon = activeTournament?.type_icon || '⚽';
 
@@ -78,20 +76,20 @@ export default function MatchHistory() {
   }, [editScoreA, editScoreB, activeTournament, editingMatchId]);
 
   const getPlayers = (ids: string[]) =>
-    ids.map(id => players.find(p => p.id === id)?.name ?? 'Desconocido');
+    ids.map(id => players.find(p => p.id === id)?.name ?? t('matchHistory.unknown'));
 
   const formatDateLabel = (isoString: string) => {
     const d = new Date(isoString);
-    const dia = DIAS[d.getUTCDay()];
-    const num = d.getUTCDate();
-    const mes = MESES_CORTOS[d.getUTCMonth()];
-    const año = d.getUTCFullYear();
-    return `${dia} ${num} ${mes}. ${año}`;
+    const formatter = new Intl.DateTimeFormat(i18n.language, { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+    const formatted = formatter.format(d);
+    return formatted.charAt(0).toUpperCase() + formatted.slice(1);
   };
 
   const getMonthKey = (isoString: string) => {
     const d = new Date(isoString);
-    return `${MESES_LARGOS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+    const formatter = new Intl.DateTimeFormat(i18n.language, { month: 'long', year: 'numeric', timeZone: 'UTC' });
+    const formatted = formatter.format(d);
+    return formatted.charAt(0).toUpperCase() + formatted.slice(1);
   };
 
   const sortedMatches = [...matches].sort(
@@ -117,8 +115,8 @@ export default function MatchHistory() {
     return (
       <div className={`${styles.container} glass-panel ${styles.emptyState}`}>
         <span className={styles.emptyIcon}>{tIcon}</span>
-        <h2>No se han jugado partidos aún</h2>
-        <p>Registra un partido para que aparezca aquí el historial.</p>
+        <h2>{t('matchHistory.emptyState.title')}</h2>
+        <p>{t('matchHistory.emptyState.desc')}</p>
       </div>
     );
   }
@@ -142,8 +140,8 @@ export default function MatchHistory() {
             const teamBPlayers = getPlayers(match.teamB);
 
             const isDraw = match.result === 'DRAW';
-            const labelA = isDraw ? 'Empate' : match.result === 'A_WIN' ? 'Equipo Ganador' : 'Equipo Perdedor';
-            const labelB = isDraw ? 'Empate' : match.result === 'B_WIN' ? 'Equipo Ganador' : 'Equipo Perdedor';
+            const labelA = isDraw ? t('matchHistory.result.draw') : match.result === 'A_WIN' ? t('matchHistory.result.winner') : t('matchHistory.result.loser');
+            const labelB = isDraw ? t('matchHistory.result.draw') : match.result === 'B_WIN' ? t('matchHistory.result.winner') : t('matchHistory.result.loser');
             
             const teamAColor = isDraw ? 'Amber' : match.result === 'A_WIN' ? 'Green' : 'Red';
             const teamBColor = isDraw ? 'Amber' : match.result === 'B_WIN' ? 'Green' : 'Red';
@@ -165,7 +163,7 @@ export default function MatchHistory() {
                   {/* Cabecera */}
                   <div className={styles.cardHeader}>
                     <div className={styles.headerLeft}>
-                      <div className={styles.matchNumber}>Partido #{num}</div>
+                      <div className={styles.matchNumber}>{t('matchHistory.matchNumber')}{num}</div>
                     </div>
 
                     <div className={styles.dateLabel}>
@@ -185,7 +183,7 @@ export default function MatchHistory() {
                           className={styles.videoLink}
                           onClick={(e) => e.stopPropagation()}
                         >
-                          🎥 <span className={styles.videoText}>VER VIDEO</span>
+                          🎥 <span className={styles.videoText}>{t('matchHistory.viewVideo')}</span>
                         </a>
                       )}
 
@@ -194,17 +192,17 @@ export default function MatchHistory() {
                           <button
                             className={styles.editBtn}
                             onClick={() => handleEditClick(match)}
-                            title="Editar resultado"
+                            title={t('matchHistory.editTitle')}
                           >
                             ✏️
                           </button>
                           <button
                             className={styles.deleteBtn}
                             onClick={() =>
-                              confirm('¿Estás seguro de eliminar este partido?') &&
+                              confirm(t('matchHistory.deleteConfirm')) &&
                               removeMatch(match.id)
                             }
-                            title="Eliminar partido"
+                            title={t('matchHistory.deleteTitle')}
                           >
                             ✕
                           </button>
@@ -217,9 +215,9 @@ export default function MatchHistory() {
                   {editingMatchId === match.id ? (
                     <div className={styles.editPanel}>
                       <div className={styles.editResultOptions}>
-                        <button className={`${styles.editOption} ${editResult === 'A_WIN' ? styles.editOptionActiveGreen : ''}`} onClick={() => setEditResult('A_WIN')}>Ganó Eq. A</button>
-                        <button className={`${styles.editOption} ${editResult === 'DRAW' ? styles.editOptionActiveDraw : ''}`} onClick={() => setEditResult('DRAW')}>Empate</button>
-                        <button className={`${styles.editOption} ${editResult === 'B_WIN' ? styles.editOptionActiveRed : ''}`} onClick={() => setEditResult('B_WIN')}>Ganó Eq. B</button>
+                        <button className={`${styles.editOption} ${editResult === 'A_WIN' ? styles.editOptionActiveGreen : ''}`} onClick={() => setEditResult('A_WIN')}>{t('matchHistory.edit.winA')}</button>
+                        <button className={`${styles.editOption} ${editResult === 'DRAW' ? styles.editOptionActiveDraw : ''}`} onClick={() => setEditResult('DRAW')}>{t('matchHistory.edit.draw')}</button>
+                        <button className={`${styles.editOption} ${editResult === 'B_WIN' ? styles.editOptionActiveRed : ''}`} onClick={() => setEditResult('B_WIN')}>{t('matchHistory.edit.winB')}</button>
                       </div>
                       <div className={styles.editScores}>
                         <input type="number" min="0" value={editScoreA} onChange={e => setEditScoreA(e.target.value)} placeholder="0" className={styles.editInput} />
@@ -240,20 +238,20 @@ export default function MatchHistory() {
                         marginTop: '0.5rem'
                       }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                          <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 800, letterSpacing: '0.05em' }}>⭐ MVP (OPCIONAL)</span>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 800, letterSpacing: '0.05em' }}>{t('matchHistory.edit.mvp')}</span>
                           <CustomSelect 
                             options={[...match.teamA, ...match.teamB].map(id => ({ 
                               id, 
-                              label: players.find(p => p.id === id)?.name || 'Desconocido' 
+                              label: players.find(p => p.id === id)?.name || t('matchHistory.unknown') 
                             }))}
                             value={editMvpId}
                             onChange={setEditMvpId}
-                            placeholder="Ninguno"
+                            placeholder={t('matchHistory.edit.none')}
                             icon="🏅"
                           />
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                          <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 800, letterSpacing: '0.05em' }}>📹 VIDEO (OPCIONAL)</span>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 800, letterSpacing: '0.05em' }}>{t('matchHistory.edit.video')}</span>
                           <input 
                             type="url" 
                             value={editVideoUrl} 
@@ -275,8 +273,8 @@ export default function MatchHistory() {
                       </div>
 
                       <div className={styles.editActions} style={{ marginTop: '0.5rem' }}>
-                        <button onClick={handleSaveEdit} className={styles.saveEditBtn}>Guardar</button>
-                        <button onClick={() => setEditingMatchId(null)} className={styles.cancelEditBtn}>Cancelar</button>
+                        <button onClick={handleSaveEdit} className={styles.saveEditBtn}>{t('matchHistory.edit.save')}</button>
+                        <button onClick={() => setEditingMatchId(null)} className={styles.cancelEditBtn}>{t('matchHistory.edit.cancel')}</button>
                       </div>
                     </div>
                   ) : (
@@ -335,7 +333,7 @@ export default function MatchHistory() {
                             fontSize: '0.75rem',
                             fontWeight: 700
                           }}>
-                            ⭐ MVP: {players.find(p => p.id === match.metadata?.mvp_id)?.name || 'Desconocido'}
+                            ⭐ MVP: {players.find(p => p.id === match.metadata?.mvp_id)?.name || t('matchHistory.unknown')}
                           </div>
                         )}
                       </div>

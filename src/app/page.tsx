@@ -16,6 +16,7 @@ import { useTournament } from '@/context/TournamentContext';
 import { AppProvider } from '@/context/AppContext';
 import Login from '@/components/Login';
 import Brand from '@/components/Brand';
+import { useTranslation } from 'react-i18next';
 
 const BASE_NAV_ITEMS = [
   { id: 'STATS',      label: '📊 Estadísticas' },
@@ -41,6 +42,7 @@ function MainApp() {
   const [view, setView] = useState<View>('STATS');
   const { user } = useAuth();
   const { activeTournament, clearActiveTournament, isAdminOfActiveTournament } = useTournament();
+  const { t } = useTranslation();
 
   const isAdmin = isAdminOfActiveTournament;
   const isSuperAdmin = user?.role === 'superadmin';
@@ -49,11 +51,11 @@ function MainApp() {
   const tIcon = activeTournament?.type_icon || '⚽';
 
   const navItems = [
-    { id: 'STATS',      label: '📊 Estadísticas' },
-    { id: 'HISTORY',   label: '🗂️ Historial' },
-    { id: 'SIMULATOR', label: `${tIcon} Simulación` },
-    { id: 'PLAYERS',   label: '👥 Jugadores' },
-    ...(isAdmin ? [{ id: 'CONFIG', label: '⚙️ Configuración' }, { id: 'USERS', label: '🔐 Usuarios' }] : []),
+    { id: 'STATS',      label: t('nav.stats') },
+    { id: 'HISTORY',    label: t('nav.history') },
+    { id: 'SIMULATOR',  label: `${tIcon} ${t('nav.simulator')}` },
+    { id: 'PLAYERS',    label: t('nav.players') },
+    ...(isAdmin ? [{ id: 'CONFIG', label: t('nav.config') }, { id: 'USERS', label: t('nav.users') }] : []),
   ];
 
   return (
@@ -100,7 +102,7 @@ function MainApp() {
                   onClick={() => setView('NEW_MATCH')}
                 >
                   <span>{tIcon}</span>
-                  <span className={styles.registerLabel}>Registrar Partido</span>
+                  <span className={styles.registerLabel}>{t('action.registerMatch')}</span>
                 </button>
               )}
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTournament } from '@/context/TournamentContext';
 import styles from './TournamentSettings.module.css';
+import { useTranslation } from 'react-i18next';
 
 const FOOTBALL_OPTIONS = [
   { value: 5, label: 'Fútbol 5 (5v5)' },
@@ -10,6 +11,7 @@ const FOOTBALL_OPTIONS = [
 
 export default function TournamentSettings() {
   const { activeTournament, updateTournamentConfig, isAdminOfActiveTournament } = useTournament();
+  const { t } = useTranslation();
   
   // Initialize with tournament's config, or default to [5]
   const [matchTypes, setMatchTypes] = useState<number[]>([]);
@@ -26,7 +28,7 @@ export default function TournamentSettings() {
     return (
       <div className={styles.container}>
         <div className={styles.errorBox}>
-          No tienes permisos para ver esta sección.
+          {t('tournamentSettings.noPermission')}
         </div>
       </div>
     );
@@ -59,16 +61,16 @@ export default function TournamentSettings() {
   return (
     <div className={styles.container}>
       <div className={styles.pageHeader}>
-        <h1 className={styles.pageTitle}>⚙️ Configuración del Torneo</h1>
-        <p className={styles.pageSubtitle}>Administra las reglas y modalidades de este torneo. Estos cambios afectarán a todos los participantes.</p>
+        <h1 className={styles.pageTitle}>⚙️ {t('tournamentSettings.title')}</h1>
+        <p className={styles.pageSubtitle}>{t('tournamentSettings.subtitle')}</p>
       </div>
 
       <div className={styles.card}>
         {activeTournament?.type_slug === 'paddle' ? (
           <>
-            <h2 className={styles.cardTitle}>Formatos de Partido (Pádel)</h2>
+            <h2 className={styles.cardTitle}>{t('tournamentSettings.padel.title')}</h2>
             <p className={styles.cardDesc}>
-              El pádel se juega por defecto en modalidad 2v2 (Parejas). Actualmente, la plataforma no soporta otras modalidades para este deporte.
+              {t('tournamentSettings.padel.desc')}
             </p>
             <div className={styles.optionsGrid} style={{ opacity: 0.5 }}>
               <div className={`${styles.optionCard} ${styles.optionCardSelected}`} style={{ cursor: 'default' }}>
@@ -76,17 +78,17 @@ export default function TournamentSettings() {
                   <span className={styles.checkIcon}>✓</span>
                 </div>
                 <div className={styles.optionContent}>
-                  <span className={styles.optionLabel}>Pádel Dobles (2v2)</span>
-                  <span className={styles.optionSub}>4 jugadores en cancha</span>
+                  <span className={styles.optionLabel}>{t('tournamentSettings.padel.optTitle')}</span>
+                  <span className={styles.optionSub}>{t('tournamentSettings.padel.optSub')}</span>
                 </div>
               </div>
             </div>
           </>
         ) : (
           <>
-            <h2 className={styles.cardTitle}>Formatos de Partido (Fútbol)</h2>
+            <h2 className={styles.cardTitle}>{t('tournamentSettings.football.title')}</h2>
             <p className={styles.cardDesc}>
-              Selecciona las modalidades de juego que están permitidas en este torneo. Puedes tener más de una activa a la vez. Cuando haya más de una, la aplicación te pedirá elegir el formato al registrar un partido o simular.
+              {t('tournamentSettings.football.desc')}
             </p>
 
             <div className={styles.optionsGrid}>
@@ -103,8 +105,8 @@ export default function TournamentSettings() {
                       {isSelected && <span className={styles.checkIcon}>✓</span>}
                     </div>
                     <div className={styles.optionContent}>
-                      <span className={styles.optionLabel}>{opt.label}</span>
-                      <span className={styles.optionSub}>{opt.value * 2} jugadores en cancha</span>
+                      <span className={styles.optionLabel}>{t(`tournamentSettings.options.football${opt.value}`)}</span>
+                      <span className={styles.optionSub}>{t('tournamentSettings.football.optSub', { val: opt.value * 2 })}</span>
                     </div>
                   </button>
                 );
@@ -112,15 +114,15 @@ export default function TournamentSettings() {
             </div>
 
             <div className={styles.actionsBox}>
-              {saveStatus === 'success' && <span className={styles.statusSuccess}>¡Cambios guardados con éxito!</span>}
-              {saveStatus === 'error' && <span className={styles.statusError}>Error al guardar. Intenta nuevamente.</span>}
+              {saveStatus === 'success' && <span className={styles.statusSuccess}>{t('tournamentSettings.success')}</span>}
+              {saveStatus === 'error' && <span className={styles.statusError}>{t('tournamentSettings.error')}</span>}
               
               <button 
                 className={styles.saveBtn} 
                 onClick={handleSave} 
                 disabled={isSaving}
               >
-                {isSaving ? 'Guardando...' : 'Guardar Configuración'}
+                {isSaving ? t('tournamentSettings.saving') : t('tournamentSettings.saveBtn')}
               </button>
             </div>
           </>
