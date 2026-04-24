@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   DndContext, DragOverlay, closestCenter,
   PointerSensor, useSensor, useSensors,
@@ -106,7 +106,26 @@ export function TacticalBoard({ players, teamSize, pairMap, fillBestBalance, onC
   });
 
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const [swapSelected, setSwapSelected] = useState<string | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 }}));
+
+  const handleSwapClick = useCallback((playerId: string) => {
+    if (!swapSelected) {
+      setSwapSelected(playerId);
+      return;
+    }
+    if (swapSelected === playerId) { setSwapSelected(null); return; }
+    setLocations(prev => {
+      const next = { ...prev };
+      const locA = next[swapSelected];
+      const locB = next[playerId];
+      next[swapSelected] = locB;
+      next[playerId] = locA;
+      return next;
+    });
+    setSwapSelected(null);
+  }, [swapSelected]);
+
 
   const handleDragStart = (e: DragStartEvent) => { setActiveDragId(e.active.id as string); };
 
@@ -167,6 +186,10 @@ export function TacticalBoard({ players, teamSize, pairMap, fillBestBalance, onC
   const formedA = players.filter(p => locations[p.player.id].startsWith('teamA'));
   const formedB = players.filter(p => locations[p.player.id].startsWith('teamB'));
   const isComplete = formedA.length === teamSize && formedB.length === teamSize;
+
+  // Chemistry: players in each slot (for ChemistryLines)
+  const assignmentsA = formationA.pos.map((_, i) => players.find(p => locations[p.player.id] === `teamA-${i}`));
+  const assignmentsB = formationB.pos.map((_, i) => players.find(p => locations[p.player.id] === `teamB-${i}`));
 
   const poolPlayers = players.filter(p => locations[p.player.id] === 'pool');
   const activeDragPlayer = activeDragId ? players.find(p => p.player.id === activeDragId) : null;
@@ -230,10 +253,19 @@ export function TacticalBoard({ players, teamSize, pairMap, fillBestBalance, onC
            </div>
         </div>
 
+        {/* Real-time comparison panel */}
+        <ComparisonPanel
+          formedA={formedA}
+          formedB={formedB}
+          teamSize={teamSize}
+          colorA={colorA1}
+          colorB={colorB1}
+        />
+
         {/* Pitch Area */}
         <div className={`${styles.pitchWrapper} ${isPadel ? styles.padelCourtWrapper : ''}`}>
           {!isPadel && <div className={styles.grassTexture} />}
-          
+
           {isPadel ? (
             <>
               <div className={styles.padelServiceLineLeft} />
@@ -246,27 +278,62 @@ export function TacticalBoard({ players, teamSize, pairMap, fillBestBalance, onC
             <>
               <div className={styles.lineCenter} />
               <div className={styles.lineCircle} />
-              <div className={styles.goalAreaLeft} />
-              <div className={styles.goalAreaRight} />
+              <div className={styles.centerSpot} />
+              <div className={styles.penaltyAreaLeft} />
+              <div className={styles.penaltyAreaRight} />
+              <div className={styles.smallAreaLeft} />
+              <div className={styles.smallAreaRight} />
+              <div className={styles.penaltySpotLeft} />
+              <div className={styles.penaltySpotRight} />
             </>
           )}
+
+          {/* Formation lines SVG overlay */}
+          <FormationLines positions={formationA.pos} color={colorA1} />
+          <FormationLines positions={formationB.pos} color={colorB1} mirrorX />
+          {/* Chemistry glow lines */}
+          <ChemistryLines positions={formationA.pos} assignments={assignmentsA} pairMap={pairMap} />
+          <ChemistryLines positions={formationB.pos} assignments={assignmentsB} pairMap={pairMap} mirrorX />
 
           {/* Render Slots Map */}
           {formationA.pos.map((coord, i) => {
              const locId = `teamA-${i}`;
              const ply = players.find(p => locations[p.player.id] === locId);
-             return <PitchSlot key={locId} id={locId} x={coord.x} y={coord.y} player={ply} 
-                       teamColor1={colorA1} teamColor2={colorA2} teamPattern={patA} />;
+             return <PitchSlot key={locId} id={locId} x={coord.x} y={coord.y} player={ply}
+                       teamColor1={colorA1} teamColor2={colorA2} teamPattern={patA}
+                       depthX={coord.x} swapSelected={swapSelected} onSwapClick={handleSwapClick} />;
           })}
           {formationB.pos.map((coord, i) => {
              const locId = `teamB-${i}`;
-             // mirror horizontal for right side
              const mirroredX = 100 - coord.x;
              const ply = players.find(p => locations[p.player.id] === locId);
-             return <PitchSlot key={locId} id={locId} x={mirroredX} y={coord.y} player={ply} 
-                       teamColor1={colorB1} teamColor2={colorB2} teamPattern={patB} />;
+             return <PitchSlot key={locId} id={locId} x={mirroredX} y={coord.y} player={ply}
+                       teamColor1={colorB1} teamColor2={colorB2} teamPattern={patB}
+                       depthX={coord.x} swapSelected={swapSelected} onSwapClick={handleSwapClick} />;
           })}
+
+          {/* Pitch legend */}
+          <div className={styles.pitchLegend}>
+            <div className={styles.legendItem}>
+              <div className={styles.legendLineDashed} />
+              <span>Formación</span>
+            </div>
+            <div className={styles.legendItem}>
+              <div className={styles.legendLineGold} style={{ background: '#10b981' }} />
+              <span>Química alta</span>
+            </div>
+            <div className={styles.legendItem}>
+              <div className={styles.legendLineGold} style={{ background: '#f59e0b' }} />
+              <span>Química media</span>
+            </div>
+            <div className={styles.legendItem}>
+              <div className={styles.legendLineGold} style={{ background: '#ef4444' }} />
+              <span>Química baja</span>
+            </div>
+          </div>
+
         </div>
+
 
         {/* Bench / Pool Area */}
         <DroppablePool id="pool">
@@ -310,34 +377,65 @@ export function TacticalBoard({ players, teamSize, pairMap, fillBestBalance, onC
   );
 }
 
-function PitchSlot({ id, x, y, player, teamColor1, teamColor2, teamPattern, readOnly = false }: { 
-  id: string; x: number; y: number; player?: PlayerStats; 
+function PitchSlot({ id, x, y, player, teamColor1, teamColor2, teamPattern, readOnly = false, depthX, swapSelected, onSwapClick }: {
+  id: string; x: number; y: number; player?: PlayerStats;
   teamColor1: string; teamColor2: string; teamPattern: JerseyPattern;
   readOnly?: boolean;
+  depthX?: number;
+  swapSelected?: string | null;
+  onSwapClick?: (id: string) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id, disabled: readOnly });
-  
+
+  // Position label based on depth (original x before mirroring)
+  const posLabel = !player && !readOnly && depthX !== undefined
+    ? depthX <= 10 ? 'GK' : depthX <= 22 ? 'DEF' : depthX <= 35 ? 'MID' : 'FWD'
+    : null;
+
   return (
     <div ref={setNodeRef} className={`${styles.slot} ${isOver ? styles.slotOver : ''} ${readOnly ? styles.slotReadOnly : ''}`} style={{ left: `${x}%`, top: `${y}%` }}>
       {player ? (
-         <DraggableToken player={player} c1={teamColor1} c2={teamColor2} pat={teamPattern} readOnly={readOnly} />
+         <DraggableToken player={player} c1={teamColor1} c2={teamColor2} pat={teamPattern} readOnly={readOnly}
+           isSwapSelected={swapSelected === player.player.id}
+           onSwapClick={onSwapClick} />
       ) : (
-         !readOnly && <span style={{ color: 'rgba(255,255,255,0.1)', fontSize: '0.75rem', fontWeight: 'bold' }}>{id.includes('teamA') ? 'A' : 'B'}</span>
+         posLabel
+           ? <span className={styles.slotPosLabel}>{posLabel}</span>
+           : null
       )}
     </div>
   );
 }
 
-function DraggableToken({ player, c1, c2, pat, readOnly = false }: { player: PlayerStats; c1: string; c2: string; pat: JerseyPattern; readOnly?: boolean }) {
+function DraggableToken({ player, c1, c2, pat, readOnly = false, isSwapSelected = false, onSwapClick }: {
+  player: PlayerStats; c1: string; c2: string; pat: JerseyPattern;
+  readOnly?: boolean; isSwapSelected?: boolean;
+  onSwapClick?: (id: string) => void;
+}) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: player.player.id, disabled: readOnly });
-  
+  const ratingColor = player.winPercentage >= 60 ? '#10b981' : player.winPercentage >= 40 ? '#f59e0b' : '#ef4444';
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (!readOnly && onSwapClick) { e.stopPropagation(); onSwapClick(player.player.id); }
+  };
+
   return (
-    <div ref={setNodeRef} {...(readOnly ? {} : listeners)} {...(readOnly ? {} : attributes)} className={`${styles.playerTokenWrapper} ${isDragging ? styles.tokenDragging : ''} ${readOnly ? styles.tokenReadOnly : ''}`}>
-       <JerseySVG primaryColor={c1} secondaryColor={c2} pattern={pat} width={48} height={48} />
-       <div className={styles.jerseyLabel}>
-          <span className={styles.jerseyName}>{player.player.name}</span>
-          <span className={styles.jerseyStat}>{player.winPercentage.toFixed(0)}</span>
-       </div>
+    <div
+      ref={setNodeRef} {...(readOnly ? {} : listeners)} {...(readOnly ? {} : attributes)}
+      className={`${styles.playerTokenWrapper} ${isDragging ? styles.tokenDragging : ''} ${readOnly ? styles.tokenReadOnly : ''} ${isSwapSelected ? styles.tokenSwapSelected : ''}`}
+      onClick={handleClick}
+    >
+      {!readOnly && (
+        <div className={styles.hoverTooltip}>
+          <span className={styles.hoverTooltipStat}>{player.winPercentage.toFixed(0)}% win</span>
+          <span>{player.matchesPlayed} PJ</span>
+        </div>
+      )}
+      <JerseySVG primaryColor={c1} secondaryColor={c2} pattern={pat} width={48} height={48} />
+      <div className={styles.jerseyLabel}>
+        <span className={styles.jerseyName}>{player.player.name}</span>
+        <span className={styles.jerseyStat} style={{ color: ratingColor }}>{player.winPercentage.toFixed(0)}</span>
+      </div>
     </div>
   );
 }
@@ -353,7 +451,7 @@ export function FinalPitchRenderer({ players, config, isPadel }: { players: Play
   return (
     <div className={`${styles.pitchWrapper} ${isPadel ? styles.padelCourtWrapper : ''}`} style={{ maxWidth: '800px', marginBottom: '2rem' }}>
       {!isPadel && <div className={styles.grassTexture} />}
-      
+
       {isPadel ? (
         <>
           <div className={styles.padelServiceLineLeft} />
@@ -366,24 +464,190 @@ export function FinalPitchRenderer({ players, config, isPadel }: { players: Play
         <>
           <div className={styles.lineCenter} />
           <div className={styles.lineCircle} />
-          <div className={styles.goalAreaLeft} />
-          <div className={styles.goalAreaRight} />
+          <div className={styles.centerSpot} />
+          <div className={styles.penaltyAreaLeft} />
+          <div className={styles.penaltyAreaRight} />
+          <div className={styles.smallAreaLeft} />
+          <div className={styles.smallAreaRight} />
+          <div className={styles.penaltySpotLeft} />
+          <div className={styles.penaltySpotRight} />
         </>
       )}
+
+      {/* Formation lines */}
+      <FormationLines positions={formationA.pos} color={config.colorA1} />
+      <FormationLines positions={formationB.pos} color={config.colorB1} mirrorX />
 
       {formationA.pos.map((coord, i) => {
          const locId = `teamA-${i}`;
          const ply = players.find(p => config.locations[p.player.id] === locId);
-         return <PitchSlot key={locId} id={locId} x={coord.x} y={coord.y} player={ply} 
+         return <PitchSlot key={locId} id={locId} x={coord.x} y={coord.y} player={ply}
                    teamColor1={config.colorA1} teamColor2={config.colorA2} teamPattern={config.patA} readOnly={true} />;
       })}
       {formationB.pos.map((coord, i) => {
          const locId = `teamB-${i}`;
          const mirroredX = 100 - coord.x;
          const ply = players.find(p => config.locations[p.player.id] === locId);
-         return <PitchSlot key={locId} id={locId} x={mirroredX} y={coord.y} player={ply} 
+         return <PitchSlot key={locId} id={locId} x={mirroredX} y={coord.y} player={ply}
                    teamColor1={config.colorB1} teamColor2={config.colorB2} teamPattern={config.patB} readOnly={true} />;
       })}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FORMATION LINES — SVG overlay connecting players by proximity
+// ─────────────────────────────────────────────────────────────────────────────
+function FormationLines({ positions, color, mirrorX = false }: {
+  positions: { x: number; y: number }[];
+  color: string;
+  mirrorX?: boolean;
+}) {
+  if (positions.length < 2) return null;
+
+  const pts = positions.map(p => ({
+    x: mirrorX ? 100 - p.x : p.x,
+    y: p.y,
+  }));
+
+  // Connect each node to its nearest neighbors (no duplicate lines)
+  // 3 connections for 5+ players ensures players in the same line get connected
+  const maxConn = positions.length >= 5 ? 3 : 2;
+  const connections: [number, number][] = [];
+  const added = new Set<string>();
+  for (let i = 0; i < pts.length; i++) {
+    const sorted = pts
+      .map((_, j) => j)
+      .filter(j => j !== i)
+      .sort((a, b) => {
+        const da = Math.hypot(pts[i].x - pts[a].x, pts[i].y - pts[a].y);
+        const db = Math.hypot(pts[i].x - pts[b].x, pts[i].y - pts[b].y);
+        return da - db;
+      })
+      .slice(0, maxConn);
+    sorted.forEach(j => {
+      const key = i < j ? `${i}-${j}` : `${j}-${i}`;
+      if (!added.has(key)) { added.add(key); connections.push([i, j]); }
+    });
+  }
+
+
+  return (
+    <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
+      {connections.map(([i, j], idx) => (
+        <line
+          key={idx}
+          x1={`${pts[i].x}%`} y1={`${pts[i].y}%`}
+          x2={`${pts[j].x}%`} y2={`${pts[j].y}%`}
+          stroke={color} strokeWidth="1.5" strokeOpacity="0.28" strokeDasharray="5 4"
+        />
+      ))}
+    </svg>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CHEMISTRY LINES — gold solid lines between players with >70% win rate together
+// ─────────────────────────────────────────────────────────────────────────────
+function ChemistryLines({ positions, assignments, pairMap, mirrorX = false }: {
+  positions: { x: number; y: number }[];
+  assignments: (PlayerStats | undefined)[];
+  pairMap: Map<string, PairStats>;
+  mirrorX?: boolean;
+}) {
+  const pts = positions.map(p => ({ x: mirrorX ? 100 - p.x : p.x, y: p.y }));
+
+  const lines: { i: number; j: number; color: string }[] = [];
+
+  for (let i = 0; i < assignments.length; i++) {
+    for (let j = i + 1; j < assignments.length; j++) {
+      const pA = assignments[i]; const pB = assignments[j];
+      if (!pA || !pB) continue;
+      const k = pA.player.id < pB.player.id ? `${pA.player.id}::${pB.player.id}` : `${pB.player.id}::${pA.player.id}`;
+      const pair = pairMap.get(k);
+      // Solo mostrar pares con al menos 2 partidos juntos
+      if (!pair || pair.togetherTotal < 2) continue;
+      const pct = pair.togetherWinPct;
+      const color = pct >= 65 ? '#10b981' : pct >= 40 ? '#f59e0b' : '#ef4444';
+      lines.push({ i, j, color });
+    }
+  }
+  if (lines.length === 0) return null;
+
+  return (
+    <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
+      {lines.map(({ i, j, color }, idx) => (
+        <line key={idx}
+          x1={`${pts[i].x}%`} y1={`${pts[i].y}%`}
+          x2={`${pts[j].x}%`} y2={`${pts[j].y}%`}
+          stroke={color} strokeWidth="2" strokeOpacity="0.6"
+        />
+      ))}
+    </svg>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COMPARISON PANEL — real-time team stats while building
+// ─────────────────────────────────────────────────────────────────────────────
+function ComparisonPanel({ formedA, formedB, teamSize, colorA, colorB }: {
+  formedA: PlayerStats[]; formedB: PlayerStats[];
+  teamSize: number; colorA: string; colorB: string;
+}) {
+  const avgA = formedA.length > 0 ? formedA.reduce((s, p) => s + p.winPercentage, 0) / formedA.length : 0;
+  const avgB = formedB.length > 0 ? formedB.reduce((s, p) => s + p.winPercentage, 0) / formedB.length : 0;
+  const total = avgA + avgB || 1;
+  const aWidth = (avgA / total) * 100;
+  const progA = formedA.length / teamSize;
+  const progB = formedB.length / teamSize;
+  const imbalanced = formedA.length === teamSize && formedB.length === teamSize && Math.abs(avgA - avgB) > 15;
+  const stronger = avgA > avgB ? 'A' : 'B';
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', maxWidth: '900px', margin: '0 auto', width: '100%', gap: '0.4rem' }}>
+      <div className={styles.comparisonPanel}>
+        {/* Team A */}
+        <div className={styles.compSide}>
+          <span className={styles.compTeamLabel} style={{ color: colorA }}>{formedA.length}/{teamSize}</span>
+          <div className={styles.compStat}>
+            <span className={styles.compStatValue}>{avgA.toFixed(0)}%</span>
+            <span className={styles.compStatLabel}>win</span>
+          </div>
+          <div className={styles.compProgressTrack}>
+            <div className={styles.compProgressFill} style={{ width: `${progA * 100}%`, background: colorA }} />
+          </div>
+        </div>
+
+        {/* Center — win probability */}
+        <div className={styles.compCenter}>
+          <div className={styles.compDualBar}>
+            <div className={styles.compDualBarA} style={{ width: `${aWidth}%`, background: colorA }} />
+            <div className={styles.compDualBarB} style={{ width: `${100 - aWidth}%`, background: colorB }} />
+          </div>
+          <span className={styles.compVsText}>VS</span>
+          {formedA.length === teamSize && formedB.length === teamSize && (
+            <span className={styles.winProbLabel}>{aWidth.toFixed(0)}% · {(100 - aWidth).toFixed(0)}%</span>
+          )}
+        </div>
+
+        {/* Team B */}
+        <div className={`${styles.compSide} ${styles.compSideRight}`}>
+          <span className={styles.compTeamLabel} style={{ color: colorB }}>{formedB.length}/{teamSize}</span>
+          <div className={styles.compStat}>
+            <span className={styles.compStatValue}>{avgB.toFixed(0)}%</span>
+            <span className={styles.compStatLabel}>win</span>
+          </div>
+          <div className={styles.compProgressTrack}>
+            <div className={styles.compProgressFill} style={{ width: `${progB * 100}%`, background: colorB }} />
+          </div>
+        </div>
+      </div>
+
+      {imbalanced && (
+        <div className={styles.imbalanceWarning}>
+          ⚠️ Equipo {stronger} tiene ventaja significativa ({Math.abs(avgA - avgB).toFixed(0)}% de diferencia). Considerá redistribuir.
+        </div>
+      )}
     </div>
   );
 }

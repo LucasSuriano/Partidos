@@ -56,7 +56,91 @@
 .colorPicker::-webkit-color-swatch-wrapper { padding: 0; }
 .colorPicker::-webkit-color-swatch { border: 1px solid rgba(255,255,255,0.3); border-radius: 50%; }
 
-/* Buttons */
+/* ─── Comparison Panel ─── */
+.comparisonPanel {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 0.75rem 1.25rem;
+}
+
+.compSide {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex: 1;
+}
+.compSideRight { flex-direction: row-reverse; }
+
+.compTeamLabel {
+  font-weight: 800;
+  font-size: 1rem;
+  min-width: 2.5rem;
+  text-align: center;
+}
+
+.compStat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.compStatValue {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+.compStatLabel {
+  font-size: 0.65rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.compProgressTrack {
+  flex: 1;
+  height: 6px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.compProgressFill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+.compCenter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 60px;
+}
+.compVsText {
+  font-size: 0.7rem;
+  color: #475569;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+}
+.compDualBar {
+  display: flex;
+  width: 80px;
+  height: 6px;
+  border-radius: 99px;
+  overflow: hidden;
+}
+.compDualBarA, .compDualBarB {
+  height: 100%;
+  transition: width 0.4s ease;
+}
+
+/* ─── Buttons ─── */
 .backBtn {
   background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 0.9rem;
 }
@@ -64,108 +148,151 @@
 
 .aiBtn {
   background: #10b981; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; font-weight: bold; cursor: pointer;
+  transition: background 0.2s;
 }
+.aiBtn:hover { background: #059669; }
+
 .clearBtn {
   background: rgba(255,255,255,0.1); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;
+  transition: background 0.2s;
+}
+.clearBtn:hover { background: rgba(255,255,255,0.18); }
+
+@keyframes ctaPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5), 0 4px 20px rgba(59, 130, 246, 0.3); }
+  50%       { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0), 0 4px 20px rgba(59, 130, 246, 0.1); }
 }
 
 .generateBtn {
   padding: 1rem 3rem; font-size: 1.1rem; font-weight: bold;
-  background: rgba(59, 130, 246, 0.3); color: rgba(255,255,255,0.5);
-  border: none; border-radius: 8px; cursor: not-allowed; transition: all 0.2s;
+  background: rgba(59, 130, 246, 0.2); color: rgba(255,255,255,0.4);
+  border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 10px;
+  cursor: not-allowed; transition: all 0.3s;
 }
 .generateBtnReady {
-  background: #3b82f6; color: white; cursor: pointer;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white; cursor: pointer;
+  border-color: transparent;
+  animation: ctaPulse 2s ease-in-out infinite;
+}
+.generateBtnReady:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(59, 130, 246, 0.5);
+  animation: none;
 }
 
-/* Pitch setup */
+/* ─── Pitch ─── */
 .pitchWrapper {
   position: relative;
   width: 100%;
   max-width: 900px;
   aspect-ratio: 16 / 9;
   margin: 0 auto;
-  background: #0d2e1c; /* Slightly more vibrant pitch */
-  border: 4px solid rgba(255, 255, 255, 0.15);
+  background: radial-gradient(ellipse 120% 120% at 50% 50%, #1a5c2c 0%, #0f3d1c 45%, #0a2b12 100%);
+  border: 3px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 0 60px rgba(16, 185, 129, 0.2), inset 0 0 40px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 80px rgba(16, 185, 129, 0.15), inset 0 0 60px rgba(0, 0, 0, 0.5);
 }
 
-.lineCenter {
-  position: absolute; top: 0; left: 50%; width: 2px; height: 100%;
-  background: rgba(255, 255, 255, 0.2); transform: translateX(-50%);
-}
-.lineCircle {
-  position: absolute; top: 50%; left: 50%; width: 22%; aspect-ratio: 1/1;
-  border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 50%;
-  transform: translate(-50%, -50%);
-}
-.goalAreaLeft, .goalAreaRight {
-  position: absolute; top: 50%; width: 15%; height: 45%;
-  border: 2px solid rgba(255, 255, 255, 0.2); transform: translateY(-50%);
-}
-.goalAreaLeft { left: 0; border-left: none; }
-.goalAreaRight { right: 0; border-right: none; }
-
+/* Horizontal alternating grass stripes (more realistic) */
 .grassTexture {
   position: absolute; inset: 0;
-  background: repeating-linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.03) 5%, transparent 5%, transparent 10%);
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 7%,
+    rgba(255,255,255,0.022) 7%,
+    rgba(255,255,255,0.022) 14%
+  );
   pointer-events: none; z-index: 1;
 }
 
-/* Padel Court Specifics */
+/* Standard field lines */
+.lineCenter {
+  position: absolute; top: 0; left: 50%; width: 2px; height: 100%;
+  background: rgba(255, 255, 255, 0.25); transform: translateX(-50%);
+}
+.lineCircle {
+  position: absolute; top: 50%; left: 50%; width: 22%; aspect-ratio: 1/1;
+  border: 2px solid rgba(255, 255, 255, 0.25); border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+.centerSpot {
+  position: absolute; top: 50%; left: 50%;
+  width: 6px; height: 6px;
+  background: rgba(255,255,255,0.5); border-radius: 50%;
+  transform: translate(-50%, -50%); z-index: 2;
+}
+
+/* Penalty areas */
+.penaltyAreaLeft, .penaltyAreaRight {
+  position: absolute; top: 50%; width: 18%; height: 56%;
+  border: 2px solid rgba(255, 255, 255, 0.2); transform: translateY(-50%);
+}
+.penaltyAreaLeft  { left: 0;  border-left: none; }
+.penaltyAreaRight { right: 0; border-right: none; }
+
+/* Small box (goal area) */
+.smallAreaLeft, .smallAreaRight {
+  position: absolute; top: 50%; width: 8%; height: 30%;
+  border: 2px solid rgba(255, 255, 255, 0.15); transform: translateY(-50%);
+}
+.smallAreaLeft  { left: 0;  border-left: none; }
+.smallAreaRight { right: 0; border-right: none; }
+
+/* Penalty spots */
+.penaltySpotLeft, .penaltySpotRight {
+  position: absolute; top: 50%;
+  width: 5px; height: 5px;
+  background: rgba(255,255,255,0.45); border-radius: 50%;
+  transform: translate(-50%, -50%); z-index: 2;
+}
+.penaltySpotLeft  { left: 15%; }
+.penaltySpotRight { left: 85%; }
+
+/* Padel Court */
 .padelCourtWrapper {
   background: radial-gradient(circle at center, #0284c7, #0369a1);
   box-shadow: 0 0 60px rgba(2, 132, 199, 0.3), inset 0 0 40px rgba(0, 0, 0, 0.4);
 }
-
 .padelNet {
-  position: absolute;
-  top: 0; left: 50%;
+  position: absolute; top: 0; left: 50%;
   width: 4px; height: 100%;
-  background: rgba(255, 255, 255, 0.4);
-  transform: translateX(-50%);
-  z-index: 1;
+  background: rgba(255, 255, 255, 0.4); transform: translateX(-50%); z-index: 1;
 }
-
 .padelServiceLineLeft, .padelServiceLineRight {
-  position: absolute;
-  top: 10%; height: 80%;
-  width: 2px;
-  background: rgba(255, 255, 255, 0.3);
-  z-index: 1;
+  position: absolute; top: 10%; height: 80%; width: 2px;
+  background: rgba(255, 255, 255, 0.3); z-index: 1;
 }
-.padelServiceLineLeft { left: 25%; }
+.padelServiceLineLeft  { left: 25%; }
 .padelServiceLineRight { right: 25%; }
-
 .padelCenterLineLeft, .padelCenterLineRight {
-  position: absolute;
-  top: 50%; height: 2px;
-  background: rgba(255, 255, 255, 0.3);
-  transform: translateY(-50%);
-  z-index: 1;
+  position: absolute; top: 50%; height: 2px;
+  background: rgba(255, 255, 255, 0.3); transform: translateY(-50%); z-index: 1;
 }
-.padelCenterLineLeft { left: 25%; width: 25%; }
+.padelCenterLineLeft  { left: 25%;  width: 25%; }
 .padelCenterLineRight { right: 25%; width: 25%; }
 
-/* Slots and Jerseys */
+/* ─── Slots ─── */
 .slot {
   position: absolute;
-  width: 60px; height: 60px;
-  border: 2px dashed rgba(255, 255, 255, 0.2);
+  width: 62px; height: 62px;
+  border: 2px dashed rgba(255, 255, 255, 0.18);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   display: flex; align-items: center; justify-content: center;
-  z-index: 2; transition: all 0.2s;
+  z-index: 2;
+  /* Smooth transition when formation changes */
+  transition: left 0.38s cubic-bezier(.4,0,.2,1), top 0.38s cubic-bezier(.4,0,.2,1), background 0.2s;
 }
-
 .slotOver {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translate(-50%, -50%) scale(1.1);
-  border-style: solid;
+  background: rgba(255, 255, 255, 0.15);
+  transform: translate(-50%, -50%) scale(1.12);
+  border-style: solid; border-color: rgba(255,255,255,0.5);
 }
 
+/* ─── Player tokens ─── */
 .playerTokenWrapper {
   position: relative;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -173,13 +300,38 @@
 }
 .playerTokenWrapper:active { cursor: grabbing; }
 
-.tokenDragging { opacity: 0.5; z-index: 999; }
+.tokenDragging { opacity: 0.45; z-index: 999; }
+
+/* Hover tooltip */
+.hoverTooltip {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(2, 6, 23, 0.95);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  padding: 5px 9px;
+  white-space: nowrap;
+  font-size: 0.7rem;
+  color: #e2e8f0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.hoverTooltipStat { color: #10b981; font-weight: 700; font-size: 0.75rem; }
+.playerTokenWrapper:hover .hoverTooltip { opacity: 1; }
 
 .jerseyLabel {
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.75);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 4px;
-  padding: 1px 4px;
+  padding: 1px 5px;
   margin-top: -6px;
   display: flex; flex-direction: column; align-items: center;
   pointer-events: none;
@@ -187,44 +339,134 @@
 .jerseyName { color: white; font-size: 0.65rem; font-weight: bold; white-space: nowrap; }
 .jerseyStat { color: #10b981; font-size: 0.6rem; font-weight: 800; }
 
-
 .dragOverlay {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   transform: scale(1.3); cursor: grabbing;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
 }
 .overlayName {
-  background: rgba(0,0,0,0.8); color: white; font-size: 0.7rem; font-weight: bold;
+  background: rgba(0,0,0,0.85); color: white; font-size: 0.7rem; font-weight: bold;
   padding: 2px 6px; border-radius: 4px; margin-top: -8px;
 }
 
-/* Bench Area */
+/* ─── Bench ─── */
 .benchContainer {
   width: 100%; max-width: 900px; margin: 0 auto;
   background: rgba(30, 41, 59, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
-  padding: 1.5rem; min-height: 120px;
+  padding: 1.25rem; min-height: 100px;
+  transition: background 0.2s;
 }
 .benchTitle {
-  font-size: 0.8rem; color: #94a3b8; margin-bottom: 1rem;
+  font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.75rem;
   text-transform: uppercase; letter-spacing: 1px;
 }
 .benchGrid { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 
 .benchCardWrapper { touch-action: none; cursor: grab; }
 .benchCardWrapper:active { cursor: grabbing; }
-
 .benchCard {
-  background: #1e293b; border: 1px solid #334155; border-radius: 6px;
-  padding: 0.4rem 0.8rem; display: flex; align-items: center; gap: 0.5rem; color: white;
+  background: rgba(30, 41, 59, 0.8); border: 1px solid #334155; border-radius: 8px;
+  padding: 0.4rem 0.9rem; display: flex; align-items: center; gap: 0.6rem; color: white;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+  font-size: 0.85rem;
 }
-.benchCard:hover { background: #2a3b52; border-color: #475569; }
+.benchCard:hover { background: #2a3b52; border-color: #475569; transform: translateY(-2px); }
 .benchCardStat {
-  color: #10b981; font-size: 0.7rem; font-weight: 600;
-  background: rgba(16, 185, 129, 0.1); padding: 1px 4px; border-radius: 4px;
+  color: #10b981; font-size: 0.7rem; font-weight: 700;
+  background: rgba(16, 185, 129, 0.12); padding: 1px 5px; border-radius: 4px;
 }
 .benchCardDragging { opacity: 0.3; }
-.completionRow { display: flex; justify-content: center; margin-top: 1rem; }
+.completionRow { display: flex; justify-content: center; margin-top: 0.5rem; }
 
-/* Read only classes */
-.slotReadOnly { border: none !important; }
+/* Read only */
+.slotReadOnly { border: none !important; transition: none !important; }
 .tokenReadOnly { cursor: default !important; }
+
+/* ─── Token entrance animation ─── */
+@keyframes tokenEnter {
+  from { opacity: 0; transform: scale(0.55); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.playerTokenWrapper {
+  animation: tokenEnter 0.22s cubic-bezier(.175,.885,.32,1.275);
+}
+.tokenDragging { animation: none !important; }
+
+/* ─── Swap selection highlight ─── */
+.tokenSwapSelected {
+  filter: drop-shadow(0 0 8px #fbbf24) drop-shadow(0 0 3px #fbbf24);
+  animation: none !important; /* don't re-trigger entrance */
+}
+.tokenSwapSelected .jerseyLabel {
+  border-color: #fbbf24;
+  background: rgba(251, 191, 36, 0.15);
+}
+
+/* ─── Position slot labels (GK / DEF / MID / FWD) ─── */
+.slotPosLabel {
+  color: rgba(255,255,255,0.25);
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ─── Imbalance warning ─── */
+.imbalanceWarning {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 6px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.75rem;
+  color: #fbbf24;
+  font-weight: 600;
+  margin-top: 0.4rem;
+  align-self: center;
+}
+
+/* ─── Win probability label inside comparison panel ─── */
+.winProbLabel {
+  font-size: 0.62rem;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.1rem;
+}
+
+/* ─── Pitch legend ─── */
+.pitchLegend {
+  position: absolute;
+  bottom: 8px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 10;
+  pointer-events: none;
+}
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.6rem;
+  color: rgba(255,255,255,0.5);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.legendLineDashed {
+  width: 22px; height: 2px;
+  border-top: 1.5px dashed rgba(255,255,255,0.35);
+}
+.legendLineGold {
+  width: 22px; height: 2px;
+  background: #fbbf24;
+  opacity: 0.7;
+  border-radius: 1px;
+}
