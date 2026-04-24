@@ -15,6 +15,8 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [shakeKey, setShakeKey] = useState(0);
+  // Los mensajes de debug solo se muestran en desarrollo
+  const isDev = process.env.NODE_ENV === 'development';
   const [debugMsg, setDebugMsg] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -162,7 +164,7 @@ export default function Login() {
             )}
           </button>
           
-          {debugMsg && (
+          {isDev && debugMsg && (
             <p style={{ textAlign: 'center', margin: 0, fontSize: '0.8rem', color: error ? '#f87171' : '#94a3b8' }}>
               {debugMsg}
             </p>

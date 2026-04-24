@@ -1,36 +1,42 @@
+import { timingSafeEqual } from 'crypto';
 import bcrypt from 'bcryptjs';
-import { createServiceClient } from '@/lib/supabase';
+import jwt from 'jsonwebtoken';
+import { createServiceClient } from '@/lib/supabase-server';
+import { BCRYPT_ROUNDS, getCorsHeaders } from '@/lib/auth-constants';
 
-export async function OPTIONS() {
+export async function OPTIONS(request: Request) {
+  const origin = request.headers.get('origin');
   return new Response(null, {
     status: 204,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
+    headers: getCorsHeaders(origin),
   });
 }
 
 export async function POST(request: Request) {
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  };
+  const origin = request.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
 
   // Usamos service_role: bypasea RLS, puede leer/escribir users sin restricciones
   const supabase = createServiceClient();
 
   try {
-    const { username, password } = await request.json();
+    const body = await request.json().catch(() => null);
+    if (!body) {
+      return Response.json({ ok: false, error: 'Cuerpo de request inválido' }, { status: 400, headers: corsHeaders });
+    }
+
+    const { username, password } = body;
 
     if (!username || !password) {
       return Response.json({ ok: false, error: 'Faltan credenciales' }, { status: 400, headers: corsHeaders });
     }
 
-    const u = username.trim();
-    const p = password.trim();
+    const u = String(username).trim();
+    const p = String(password).trim();
+
+    if (!u || !p) {
+      return Response.json({ ok: false, error: 'Faltan credenciales' }, { status: 400, headers: corsHeaders });
+    }
 
     // Buscamos el usuario por username
     const { data, error } = await supabase
@@ -40,7 +46,8 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (error || !data) {
-      return Response.json({ ok: false, error: 'Usuario no encontrado' }, { status: 401, headers: corsHeaders });
+      // Respuesta genérica para no revelar si el usuario existe o no (evitar user enumeration)
+      return Response.json({ ok: false, error: 'Credenciales incorrectas' }, { status: 401, headers: corsHeaders });
     }
 
     // Si no tiene password (usuario de Google u otro), rechazamos login manual
@@ -50,19 +57,29 @@ export async function POST(request: Request) {
 
     let isValid = false;
 
-    const isHashed = typeof data.password === 'string' &&
+    const isHashed =
+      typeof data.password === 'string' &&
       (data.password.startsWith('$2b$') || data.password.startsWith('$2a$'));
 
     if (isHashed) {
-      // ✅ Contraseña ya en bcrypt — comparamos de forma segura
+      // ✅ Contraseña en bcrypt — comparamos de forma segura
       isValid = await bcrypt.compare(p, data.password);
     } else {
-      // 🔄 Contraseña en texto plano (legado) — comparamos y migramos
-      isValid = data.password === p;
+      // 🔄 Contraseña legacy en texto plano — comparamos con timingSafeEqual
+      // para evitar timing attacks, y auto-migramos a bcrypt
+      try {
+        const storedBuf = Buffer.from(data.password, 'utf8');
+        const inputBuf = Buffer.from(p, 'utf8');
+        if (storedBuf.length === inputBuf.length) {
+          isValid = timingSafeEqual(storedBuf, inputBuf);
+        }
+      } catch {
+        isValid = false;
+      }
 
       if (isValid) {
         // Auto-migración: hasheamos y actualizamos en background
-        const hash = await bcrypt.hash(p, 12);
+        const hash = await bcrypt.hash(p, BCRYPT_ROUNDS);
         supabase
           .from('users')
           .update({ password: hash })
@@ -75,7 +92,8 @@ export async function POST(request: Request) {
     }
 
     if (!isValid) {
-      return Response.json({ ok: false, error: 'Contraseña incorrecta' }, { status: 401 });
+      // Respuesta genérica (no distinguir usuario incorrecto de contraseña incorrecta)
+      return Response.json({ ok: false, error: 'Credenciales incorrectas' }, { status: 401, headers: corsHeaders });
     }
 
     // Actualizar last_sign_in_at
@@ -84,9 +102,17 @@ export async function POST(request: Request) {
       .update({ last_sign_in_at: new Date().toISOString() })
       .eq('id', data.id);
 
-    // Devolvemos los datos del usuario (sin password)
+    // Devolvemos los datos del usuario (sin password) + token JWT firmado
     const user = { id: data.id, username: data.username, role: data.role };
-    return Response.json({ ok: true, user }, { headers: corsHeaders });
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) throw new Error('JWT_SECRET no configurado');
+    const token = jwt.sign(
+      { userId: data.id, username: data.username },
+      jwtSecret,
+      { expiresIn: '7d' }
+    );
+    return Response.json({ ok: true, user, token }, { headers: corsHeaders });
+
 
   } catch (err) {
     console.error('Error en /api/auth/login:', err);

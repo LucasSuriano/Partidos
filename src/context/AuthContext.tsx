@@ -28,34 +28,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    // ── Usuarios manuales: sesión via localStorage (sincrónico) ──
-    const savedUser = localStorage.getItem('auth_user');
-    if (savedUser) {
-      try {
-        const parsed = JSON.parse(savedUser) as User;
-        setUser(parsed);
-        setIsLoaded(true);
+    // ── Usuarios manuales: sesión via localStorage ──
+    // La sesión expira luego de SESSION_MAX_AGE_MS días para evitar acceso permanente
+    const SESSION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 días
 
-        // Validación en background: confirmar que el usuario aún existe en DB y actualizar última conexión
-        supabaseNoAuth
-          .from('users')
-          .select('id, username')
-          .eq('username', parsed.username)
-          .then(({ data, error }) => {
-            if (error || !data || data.length === 0) {
-              setUser(null);
-              localStorage.removeItem('auth_user');
-            } else {
-              // Actualizar last_sign_in_at en background
-              supabaseNoAuth.from('users').update({
-                last_sign_in_at: new Date().toISOString()
-              }).eq('id', data[0].id).then(({ error: updateError }) => {
-                if (updateError) console.error("Fallo actualizando last_sign_in_at (manual-bg):", updateError);
-              });
-            }
-          });
+    const savedRaw = localStorage.getItem('auth_user');
+    if (savedRaw) {
+      try {
+        const { user: parsed, savedAt } = JSON.parse(savedRaw) as { user: User; savedAt: number };
+
+        // Verificar expiración de sesión
+        if (!savedAt || Date.now() - savedAt > SESSION_MAX_AGE_MS) {
+          localStorage.removeItem('auth_user');
+          setIsLoaded(true);
+        } else {
+          setUser(parsed);
+          setIsLoaded(true);
+
+          // Validación en background: confirmar que el usuario existe en DB
+          // y refrescar el rol (evita manipulación del rol en localStorage)
+          supabaseNoAuth
+            .from('users')
+            .select('id, username, role')
+            .eq('username', parsed.username)
+            .then(({ data, error }) => {
+              if (error || !data || data.length === 0) {
+                setUser(null);
+                localStorage.removeItem('auth_user');
+              } else {
+                const freshUser: User = {
+                  id: data[0].id,
+                  username: data[0].username,
+                  role: data[0].role as Role,
+                };
+                // Actualizar rol desde DB (por si cambió) y renovar timestamp
+                setUser(freshUser);
+                localStorage.setItem('auth_user', JSON.stringify({ user: freshUser, savedAt: Date.now() }));
+
+                supabaseNoAuth.from('users').update({
+                  last_sign_in_at: new Date().toISOString()
+                }).eq('id', data[0].id).then(({ error: updateError }) => {
+                  if (updateError) console.error('Fallo actualizando last_sign_in_at (manual-bg):', updateError);
+                });
+              }
+            });
+        }
       } catch {
         localStorage.removeItem('auth_user');
+        setIsLoaded(true);
       }
     }
 
@@ -141,17 +161,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (!p) return false;
 
-    // Helper para determinar la URL de la API
-    const getApiUrl = (path: string) => {
-      if (typeof window !== 'undefined' && !window.location.href.includes('localhost:3000')) {
-        return `https://partidos-ruby.vercel.app${path}`;
-      }
-      return path;
-    };
+    // Para el APK de Capacitor usar NEXT_PUBLIC_API_URL; en web se usan rutas relativas.
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
 
     try {
-      // Usamos la URL dinámica para que funcione tanto en local como en el APK
-      const res = await fetch(getApiUrl('/api/auth/login'), {
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: u, password: p })
@@ -166,7 +180,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           role: json.user.role as Role
         };
         setUser(loggedInUser);
-        localStorage.setItem('auth_user', JSON.stringify(loggedInUser));
+        // Guardar sesión con timestamp y token JWT para verificación server-side
+        localStorage.setItem('auth_user', JSON.stringify({ user: loggedInUser, savedAt: Date.now() }));
+        if (json.token) localStorage.setItem('auth_token', json.token);
         return true;
       }
 
@@ -187,16 +203,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (!p) return false;
 
-    const getApiUrl = (path: string) => {
-      if (typeof window !== 'undefined' && !window.location.href.includes('localhost:3000')) {
-        return `https://partidos-ruby.vercel.app${path}`;
-      }
-      return path;
-    };
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
 
     try {
-      // Usamos la URL dinámica para que funcione tanto en local como en el APK
-      const res = await fetch(getApiUrl('/api/auth/register'), {
+      const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: u, password: p })
@@ -211,7 +221,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           role: json.user.role as Role
         };
         setUser(registeredUser);
-        localStorage.setItem('auth_user', JSON.stringify(registeredUser));
+        localStorage.setItem('auth_user', JSON.stringify({ user: registeredUser, savedAt: Date.now() }));
+        if (json.token) localStorage.setItem('auth_token', json.token);
         return true;
       }
 
@@ -234,9 +245,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     setUser(null);
     localStorage.removeItem('auth_user');
+    localStorage.removeItem('auth_token'); // Limpiar JWT
     // Cerramos también sesión de Google si existe
     await supabase.auth.signOut();
   };
+
 
   if (!isLoaded) {
     return (

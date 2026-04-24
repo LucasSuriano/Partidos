@@ -170,10 +170,14 @@ function ChangePasswordModal({ userId, onClose }: { userId: string; onClose: () 
     }
 
     setLoading(true);
+    const token = localStorage.getItem('auth_token') ?? '';
     const res = await fetch('/api/auth/change-password', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, currentPassword: currentPw, newPassword: newPw }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ currentPassword: currentPw, newPassword: newPw }),
     });
     const data = await res.json();
     setLoading(false);

@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:mobile": "set IS_CAPACITOR=true&& next build",
+    "build:mobile": "set NEXT_PUBLIC_API_URL=https://partidos-ruby.vercel.app&&set IS_CAPACITOR=true&& next build",
     "start": "next start",
     "lint": "eslint"
   },
@@ -18,13 +18,16 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@supabase/supabase-js": "^2.101.1",
     "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "bcryptjs": "^3.0.3",
     "i18next": "^26.0.7",
     "i18next-browser-languagedetector": "^8.2.1",
+    "jsonwebtoken": "^9.0.3",
     "next": "16.2.2",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "react-i18next": "^17.0.4"
+    "react-i18next": "^17.0.4",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",

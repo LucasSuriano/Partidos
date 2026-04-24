@@ -1,17 +1,57 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { createServiceClient } from '@/lib/supabase';
+import jwt from 'jsonwebtoken';
+import { createServiceClient } from '@/lib/supabase-server';
+import { BCRYPT_ROUNDS } from '@/lib/auth-constants';
+
+interface JwtPayload {
+  userId: string;
+  username: string;
+}
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId, currentPassword, newPassword } = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body) {
+      return NextResponse.json({ error: 'Cuerpo de request inválido.' }, { status: 400 });
+    }
 
-    if (!userId || !currentPassword || !newPassword) {
+    const { currentPassword, newPassword } = body;
+
+    // Verificar el token JWT del header Authorization
+    // El userId se extrae del token (no del body), así el servidor controla la identidad
+    const authHeader = req.headers.get('Authorization');
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+
+    if (!token) {
+      return NextResponse.json({ error: 'No autorizado. Iniciá sesión nuevamente.' }, { status: 401 });
+    }
+
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      return NextResponse.json({ error: 'Error de configuración del servidor.' }, { status: 500 });
+    }
+
+    let payload: JwtPayload;
+    try {
+      payload = jwt.verify(token, jwtSecret) as JwtPayload;
+    } catch {
+      return NextResponse.json({ error: 'Sesión inválida o expirada. Iniciá sesión nuevamente.' }, { status: 401 });
+    }
+
+    // A partir de acá, payload.userId es confiable — viene de un token firmado por el servidor
+    const userId = payload.userId;
+
+    if (!currentPassword || !newPassword) {
       return NextResponse.json({ error: 'Faltan campos requeridos.' }, { status: 400 });
     }
 
-    if (newPassword.length < 6) {
-      return NextResponse.json({ error: 'La nueva contraseña debe tener al menos 6 caracteres.' }, { status: 400 });
+    if (typeof currentPassword !== 'string' || typeof newPassword !== 'string') {
+      return NextResponse.json({ error: 'Tipos de datos inválidos.' }, { status: 400 });
+    }
+
+    if (newPassword.length < 6 || newPassword.length > 128) {
+      return NextResponse.json({ error: 'La nueva contraseña debe tener entre 6 y 128 caracteres.' }, { status: 400 });
     }
 
     const supabase = createServiceClient();
@@ -35,7 +75,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'La contraseña actual es incorrecta.' }, { status: 401 });
     }
 
-    const hashed = await bcrypt.hash(newPassword, 10);
+    const hashed = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
     const { error: updateError } = await supabase
       .from('users')
       .update({ password: hashed })

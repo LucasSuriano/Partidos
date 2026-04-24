@@ -1,37 +1,67 @@
 import bcrypt from 'bcryptjs';
-import { createServiceClient } from '@/lib/supabase';
+import jwt from 'jsonwebtoken';
+import { createServiceClient } from '@/lib/supabase-server';
+import { BCRYPT_ROUNDS, getCorsHeaders } from '@/lib/auth-constants';
 
-export async function OPTIONS() {
+const RESERVED_USERNAMES = [
+  'admin', 'root', 'superuser', 'moderator', 'soporte',
+  'support', 'sistema', 'system', 'administrator', 'test',
+];
+
+/** Valida el formato del username: 3–30 caracteres, solo letras, números, puntos, guiones y guiones bajos */
+function isValidUsername(u: string): boolean {
+  return u.length >= 3 && u.length <= 30 && /^[a-zA-Z0-9._-]+$/.test(u);
+}
+
+/** Valida que la contraseña tenga al menos 6 caracteres y máximo 128 */
+function isValidPassword(p: string): boolean {
+  return p.length >= 6 && p.length <= 128;
+}
+
+export async function OPTIONS(request: Request) {
+  const origin = request.headers.get('origin');
   return new Response(null, {
     status: 204,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
+    headers: getCorsHeaders(origin),
   });
 }
 
 export async function POST(request: Request) {
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  };
+  const origin = request.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
 
   // Usamos service_role: bypasea RLS, puede insertar en users sin restricciones
   const supabase = createServiceClient();
-  const RESERVED_USERNAMES = ['admin', 'root', 'superuser', 'moderator', 'soporte', 'support', 'sistema', 'system'];
 
   try {
-    const { username, password } = await request.json();
+    const body = await request.json().catch(() => null);
+    if (!body) {
+      return Response.json({ ok: false, error: 'Cuerpo de request inválido' }, { status: 400, headers: corsHeaders });
+    }
+
+    const { username, password } = body;
 
     if (!username || !password) {
       return Response.json({ ok: false, error: 'Faltan credenciales' }, { status: 400, headers: corsHeaders });
     }
 
-    const u = username.trim();
-    const p = password.trim();
+    const u = String(username).trim();
+    const p = String(password).trim();
+
+    // Validación de formato
+    if (!isValidUsername(u)) {
+      return Response.json(
+        { ok: false, error: 'El nombre de usuario debe tener entre 3 y 30 caracteres y solo puede contener letras, números, puntos, guiones y guiones bajos.' },
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    if (!isValidPassword(p)) {
+      return Response.json(
+        { ok: false, error: 'La contraseña debe tener entre 6 y 128 caracteres.' },
+        { status: 400, headers: corsHeaders }
+      );
+    }
 
     // Prevenir el registro de nombres de usuario reservados
     if (RESERVED_USERNAMES.includes(u.toLowerCase())) {
@@ -49,8 +79,8 @@ export async function POST(request: Request) {
       return Response.json({ ok: false, error: 'El usuario ya existe' }, { status: 409, headers: corsHeaders });
     }
 
-    // Hashear la contraseña con bcrypt (salt rounds = 12)
-    const hash = await bcrypt.hash(p, 12);
+    // Hashear la contraseña con bcrypt
+    const hash = await bcrypt.hash(p, BCRYPT_ROUNDS);
 
     // Insertar en tabla users con el hash
     const { data: inserted, error: insertError } = await supabase
@@ -70,7 +100,15 @@ export async function POST(request: Request) {
     }
 
     const user = { id: inserted.id, username: inserted.username, role: inserted.role };
-    return Response.json({ ok: true, user }, { headers: corsHeaders });
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) throw new Error('JWT_SECRET no configurado');
+    const token = jwt.sign(
+      { userId: inserted.id, username: inserted.username },
+      jwtSecret,
+      { expiresIn: '7d' }
+    );
+    return Response.json({ ok: true, user, token }, { headers: corsHeaders });
+
 
   } catch (err) {
     console.error('Error en /api/auth/register:', err);
