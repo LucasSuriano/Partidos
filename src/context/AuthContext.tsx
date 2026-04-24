@@ -40,6 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Verificar expiración de sesión
         if (!savedAt || Date.now() - savedAt > SESSION_MAX_AGE_MS) {
           localStorage.removeItem('auth_user');
+          localStorage.removeItem('auth_token'); // Limpiar JWT junto con la sesión
           setIsLoaded(true);
         } else {
           setUser(parsed);
@@ -55,6 +56,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               if (error || !data || data.length === 0) {
                 setUser(null);
                 localStorage.removeItem('auth_user');
+                localStorage.removeItem('auth_token'); // Limpiar JWT si el usuario ya no existe en DB
               } else {
                 const freshUser: User = {
                   id: data[0].id,
@@ -245,10 +247,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     setUser(null);
     localStorage.removeItem('auth_user');
-    localStorage.removeItem('auth_token'); // Limpiar JWT
+    localStorage.removeItem('auth_token'); // Limpiar JWT del localStorage
+    // Limpiar cookie httpOnly via API (JS no puede hacerlo directamente)
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
+    await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST' }).catch(() => {});
     // Cerramos también sesión de Google si existe
     await supabase.auth.signOut();
   };
+
 
 
   if (!isLoaded) {

@@ -18,10 +18,12 @@ export async function POST(req: NextRequest) {
 
     const { currentPassword, newPassword } = body;
 
-    // Verificar el token JWT del header Authorization
-    // El userId se extrae del token (no del body), así el servidor controla la identidad
+    // Cookie httpOnly (web) → Authorization header (Capacitor) → rechazo
+    // En web el navegador envía la cookie automáticamente sin que JS la toque
+    // En Capacitor (APK) usamos el header porque las cookies cross-origin no funcionan con SameSite=Strict
+    const cookieToken = req.cookies.get('auth_token')?.value;
     const authHeader = req.headers.get('Authorization');
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    const token = cookieToken ?? (authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null);
 
     if (!token) {
       return NextResponse.json({ error: 'No autorizado. Iniciá sesión nuevamente.' }, { status: 401 });

@@ -1,6 +1,7 @@
 import { timingSafeEqual } from 'crypto';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase-server';
 import { BCRYPT_ROUNDS, getCorsHeaders } from '@/lib/auth-constants';
 
@@ -111,7 +112,17 @@ export async function POST(request: Request) {
       jwtSecret,
       { expiresIn: '7d' }
     );
-    return Response.json({ ok: true, user, token }, { headers: corsHeaders });
+    // Cookie httpOnly: el navegador la envía automáticamente y JS no puede leerla (protección XSS)
+    // El token también se retorna en el body para compatibilidad con Capacitor (APK)
+    const res = NextResponse.json({ ok: true, user, token }, { headers: corsHeaders });
+    res.cookies.set('auth_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60, // 7 días
+      path: '/',
+    });
+    return res;
 
 
   } catch (err) {

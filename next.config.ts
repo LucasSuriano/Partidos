@@ -25,14 +25,12 @@ const securityHeaders = [
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      // Next.js requiere unsafe-inline para estilos. En el futuro se puede usar nonce-based CSP.
       "style-src 'self' 'unsafe-inline' fonts.googleapis.com",
-      // Next.js requiere unsafe-inline y unsafe-eval para hot reload en dev
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "font-src 'self' fonts.gstatic.com data:",
       "img-src 'self' data: blob: https:",
-      // Supabase: API REST y WebSockets para realtime
-      `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://partidos-ruby.vercel.app`,
+      // Supabase: API REST y WebSockets para realtime + dominio de la app
+      `connect-src 'self' https://*.supabase.co wss://*.supabase.co ${process.env.NEXT_PUBLIC_APP_URL ?? 'https://partidos-ruby.vercel.app'}`,
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

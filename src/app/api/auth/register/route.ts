@@ -1,7 +1,9 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase-server';
 import { BCRYPT_ROUNDS, getCorsHeaders } from '@/lib/auth-constants';
+
 
 const RESERVED_USERNAMES = [
   'admin', 'root', 'superuser', 'moderator', 'soporte',
@@ -107,7 +109,15 @@ export async function POST(request: Request) {
       jwtSecret,
       { expiresIn: '7d' }
     );
-    return Response.json({ ok: true, user, token }, { headers: corsHeaders });
+    const res = NextResponse.json({ ok: true, user, token }, { headers: corsHeaders });
+    res.cookies.set('auth_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60,
+      path: '/',
+    });
+    return res;
 
 
   } catch (err) {
