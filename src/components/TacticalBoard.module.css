@@ -114,6 +114,41 @@
   pointer-events: none; z-index: 1;
 }
 
+/* Padel Court Specifics */
+.padelCourtWrapper {
+  background: radial-gradient(circle at center, #0284c7, #0369a1);
+  box-shadow: 0 0 60px rgba(2, 132, 199, 0.3), inset 0 0 40px rgba(0, 0, 0, 0.4);
+}
+
+.padelNet {
+  position: absolute;
+  top: 0; left: 50%;
+  width: 4px; height: 100%;
+  background: rgba(255, 255, 255, 0.4);
+  transform: translateX(-50%);
+  z-index: 1;
+}
+
+.padelServiceLineLeft, .padelServiceLineRight {
+  position: absolute;
+  top: 10%; height: 80%;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.3);
+  z-index: 1;
+}
+.padelServiceLineLeft { left: 25%; }
+.padelServiceLineRight { right: 25%; }
+
+.padelCenterLineLeft, .padelCenterLineRight {
+  position: absolute;
+  top: 50%; height: 2px;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-50%);
+  z-index: 1;
+}
+.padelCenterLineLeft { left: 25%; width: 25%; }
+.padelCenterLineRight { right: 25%; width: 25%; }
+
 /* Slots and Jerseys */
 .slot {
   position: absolute;

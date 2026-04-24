@@ -521,6 +521,7 @@ export default function TeamSimulator() {
              setStep('results');
           }}
           onBack={handleBackToSel}
+          isPadel={isPadel}
         />
       )}
 
@@ -538,7 +539,7 @@ export default function TeamSimulator() {
 
           {tacticalConfig && (
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
-              <FinalPitchRenderer players={selectedStats} config={tacticalConfig} />
+              <FinalPitchRenderer players={selectedStats} config={tacticalConfig} isPadel={isPadel} />
             </div>
           )}
 

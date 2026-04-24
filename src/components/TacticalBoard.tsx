@@ -35,6 +35,7 @@ interface TacticalBoardProps {
   ) => { teamA: PlayerStats[]; teamB: PlayerStats[] };
   onComplete: (teamA: PlayerStats[], teamB: PlayerStats[], config: TacticalConfig) => void;
   onBack: () => void;
+  isPadel?: boolean;
 }
 
 interface Formation {
@@ -78,7 +79,7 @@ function getFormationsForSize(size: number): Formation[] {
   return [{ id: 'generic', name: `Genérica (${size}v${size})`, pos: genericCoords }];
 }
 
-export function TacticalBoard({ players, teamSize, pairMap, fillBestBalance, onComplete, onBack }: TacticalBoardProps) {
+export function TacticalBoard({ players, teamSize, pairMap, fillBestBalance, onComplete, onBack, isPadel }: TacticalBoardProps) {
   const formations = getFormationsForSize(teamSize);
   
   const [fmtA, setFmtA] = useState(formations[0].id);
@@ -228,12 +229,25 @@ export function TacticalBoard({ players, teamSize, pairMap, fillBestBalance, onC
         </div>
 
         {/* Pitch Area */}
-        <div className={styles.pitchWrapper}>
-          <div className={styles.grassTexture} />
-          <div className={styles.lineCenter} />
-          <div className={styles.lineCircle} />
-          <div className={styles.goalAreaLeft} />
-          <div className={styles.goalAreaRight} />
+        <div className={`${styles.pitchWrapper} ${isPadel ? styles.padelCourtWrapper : ''}`}>
+          {!isPadel && <div className={styles.grassTexture} />}
+          
+          {isPadel ? (
+            <>
+              <div className={styles.padelServiceLineLeft} />
+              <div className={styles.padelServiceLineRight} />
+              <div className={styles.padelCenterLineLeft} />
+              <div className={styles.padelCenterLineRight} />
+              <div className={styles.padelNet} />
+            </>
+          ) : (
+            <>
+              <div className={styles.lineCenter} />
+              <div className={styles.lineCircle} />
+              <div className={styles.goalAreaLeft} />
+              <div className={styles.goalAreaRight} />
+            </>
+          )}
 
           {/* Render Slots Map */}
           {formationA.pos.map((coord, i) => {
@@ -329,18 +343,31 @@ function DraggableToken({ player, c1, c2, pat, readOnly = false }: { player: Pla
 // ─────────────────────────────────────────────────────────────────────────────
 // READ ONLY RENDERER FOR RESULTS SECTION
 // ─────────────────────────────────────────────────────────────────────────────
-export function FinalPitchRenderer({ players, config }: { players: PlayerStats[], config: TacticalConfig }) {
+export function FinalPitchRenderer({ players, config, isPadel }: { players: PlayerStats[], config: TacticalConfig, isPadel?: boolean }) {
   const formations = getFormationsForSize(config.teamSize);
   const formationA = formations.find(f => f.id === config.fmtA) || formations[0];
   const formationB = formations.find(f => f.id === config.fmtB) || formations[0];
 
   return (
-    <div className={styles.pitchWrapper} style={{ maxWidth: '800px', marginBottom: '2rem' }}>
-      <div className={styles.grassTexture} />
-      <div className={styles.lineCenter} />
-      <div className={styles.lineCircle} />
-      <div className={styles.goalAreaLeft} />
-      <div className={styles.goalAreaRight} />
+    <div className={`${styles.pitchWrapper} ${isPadel ? styles.padelCourtWrapper : ''}`} style={{ maxWidth: '800px', marginBottom: '2rem' }}>
+      {!isPadel && <div className={styles.grassTexture} />}
+      
+      {isPadel ? (
+        <>
+          <div className={styles.padelServiceLineLeft} />
+          <div className={styles.padelServiceLineRight} />
+          <div className={styles.padelCenterLineLeft} />
+          <div className={styles.padelCenterLineRight} />
+          <div className={styles.padelNet} />
+        </>
+      ) : (
+        <>
+          <div className={styles.lineCenter} />
+          <div className={styles.lineCircle} />
+          <div className={styles.goalAreaLeft} />
+          <div className={styles.goalAreaRight} />
+        </>
+      )}
 
       {formationA.pos.map((coord, i) => {
          const locId = `teamA-${i}`;
