@@ -568,7 +568,7 @@ function ChemistryLines({ formation, assignments, pairMap, mirrorX = false }: {
       : `${pB_assig.player.id}::${pA_assig.player.id}`;
       
     const pair = pairMap.get(k);
-    if (!pair || pair.togetherTotal < 2) continue;
+    if (!pair || pair.togetherTotal < 1) continue;
     
     const pct = pair.togetherWinPct;
     const color = pct >= 65 ? '#10b981' : pct >= 40 ? '#f59e0b' : '#ef4444';
