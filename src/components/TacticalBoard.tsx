@@ -552,7 +552,7 @@ function ChemistryLines({ formation, assignments, pairMap, mirrorX = false }: {
     roleToIndex.set(p.role, idx);
   });
 
-  const lines: { pA: {x: number, y: number}; pB: {x: number, y: number}; color: string }[] = [];
+  const lines: { pA: {x: number, y: number}; pB: {x: number, y: number}; color: string; filter?: string; strokeWidth: string; strokeOpacity: string }[] = [];
 
   for (const [roleA, roleB] of formation.links) {
     const idxA = roleToIndex.get(roleA);
@@ -572,11 +572,17 @@ function ChemistryLines({ formation, assignments, pairMap, mirrorX = false }: {
     
     const pct = pair.togetherWinPct;
     const color = pct >= 65 ? '#10b981' : pct >= 40 ? '#f59e0b' : '#ef4444';
+    const filter = pct >= 65 ? 'url(#glow-green)' : pct >= 40 ? 'url(#glow-gold)' : undefined;
+    const strokeWidth = pct >= 65 ? "2.5" : pct >= 40 ? "2" : "1.5";
+    const strokeOpacity = pct >= 65 ? "0.9" : pct >= 40 ? "0.8" : "0.5";
     
     lines.push({
       pA: pts[idxA],
       pB: pts[idxB],
-      color
+      color,
+      filter,
+      strokeWidth,
+      strokeOpacity
     });
   }
 
@@ -584,11 +590,22 @@ function ChemistryLines({ formation, assignments, pairMap, mirrorX = false }: {
 
   return (
     <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
-      {lines.map(({ pA, pB, color }, idx) => (
+      <defs>
+        <filter id="glow-green" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="3" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+        <filter id="glow-gold" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="2" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+      </defs>
+      {lines.map(({ pA, pB, color, filter, strokeWidth, strokeOpacity }, idx) => (
         <line key={idx}
           x1={`${pA.x}%`} y1={`${pA.y}%`}
           x2={`${pB.x}%`} y2={`${pB.y}%`}
-          stroke={color} strokeWidth="2" strokeOpacity="0.6"
+          stroke={color} strokeWidth={strokeWidth} strokeOpacity={strokeOpacity}
+          filter={filter} strokeLinecap="round"
         />
       ))}
     </svg>
