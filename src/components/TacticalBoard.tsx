@@ -41,43 +41,44 @@ interface TacticalBoardProps {
 
 interface Formation {
   id: string; name: string;
-  pos: {x: number, y: number}[]; // Left half relative coords (x: 0-50%)
+  pos: {role: string, x: number, y: number}[]; // Left half relative coords (x: 0-50%)
+  links?: [string, string][]; // Explicit adjacency map between roles
 }
 
 const FORMATIONS: Record<number, Formation[]> = {
   2: [
-    { id: 'paralela', name: 'Paralela', pos: [{x: 25, y: 30}, {x: 25, y: 70}] },
-    { id: '1v1', name: 'Australiana', pos: [{x: 10, y: 50}, {x: 35, y: 50}] }
+    { id: 'paralela', name: 'Paralela', pos: [{role: 'P1', x: 25, y: 30}, {role: 'P2', x: 25, y: 70}], links: [['P1', 'P2']] },
+    { id: '1v1', name: 'Australiana', pos: [{role: 'P1', x: 10, y: 50}, {role: 'P2', x: 35, y: 50}], links: [['P1', 'P2']] }
   ],
   5: [
-    { id: '1-2-1', name: 'Rombo (1-2-1)', pos: [{x: 8, y: 50}, {x: 20, y: 50}, {x: 32, y: 23}, {x: 32, y: 77}, {x: 45, y: 50}] },
-    { id: '2-2', name: 'Cuadrado (2-2)', pos: [{x: 8, y: 50}, {x: 22, y: 25}, {x: 22, y: 75}, {x: 40, y: 25}, {x: 40, y: 75}] },
-    { id: '1-3', name: 'Ofensiva (1-3)', pos: [{x: 8, y: 50}, {x: 20, y: 50}, {x: 40, y: 15}, {x: 44, y: 50}, {x: 40, y: 85}] },
-    { id: '3-1', name: 'Muro defensivo (3-1)', pos: [{x: 8, y: 50}, {x: 25, y: 15}, {x: 25, y: 50}, {x: 25, y: 85}, {x: 42, y: 50}] }
+    { id: '1-2-1', name: 'Rombo (1-2-1)', pos: [{role: 'GK', x: 8, y: 50}, {role: 'CB', x: 20, y: 50}, {role: 'LW', x: 32, y: 23}, {role: 'RW', x: 32, y: 77}, {role: 'ST', x: 45, y: 50}], links: [['GK', 'CB'], ['CB', 'LW'], ['CB', 'RW'], ['LW', 'ST'], ['RW', 'ST'], ['LW', 'RW']] },
+    { id: '2-2', name: 'Cuadrado (2-2)', pos: [{role: 'GK', x: 8, y: 50}, {role: 'LCB', x: 22, y: 25}, {role: 'RCB', x: 22, y: 75}, {role: 'LFW', x: 40, y: 25}, {role: 'RFW', x: 40, y: 75}], links: [['GK', 'LCB'], ['GK', 'RCB'], ['LCB', 'RCB'], ['LCB', 'LFW'], ['RCB', 'RFW'], ['LFW', 'RFW']] },
+    { id: '1-3', name: 'Ofensiva (1-3)', pos: [{role: 'GK', x: 8, y: 50}, {role: 'CB', x: 20, y: 50}, {role: 'LW', x: 40, y: 15}, {role: 'ST', x: 44, y: 50}, {role: 'RW', x: 40, y: 85}], links: [['GK', 'CB'], ['CB', 'LW'], ['CB', 'ST'], ['CB', 'RW'], ['LW', 'ST'], ['ST', 'RW']] },
+    { id: '3-1', name: 'Muro defensivo (3-1)', pos: [{role: 'GK', x: 8, y: 50}, {role: 'LCB', x: 25, y: 15}, {role: 'CB', x: 25, y: 50}, {role: 'RCB', x: 25, y: 85}, {role: 'ST', x: 42, y: 50}], links: [['GK', 'LCB'], ['GK', 'CB'], ['GK', 'RCB'], ['LCB', 'CB'], ['CB', 'RCB'], ['LCB', 'ST'], ['CB', 'ST'], ['RCB', 'ST']] }
   ],
   7: [
-    { id: '2-3-1', name: 'Equilibrada (2-3-1)', pos: [{x: 4, y: 50}, {x: 15, y: 30}, {x: 15, y: 70}, {x: 28, y: 20}, {x: 25, y: 50}, {x: 28, y: 80}, {x: 40, y: 50}] },
-    { id: '3-2-1', name: 'Defensiva (3-2-1)', pos: [{x: 4, y: 50}, {x: 15, y: 20}, {x: 12, y: 50}, {x: 15, y: 80}, {x: 28, y: 35}, {x: 28, y: 65}, {x: 42, y: 50}] },
-    { id: '2-2-2', name: 'Ofensiva (2-2-2)', pos: [{x: 4, y: 50}, {x: 15, y: 30}, {x: 15, y: 70}, {x: 26, y: 30}, {x: 26, y: 70}, {x: 40, y: 35}, {x: 40, y: 65}] },
-    { id: '1-3-2', name: 'Ultra Ofensiva (1-3-2)', pos: [{x: 4, y: 50}, {x: 15, y: 50}, {x: 26, y: 20}, {x: 26, y: 50}, {x: 26, y: 80}, {x: 40, y: 35}, {x: 40, y: 65}] },
-    { id: '3-1-2', name: 'Contraataque (3-1-2)', pos: [{x: 4, y: 50}, {x: 15, y: 20}, {x: 12, y: 50}, {x: 15, y: 80}, {x: 26, y: 50}, {x: 40, y: 35}, {x: 40, y: 65}] }
+    { id: '2-3-1', name: 'Equilibrada (2-3-1)', pos: [{role: 'GK', x: 4, y: 50}, {role: 'LCB', x: 15, y: 30}, {role: 'RCB', x: 15, y: 70}, {role: 'LM', x: 28, y: 20}, {role: 'CM', x: 25, y: 50}, {role: 'RM', x: 28, y: 80}, {role: 'ST', x: 40, y: 50}], links: [['GK', 'LCB'], ['GK', 'RCB'], ['LCB', 'RCB'], ['LCB', 'LM'], ['LCB', 'CM'], ['RCB', 'CM'], ['RCB', 'RM'], ['LM', 'CM'], ['CM', 'RM'], ['LM', 'ST'], ['CM', 'ST'], ['RM', 'ST']] },
+    { id: '3-2-1', name: 'Defensiva (3-2-1)', pos: [{role: 'GK', x: 4, y: 50}, {role: 'LB', x: 15, y: 20}, {role: 'CB', x: 12, y: 50}, {role: 'RB', x: 15, y: 80}, {role: 'LCM', x: 28, y: 35}, {role: 'RCM', x: 28, y: 65}, {role: 'ST', x: 42, y: 50}], links: [['GK', 'LB'], ['GK', 'CB'], ['GK', 'RB'], ['LB', 'CB'], ['CB', 'RB'], ['LB', 'LCM'], ['CB', 'LCM'], ['CB', 'RCM'], ['RB', 'RCM'], ['LCM', 'RCM'], ['LCM', 'ST'], ['RCM', 'ST']] },
+    { id: '2-2-2', name: 'Ofensiva (2-2-2)', pos: [{role: 'GK', x: 4, y: 50}, {role: 'LCB', x: 15, y: 30}, {role: 'RCB', x: 15, y: 70}, {role: 'LCM', x: 26, y: 30}, {role: 'RCM', x: 26, y: 70}, {role: 'LST', x: 40, y: 35}, {role: 'RST', x: 40, y: 65}], links: [['GK', 'LCB'], ['GK', 'RCB'], ['LCB', 'RCB'], ['LCB', 'LCM'], ['RCB', 'RCM'], ['LCM', 'RCM'], ['LCM', 'LST'], ['LCM', 'RST'], ['RCM', 'LST'], ['RCM', 'RST'], ['LST', 'RST']] },
+    { id: '1-3-2', name: 'Ultra Ofensiva (1-3-2)', pos: [{role: 'GK', x: 4, y: 50}, {role: 'CB', x: 15, y: 50}, {role: 'LM', x: 26, y: 20}, {role: 'CM', x: 26, y: 50}, {role: 'RM', x: 26, y: 80}, {role: 'LST', x: 40, y: 35}, {role: 'RST', x: 40, y: 65}], links: [['GK', 'CB'], ['CB', 'LM'], ['CB', 'CM'], ['CB', 'RM'], ['LM', 'CM'], ['CM', 'RM'], ['LM', 'LST'], ['CM', 'LST'], ['CM', 'RST'], ['RM', 'RST'], ['LST', 'RST']] },
+    { id: '3-1-2', name: 'Contraataque (3-1-2)', pos: [{role: 'GK', x: 4, y: 50}, {role: 'LB', x: 15, y: 20}, {role: 'CB', x: 12, y: 50}, {role: 'RB', x: 15, y: 80}, {role: 'CDM', x: 26, y: 50}, {role: 'LST', x: 40, y: 35}, {role: 'RST', x: 40, y: 65}], links: [['GK', 'LB'], ['GK', 'CB'], ['GK', 'RB'], ['LB', 'CB'], ['CB', 'RB'], ['LB', 'CDM'], ['CB', 'CDM'], ['RB', 'CDM'], ['CDM', 'LST'], ['CDM', 'RST'], ['LST', 'RST']] }
   ],
   11: [
-    { id: '4-4-2', name: '4-4-2 Clásico', pos: [{x: 4, y: 50}, {x: 14, y: 15}, {x: 12, y: 35}, {x: 12, y: 65}, {x: 14, y: 85}, {x: 30, y: 15}, {x: 26, y: 35}, {x: 26, y: 65}, {x: 30, y: 85}, {x: 44, y: 35}, {x: 44, y: 65}] },
-    { id: '4-3-3', name: '4-3-3 Ofensivo', pos: [{x: 4, y: 50}, {x: 14, y: 15}, {x: 12, y: 35}, {x: 12, y: 65}, {x: 14, y: 85}, {x: 24, y: 50}, {x: 30, y: 25}, {x: 30, y: 75}, {x: 40, y: 15}, {x: 44, y: 50}, {x: 40, y: 85}] },
-    { id: '4-2-3-1', name: '4-2-3-1 Moderno', pos: [{x: 4, y: 50}, {x: 14, y: 15}, {x: 12, y: 35}, {x: 12, y: 65}, {x: 14, y: 85}, {x: 24, y: 35}, {x: 24, y: 65}, {x: 34, y: 20}, {x: 36, y: 50}, {x: 34, y: 80}, {x: 45, y: 50}] },
-    { id: '3-5-2', name: '3-5-2 Carrileros', pos: [{x: 4, y: 50}, {x: 12, y: 25}, {x: 10, y: 50}, {x: 12, y: 75}, {x: 26, y: 12}, {x: 24, y: 50}, {x: 30, y: 30}, {x: 30, y: 70}, {x: 26, y: 88}, {x: 44, y: 35}, {x: 44, y: 65}] },
-    { id: '5-3-2', name: '5-3-2 Defensivo', pos: [{x: 4, y: 50}, {x: 15, y: 12}, {x: 12, y: 30}, {x: 10, y: 50}, {x: 12, y: 70}, {x: 15, y: 88}, {x: 28, y: 25}, {x: 26, y: 50}, {x: 28, y: 75}, {x: 44, y: 35}, {x: 44, y: 65}] },
-    { id: '4-4-2-rombo', name: '4-4-2 Rombo', pos: [{x: 4, y: 50}, {x: 14, y: 15}, {x: 12, y: 35}, {x: 12, y: 65}, {x: 14, y: 85}, {x: 22, y: 50}, {x: 28, y: 25}, {x: 28, y: 75}, {x: 36, y: 50}, {x: 44, y: 35}, {x: 44, y: 65}] },
-    { id: '3-4-3', name: '3-4-3 Ofensivo', pos: [{x: 4, y: 50}, {x: 12, y: 25}, {x: 10, y: 50}, {x: 12, y: 75}, {x: 26, y: 15}, {x: 24, y: 35}, {x: 24, y: 65}, {x: 26, y: 85}, {x: 40, y: 20}, {x: 44, y: 50}, {x: 40, y: 80}] },
-    { id: '4-1-4-1', name: '4-1-4-1 Posesión', pos: [{x: 4, y: 50}, {x: 14, y: 15}, {x: 12, y: 35}, {x: 12, y: 65}, {x: 14, y: 85}, {x: 22, y: 50}, {x: 32, y: 15}, {x: 30, y: 35}, {x: 30, y: 65}, {x: 32, y: 85}, {x: 45, y: 50}] }
+    { id: '4-4-2', name: '4-4-2 Clásico', pos: [{role: 'GK', x: 4, y: 50}, {role: 'RB', x: 14, y: 15}, {role: 'RCB', x: 12, y: 35}, {role: 'LCB', x: 12, y: 65}, {role: 'LB', x: 14, y: 85}, {role: 'RM', x: 30, y: 15}, {role: 'RCM', x: 26, y: 35}, {role: 'LCM', x: 26, y: 65}, {role: 'LM', x: 30, y: 85}, {role: 'RST', x: 44, y: 35}, {role: 'LST', x: 44, y: 65}], links: [['GK', 'RCB'], ['GK', 'LCB'], ['RB', 'RCB'], ['RCB', 'LCB'], ['LCB', 'LB'], ['RB', 'RM'], ['RCB', 'RCM'], ['LCB', 'LCM'], ['LB', 'LM'], ['RM', 'RCM'], ['RCM', 'LCM'], ['LCM', 'LM'], ['RCM', 'RST'], ['LCM', 'LST'], ['RM', 'RST'], ['LM', 'LST'], ['RST', 'LST']] },
+    { id: '4-3-3', name: '4-3-3 Ofensivo', pos: [{role: 'GK', x: 4, y: 50}, {role: 'RB', x: 14, y: 15}, {role: 'RCB', x: 12, y: 35}, {role: 'LCB', x: 12, y: 65}, {role: 'LB', x: 14, y: 85}, {role: 'CDM', x: 24, y: 50}, {role: 'RCM', x: 30, y: 25}, {role: 'LCM', x: 30, y: 75}, {role: 'RW', x: 40, y: 15}, {role: 'ST', x: 44, y: 50}, {role: 'LW', x: 40, y: 85}], links: [['GK', 'RCB'], ['GK', 'LCB'], ['RB', 'RCB'], ['RCB', 'LCB'], ['LCB', 'LB'], ['RCB', 'CDM'], ['LCB', 'CDM'], ['RB', 'RCM'], ['LB', 'LCM'], ['CDM', 'RCM'], ['CDM', 'LCM'], ['RCM', 'RW'], ['LCM', 'LW'], ['RCM', 'ST'], ['LCM', 'ST'], ['RW', 'ST'], ['LW', 'ST']] },
+    { id: '4-2-3-1', name: '4-2-3-1 Moderno', pos: [{role: 'GK', x: 4, y: 50}, {role: 'RB', x: 14, y: 15}, {role: 'RCB', x: 12, y: 35}, {role: 'LCB', x: 12, y: 65}, {role: 'LB', x: 14, y: 85}, {role: 'RDM', x: 24, y: 35}, {role: 'LDM', x: 24, y: 65}, {role: 'RM', x: 34, y: 20}, {role: 'CAM', x: 36, y: 50}, {role: 'LM', x: 34, y: 80}, {role: 'ST', x: 45, y: 50}], links: [['GK', 'RCB'], ['GK', 'LCB'], ['RB', 'RCB'], ['RCB', 'LCB'], ['LCB', 'LB'], ['RCB', 'RDM'], ['LCB', 'LDM'], ['RB', 'RDM'], ['LB', 'LDM'], ['RDM', 'LDM'], ['RDM', 'RM'], ['RDM', 'CAM'], ['LDM', 'CAM'], ['LDM', 'LM'], ['RM', 'CAM'], ['LM', 'CAM'], ['RM', 'ST'], ['CAM', 'ST'], ['LM', 'ST']] },
+    { id: '3-5-2', name: '3-5-2 Carrileros', pos: [{role: 'GK', x: 4, y: 50}, {role: 'RCB', x: 12, y: 25}, {role: 'CB', x: 10, y: 50}, {role: 'LCB', x: 12, y: 75}, {role: 'RWB', x: 26, y: 12}, {role: 'CDM', x: 24, y: 50}, {role: 'RCM', x: 30, y: 30}, {role: 'LCM', x: 30, y: 70}, {role: 'LWB', x: 26, y: 88}, {role: 'RST', x: 44, y: 35}, {role: 'LST', x: 44, y: 65}], links: [['GK', 'RCB'], ['GK', 'CB'], ['GK', 'LCB'], ['RCB', 'CB'], ['CB', 'LCB'], ['RCB', 'RWB'], ['RCB', 'RCM'], ['CB', 'CDM'], ['LCB', 'LCM'], ['LCB', 'LWB'], ['CDM', 'RCM'], ['CDM', 'LCM'], ['RWB', 'RCM'], ['LWB', 'LCM'], ['RCM', 'RST'], ['LCM', 'LST'], ['RST', 'LST'], ['RCM', 'LST'], ['LCM', 'RST']] },
+    { id: '5-3-2', name: '5-3-2 Defensivo', pos: [{role: 'GK', x: 4, y: 50}, {role: 'RWB', x: 15, y: 12}, {role: 'RCB', x: 12, y: 30}, {role: 'CB', x: 10, y: 50}, {role: 'LCB', x: 12, y: 70}, {role: 'LWB', x: 15, y: 88}, {role: 'RCM', x: 28, y: 25}, {role: 'CM', x: 26, y: 50}, {role: 'LCM', x: 28, y: 75}, {role: 'RST', x: 44, y: 35}, {role: 'LST', x: 44, y: 65}], links: [['GK', 'RCB'], ['GK', 'CB'], ['GK', 'LCB'], ['RWB', 'RCB'], ['RCB', 'CB'], ['CB', 'LCB'], ['LCB', 'LWB'], ['RCB', 'RCM'], ['CB', 'CM'], ['LCB', 'LCM'], ['RCM', 'CM'], ['CM', 'LCM'], ['RWB', 'RCM'], ['LWB', 'LCM'], ['RCM', 'RST'], ['CM', 'RST'], ['CM', 'LST'], ['LCM', 'LST'], ['RST', 'LST']] },
+    { id: '4-4-2-rombo', name: '4-4-2 Rombo', pos: [{role: 'GK', x: 4, y: 50}, {role: 'RB', x: 14, y: 15}, {role: 'RCB', x: 12, y: 35}, {role: 'LCB', x: 12, y: 65}, {role: 'LB', x: 14, y: 85}, {role: 'CDM', x: 22, y: 50}, {role: 'RM', x: 28, y: 25}, {role: 'LM', x: 28, y: 75}, {role: 'CAM', x: 36, y: 50}, {role: 'RST', x: 44, y: 35}, {role: 'LST', x: 44, y: 65}], links: [['GK', 'RCB'], ['GK', 'LCB'], ['RB', 'RCB'], ['RCB', 'LCB'], ['LCB', 'LB'], ['RCB', 'CDM'], ['LCB', 'CDM'], ['RB', 'RM'], ['LB', 'LM'], ['CDM', 'RM'], ['CDM', 'LM'], ['RM', 'CAM'], ['LM', 'CAM'], ['CAM', 'RST'], ['CAM', 'LST'], ['RST', 'LST'], ['RM', 'RST'], ['LM', 'LST']] },
+    { id: '3-4-3', name: '3-4-3 Ofensivo', pos: [{role: 'GK', x: 4, y: 50}, {role: 'RCB', x: 12, y: 25}, {role: 'CB', x: 10, y: 50}, {role: 'LCB', x: 12, y: 75}, {role: 'RM', x: 26, y: 15}, {role: 'RCM', x: 24, y: 35}, {role: 'LCM', x: 24, y: 65}, {role: 'LM', x: 26, y: 85}, {role: 'RW', x: 40, y: 20}, {role: 'ST', x: 44, y: 50}, {role: 'LW', x: 40, y: 80}], links: [['GK', 'RCB'], ['GK', 'CB'], ['GK', 'LCB'], ['RCB', 'CB'], ['CB', 'LCB'], ['RCB', 'RM'], ['RCB', 'RCM'], ['CB', 'RCM'], ['CB', 'LCM'], ['LCB', 'LCM'], ['LCB', 'LM'], ['RM', 'RCM'], ['RCM', 'LCM'], ['LCM', 'LM'], ['RM', 'RW'], ['RCM', 'RW'], ['RCM', 'ST'], ['LCM', 'ST'], ['LCM', 'LW'], ['LM', 'LW'], ['RW', 'ST'], ['ST', 'LW']] },
+    { id: '4-1-4-1', name: '4-1-4-1 Posesión', pos: [{role: 'GK', x: 4, y: 50}, {role: 'RB', x: 14, y: 15}, {role: 'RCB', x: 12, y: 35}, {role: 'LCB', x: 12, y: 65}, {role: 'LB', x: 14, y: 85}, {role: 'CDM', x: 22, y: 50}, {role: 'RM', x: 32, y: 15}, {role: 'RCM', x: 30, y: 35}, {role: 'LCM', x: 30, y: 65}, {role: 'LM', x: 32, y: 85}, {role: 'ST', x: 45, y: 50}], links: [['GK', 'RCB'], ['GK', 'LCB'], ['RB', 'RCB'], ['RCB', 'LCB'], ['LCB', 'LB'], ['RCB', 'CDM'], ['LCB', 'CDM'], ['RB', 'RM'], ['CDM', 'RCM'], ['CDM', 'LCM'], ['LB', 'LM'], ['RM', 'RCM'], ['RCM', 'LCM'], ['LCM', 'LM'], ['RM', 'ST'], ['RCM', 'ST'], ['LCM', 'ST'], ['LM', 'ST']] }
   ]
 };
 
 function getFormationsForSize(size: number): Formation[] {
   if (FORMATIONS[size]) return FORMATIONS[size];
-  const genericCoords = Array.from({length: size}).map((_, i) => ({ x: 10 + (Math.random() * 30), y: 10 + (Math.random() * 80) }));
-  return [{ id: 'generic', name: `Genérica (${size}v${size})`, pos: genericCoords }];
+  const genericCoords = Array.from({length: size}).map((_, i) => ({ role: `P${i+1}`, x: 10 + (Math.random() * 30), y: 10 + (Math.random() * 80) }));
+  return [{ id: 'generic', name: `Genérica (${size}v${size})`, pos: genericCoords, links: [] }];
 }
 
 export function TacticalBoard({ players, teamSize, pairMap, fillBestBalance, onComplete, onBack, isPadel }: TacticalBoardProps) {
@@ -289,11 +290,11 @@ export function TacticalBoard({ players, teamSize, pairMap, fillBestBalance, onC
           )}
 
           {/* Formation lines SVG overlay */}
-          <FormationLines positions={formationA.pos} color={colorA1} />
-          <FormationLines positions={formationB.pos} color={colorB1} mirrorX />
+          <FormationLines formation={formationA} color={colorA1} />
+          <FormationLines formation={formationB} color={colorB1} mirrorX />
           {/* Chemistry glow lines */}
-          <ChemistryLines positions={formationA.pos} assignments={assignmentsA} pairMap={pairMap} />
-          <ChemistryLines positions={formationB.pos} assignments={assignmentsB} pairMap={pairMap} mirrorX />
+          <ChemistryLines formation={formationA} assignments={assignmentsA} pairMap={pairMap} />
+          <ChemistryLines formation={formationB} assignments={assignmentsB} pairMap={pairMap} mirrorX />
 
           {/* Render Slots Map */}
           {formationA.pos.map((coord, i) => {
@@ -475,8 +476,8 @@ export function FinalPitchRenderer({ players, config, isPadel }: { players: Play
       )}
 
       {/* Formation lines */}
-      <FormationLines positions={formationA.pos} color={config.colorA1} />
-      <FormationLines positions={formationB.pos} color={config.colorB1} mirrorX />
+      <FormationLines formation={formationA} color={config.colorA1} />
+      <FormationLines formation={formationB} color={config.colorB1} mirrorX />
 
       {formationA.pos.map((coord, i) => {
          const locId = `teamA-${i}`;
@@ -498,50 +499,34 @@ export function FinalPitchRenderer({ players, config, isPadel }: { players: Play
 // ─────────────────────────────────────────────────────────────────────────────
 // FORMATION LINES — SVG overlay connecting players by proximity
 // ─────────────────────────────────────────────────────────────────────────────
-function FormationLines({ positions, color, mirrorX = false }: {
-  positions: { x: number; y: number }[];
+function FormationLines({ formation, color, mirrorX = false }: {
+  formation: Formation;
   color: string;
   mirrorX?: boolean;
 }) {
-  if (positions.length < 2) return null;
+  if (!formation.links || formation.links.length === 0) return null;
 
-  const pts = positions.map(p => ({
-    x: mirrorX ? 100 - p.x : p.x,
-    y: p.y,
-  }));
-
-  // Connect each node to its nearest neighbors (no duplicate lines)
-  // 3 connections for 5+ players ensures players in the same line get connected
-  const maxConn = positions.length >= 5 ? 3 : 2;
-  const connections: [number, number][] = [];
-  const added = new Set<string>();
-  for (let i = 0; i < pts.length; i++) {
-    const sorted = pts
-      .map((_, j) => j)
-      .filter(j => j !== i)
-      .sort((a, b) => {
-        const da = Math.hypot(pts[i].x - pts[a].x, pts[i].y - pts[a].y);
-        const db = Math.hypot(pts[i].x - pts[b].x, pts[i].y - pts[b].y);
-        return da - db;
-      })
-      .slice(0, maxConn);
-    sorted.forEach(j => {
-      const key = i < j ? `${i}-${j}` : `${j}-${i}`;
-      if (!added.has(key)) { added.add(key); connections.push([i, j]); }
-    });
-  }
-
+  // Creamos un mapa de roles a coordenadas finales
+  const roleToPos = new Map<string, {x: number, y: number}>();
+  formation.pos.forEach(p => {
+    roleToPos.set(p.role, { x: mirrorX ? 100 - p.x : p.x, y: p.y });
+  });
 
   return (
     <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
-      {connections.map(([i, j], idx) => (
-        <line
-          key={idx}
-          x1={`${pts[i].x}%`} y1={`${pts[i].y}%`}
-          x2={`${pts[j].x}%`} y2={`${pts[j].y}%`}
-          stroke={color} strokeWidth="1.5" strokeOpacity="0.28" strokeDasharray="5 4"
-        />
-      ))}
+      {formation.links.map(([roleA, roleB], idx) => {
+        const pA = roleToPos.get(roleA);
+        const pB = roleToPos.get(roleB);
+        if (!pA || !pB) return null;
+        return (
+          <line
+            key={idx}
+            x1={`${pA.x}%`} y1={`${pA.y}%`}
+            x2={`${pB.x}%`} y2={`${pB.y}%`}
+            stroke={color} strokeWidth="1.5" strokeOpacity="0.28" strokeDasharray="5 4"
+          />
+        );
+      })}
     </svg>
   );
 }
@@ -549,37 +534,57 @@ function FormationLines({ positions, color, mirrorX = false }: {
 // ─────────────────────────────────────────────────────────────────────────────
 // CHEMISTRY LINES — gold solid lines between players with >70% win rate together
 // ─────────────────────────────────────────────────────────────────────────────
-function ChemistryLines({ positions, assignments, pairMap, mirrorX = false }: {
-  positions: { x: number; y: number }[];
+function ChemistryLines({ formation, assignments, pairMap, mirrorX = false }: {
+  formation: Formation;
   assignments: (PlayerStats | undefined)[];
   pairMap: Map<string, PairStats>;
   mirrorX?: boolean;
 }) {
-  const pts = positions.map(p => ({ x: mirrorX ? 100 - p.x : p.x, y: p.y }));
+  if (!formation.links || formation.links.length === 0) return null;
 
-  const lines: { i: number; j: number; color: string }[] = [];
+  const pts = formation.pos.map(p => ({ role: p.role, x: mirrorX ? 100 - p.x : p.x, y: p.y }));
+  
+  const roleToIndex = new Map<string, number>();
+  formation.pos.forEach((p, idx) => {
+    roleToIndex.set(p.role, idx);
+  });
 
-  for (let i = 0; i < assignments.length; i++) {
-    for (let j = i + 1; j < assignments.length; j++) {
-      const pA = assignments[i]; const pB = assignments[j];
-      if (!pA || !pB) continue;
-      const k = pA.player.id < pB.player.id ? `${pA.player.id}::${pB.player.id}` : `${pB.player.id}::${pA.player.id}`;
-      const pair = pairMap.get(k);
-      // Solo mostrar pares con al menos 2 partidos juntos
-      if (!pair || pair.togetherTotal < 2) continue;
-      const pct = pair.togetherWinPct;
-      const color = pct >= 65 ? '#10b981' : pct >= 40 ? '#f59e0b' : '#ef4444';
-      lines.push({ i, j, color });
-    }
+  const lines: { pA: {x: number, y: number}; pB: {x: number, y: number}; color: string }[] = [];
+
+  for (const [roleA, roleB] of formation.links) {
+    const idxA = roleToIndex.get(roleA);
+    const idxB = roleToIndex.get(roleB);
+    if (idxA === undefined || idxB === undefined) continue;
+
+    const pA_assig = assignments[idxA];
+    const pB_assig = assignments[idxB];
+    if (!pA_assig || !pB_assig) continue;
+
+    const k = pA_assig.player.id < pB_assig.player.id 
+      ? `${pA_assig.player.id}::${pB_assig.player.id}` 
+      : `${pB_assig.player.id}::${pA_assig.player.id}`;
+      
+    const pair = pairMap.get(k);
+    if (!pair || pair.togetherTotal < 2) continue;
+    
+    const pct = pair.togetherWinPct;
+    const color = pct >= 65 ? '#10b981' : pct >= 40 ? '#f59e0b' : '#ef4444';
+    
+    lines.push({
+      pA: pts[idxA],
+      pB: pts[idxB],
+      color
+    });
   }
+
   if (lines.length === 0) return null;
 
   return (
     <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
-      {lines.map(({ i, j, color }, idx) => (
+      {lines.map(({ pA, pB, color }, idx) => (
         <line key={idx}
-          x1={`${pts[i].x}%`} y1={`${pts[i].y}%`}
-          x2={`${pts[j].x}%`} y2={`${pts[j].y}%`}
+          x1={`${pA.x}%`} y1={`${pA.y}%`}
+          x2={`${pB.x}%`} y2={`${pB.y}%`}
           stroke={color} strokeWidth="2" strokeOpacity="0.6"
         />
       ))}
