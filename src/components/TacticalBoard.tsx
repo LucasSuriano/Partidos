@@ -552,7 +552,7 @@ function ChemistryLines({ formation, assignments, pairMap, mirrorX = false }: {
     roleToIndex.set(p.role, idx);
   });
 
-  const lines: { pA: {x: number, y: number}; pB: {x: number, y: number}; color: string; filter?: string; strokeWidth: string; strokeOpacity: string }[] = [];
+  const lines: { pA: {x: number, y: number}; pB: {x: number, y: number}; color: string; filter?: string; strokeWidth: string; strokeOpacity: string; debugText: string }[] = [];
 
   for (const [roleA, roleB] of formation.links) {
     const idxA = roleToIndex.get(roleA);
@@ -572,17 +572,24 @@ function ChemistryLines({ formation, assignments, pairMap, mirrorX = false }: {
     
     const pct = pair.togetherWinPct;
     const color = pct >= 65 ? '#10b981' : pct >= 40 ? '#f59e0b' : '#ef4444';
-    const filter = pct >= 65 ? 'url(#glow-green)' : pct >= 40 ? 'url(#glow-gold)' : undefined;
-    const strokeWidth = pct >= 65 ? "2.5" : pct >= 40 ? "2" : "1.5";
-    const strokeOpacity = pct >= 65 ? "0.9" : pct >= 40 ? "0.8" : "0.5";
+    const filter = pct >= 65 ? 'url(#glow-green)' : pct >= 40 ? 'url(#glow-gold)' : 'url(#glow-red)';
+    const strokeWidth = "2.5";
+    const strokeOpacity = "0.9";
+    const debugText = `${pair.togetherTotal} PJ`;
     
+    // Fix SVG bug where perfectly horizontal/vertical lines disappear when filters are applied
+    const adjustedB = { ...pts[idxB] };
+    if (pts[idxA].x === adjustedB.x) adjustedB.x += 0.01;
+    if (pts[idxA].y === adjustedB.y) adjustedB.y += 0.01;
+
     lines.push({
       pA: pts[idxA],
-      pB: pts[idxB],
+      pB: adjustedB,
       color,
       filter,
       strokeWidth,
-      strokeOpacity
+      strokeOpacity,
+      debugText
     });
   }
 
@@ -591,23 +598,41 @@ function ChemistryLines({ formation, assignments, pairMap, mirrorX = false }: {
   return (
     <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
       <defs>
-        <filter id="glow-green" x="-20%" y="-20%" width="140%" height="140%">
+        <filter id="glow-green" x="-20%" y="-20%" width="140%" height="140%" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
           <feGaussianBlur stdDeviation="3" result="blur" />
           <feComposite in="SourceGraphic" in2="blur" operator="over" />
         </filter>
-        <filter id="glow-gold" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="2" result="blur" />
+        <filter id="glow-gold" x="-20%" y="-20%" width="140%" height="140%" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+          <feGaussianBlur stdDeviation="3" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+        <filter id="glow-red" x="-20%" y="-20%" width="140%" height="140%" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+          <feGaussianBlur stdDeviation="3" result="blur" />
           <feComposite in="SourceGraphic" in2="blur" operator="over" />
         </filter>
       </defs>
-      {lines.map(({ pA, pB, color, filter, strokeWidth, strokeOpacity }, idx) => (
-        <line key={idx}
-          x1={`${pA.x}%`} y1={`${pA.y}%`}
-          x2={`${pB.x}%`} y2={`${pB.y}%`}
-          stroke={color} strokeWidth={strokeWidth} strokeOpacity={strokeOpacity}
-          filter={filter} strokeLinecap="round"
-        />
-      ))}
+      {lines.map(({ pA, pB, color, filter, strokeWidth, strokeOpacity, debugText }, idx) => {
+        const midX = (pA.x + pB.x) / 2;
+        const midY = (pA.y + pB.y) / 2;
+        return (
+          <g key={idx}>
+            <line
+              x1={`${pA.x}%`} y1={`${pA.y}%`}
+              x2={`${pB.x}%`} y2={`${pB.y}%`}
+              stroke={color} strokeWidth={strokeWidth} strokeOpacity={strokeOpacity}
+              filter={filter} strokeLinecap="round"
+            />
+            {debugText && (
+              <svg x={`${midX}%`} y={`${midY}%`} style={{ overflow: 'visible' }}>
+                <rect x="-14" y="-7" width="28" height="14" rx="7" fill="rgba(15, 23, 42, 0.95)" stroke={color} strokeWidth="1" />
+                <text x="0" y="1" fill="#f8fafc" fontSize="7" fontWeight="bold" textAnchor="middle" dominantBaseline="middle">
+                  {debugText}
+                </text>
+              </svg>
+            )}
+          </g>
+        );
+      })}
     </svg>
   );
 }
