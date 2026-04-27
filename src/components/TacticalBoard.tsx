@@ -669,14 +669,29 @@ function ComparisonPanel({ formedA, formedB, teamSize, colorA, colorB }: {
         </div>
 
         {/* Center — win probability */}
-        <div className={styles.compCenter}>
-          <div className={styles.compDualBar}>
-            <div className={styles.compDualBarA} style={{ width: `${aWidth}%`, background: colorA }} />
-            <div className={styles.compDualBarB} style={{ width: `${100 - aWidth}%`, background: colorB }} />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: '0 1 260px', margin: '0 1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '8px' }}>
+            {formedA.length === teamSize && formedB.length === teamSize ? (
+              <span style={{ fontSize: '1.25rem', fontWeight: 900, color: colorA, textShadow: `0 0 10px ${colorA}80` }}>{aWidth.toFixed(0)}%</span>
+            ) : <span style={{ width: '40px' }} />}
+            
+            <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#94a3b8', background: 'rgba(255,255,255,0.05)', padding: '2px 10px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', letterSpacing: '0.1em' }}>VS</span>
+            
+            {formedA.length === teamSize && formedB.length === teamSize ? (
+              <span style={{ fontSize: '1.25rem', fontWeight: 900, color: colorB, textShadow: `0 0 10px ${colorB}80` }}>{(100 - aWidth).toFixed(0)}%</span>
+            ) : <span style={{ width: '40px' }} />}
           </div>
-          <span className={styles.compVsText}>VS</span>
+          
+          <div style={{ position: 'relative', width: '100%', height: '12px', background: 'rgba(0,0,0,0.5)', borderRadius: '6px', overflow: 'hidden', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)' }}>
+            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${aWidth}%`, background: `linear-gradient(90deg, ${colorA}40, ${colorA})`, transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)' }} />
+            <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: `${100 - aWidth}%`, background: `linear-gradient(270deg, ${colorB}40, ${colorB})`, transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)' }} />
+            <div style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: '2px', background: 'rgba(255,255,255,0.2)', transform: 'translateX(-50%)', zIndex: 2 }} />
+          </div>
+          
           {formedA.length === teamSize && formedB.length === teamSize && (
-            <span className={styles.winProbLabel}>{aWidth.toFixed(0)}% · {(100 - aWidth).toFixed(0)}%</span>
+            <span style={{ fontSize: '0.65rem', color: '#64748b', marginTop: '6px', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+              Probabilidad de Victoria
+            </span>
           )}
         </div>
 
