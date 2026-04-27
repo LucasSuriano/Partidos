@@ -64,14 +64,14 @@ const FORMATIONS: Record<number, Formation[]> = {
     { id: '3-1-2', name: 'Contraataque (3-1-2)', pos: [{role: 'GK', x: 4, y: 50}, {role: 'LB', x: 15, y: 20}, {role: 'CB', x: 12, y: 50}, {role: 'RB', x: 15, y: 80}, {role: 'CDM', x: 26, y: 50}, {role: 'LST', x: 40, y: 35}, {role: 'RST', x: 40, y: 65}], links: [['GK', 'LB'], ['GK', 'CB'], ['GK', 'RB'], ['LB', 'CB'], ['CB', 'RB'], ['LB', 'CDM'], ['CB', 'CDM'], ['RB', 'CDM'], ['CDM', 'LST'], ['CDM', 'RST'], ['LST', 'RST']] }
   ],
   11: [
-    { id: '4-4-2', name: '4-4-2 Clásico', pos: [{role: 'GK', x: 4, y: 50}, {role: 'RB', x: 14, y: 15}, {role: 'RCB', x: 12, y: 35}, {role: 'LCB', x: 12, y: 65}, {role: 'LB', x: 14, y: 85}, {role: 'RM', x: 30, y: 15}, {role: 'RCM', x: 26, y: 35}, {role: 'LCM', x: 26, y: 65}, {role: 'LM', x: 30, y: 85}, {role: 'RST', x: 44, y: 35}, {role: 'LST', x: 44, y: 65}], links: [['GK', 'RCB'], ['GK', 'LCB'], ['RB', 'RCB'], ['RCB', 'LCB'], ['LCB', 'LB'], ['RB', 'RM'], ['RCB', 'RCM'], ['LCB', 'LCM'], ['LB', 'LM'], ['RM', 'RCM'], ['RCM', 'LCM'], ['LCM', 'LM'], ['RCM', 'RST'], ['LCM', 'LST'], ['RM', 'RST'], ['LM', 'LST'], ['RST', 'LST']] },
-    { id: '4-3-3', name: '4-3-3 Ofensivo', pos: [{role: 'GK', x: 4, y: 50}, {role: 'RB', x: 14, y: 15}, {role: 'RCB', x: 12, y: 35}, {role: 'LCB', x: 12, y: 65}, {role: 'LB', x: 14, y: 85}, {role: 'CDM', x: 24, y: 50}, {role: 'RCM', x: 30, y: 25}, {role: 'LCM', x: 30, y: 75}, {role: 'RW', x: 40, y: 15}, {role: 'ST', x: 44, y: 50}, {role: 'LW', x: 40, y: 85}], links: [['GK', 'RCB'], ['GK', 'LCB'], ['RB', 'RCB'], ['RCB', 'LCB'], ['LCB', 'LB'], ['RCB', 'CDM'], ['LCB', 'CDM'], ['RB', 'RCM'], ['LB', 'LCM'], ['CDM', 'RCM'], ['CDM', 'LCM'], ['RCM', 'RW'], ['LCM', 'LW'], ['RCM', 'ST'], ['LCM', 'ST'], ['RW', 'ST'], ['LW', 'ST']] },
-    { id: '4-2-3-1', name: '4-2-3-1 Moderno', pos: [{role: 'GK', x: 4, y: 50}, {role: 'RB', x: 14, y: 15}, {role: 'RCB', x: 12, y: 35}, {role: 'LCB', x: 12, y: 65}, {role: 'LB', x: 14, y: 85}, {role: 'RDM', x: 24, y: 35}, {role: 'LDM', x: 24, y: 65}, {role: 'RM', x: 34, y: 20}, {role: 'CAM', x: 36, y: 50}, {role: 'LM', x: 34, y: 80}, {role: 'ST', x: 45, y: 50}], links: [['GK', 'RCB'], ['GK', 'LCB'], ['RB', 'RCB'], ['RCB', 'LCB'], ['LCB', 'LB'], ['RCB', 'RDM'], ['LCB', 'LDM'], ['RB', 'RDM'], ['LB', 'LDM'], ['RDM', 'LDM'], ['RDM', 'RM'], ['RDM', 'CAM'], ['LDM', 'CAM'], ['LDM', 'LM'], ['RM', 'CAM'], ['LM', 'CAM'], ['RM', 'ST'], ['CAM', 'ST'], ['LM', 'ST']] },
-    { id: '3-5-2', name: '3-5-2 Carrileros', pos: [{role: 'GK', x: 4, y: 50}, {role: 'RCB', x: 12, y: 25}, {role: 'CB', x: 10, y: 50}, {role: 'LCB', x: 12, y: 75}, {role: 'RWB', x: 26, y: 12}, {role: 'CDM', x: 24, y: 50}, {role: 'RCM', x: 30, y: 30}, {role: 'LCM', x: 30, y: 70}, {role: 'LWB', x: 26, y: 88}, {role: 'RST', x: 44, y: 35}, {role: 'LST', x: 44, y: 65}], links: [['GK', 'RCB'], ['GK', 'CB'], ['GK', 'LCB'], ['RCB', 'CB'], ['CB', 'LCB'], ['RCB', 'RWB'], ['RCB', 'RCM'], ['CB', 'CDM'], ['LCB', 'LCM'], ['LCB', 'LWB'], ['CDM', 'RCM'], ['CDM', 'LCM'], ['RWB', 'RCM'], ['LWB', 'LCM'], ['RCM', 'RST'], ['LCM', 'LST'], ['RST', 'LST'], ['RCM', 'LST'], ['LCM', 'RST']] },
-    { id: '5-3-2', name: '5-3-2 Defensivo', pos: [{role: 'GK', x: 4, y: 50}, {role: 'RWB', x: 15, y: 12}, {role: 'RCB', x: 12, y: 30}, {role: 'CB', x: 10, y: 50}, {role: 'LCB', x: 12, y: 70}, {role: 'LWB', x: 15, y: 88}, {role: 'RCM', x: 28, y: 25}, {role: 'CM', x: 26, y: 50}, {role: 'LCM', x: 28, y: 75}, {role: 'RST', x: 44, y: 35}, {role: 'LST', x: 44, y: 65}], links: [['GK', 'RCB'], ['GK', 'CB'], ['GK', 'LCB'], ['RWB', 'RCB'], ['RCB', 'CB'], ['CB', 'LCB'], ['LCB', 'LWB'], ['RCB', 'RCM'], ['CB', 'CM'], ['LCB', 'LCM'], ['RCM', 'CM'], ['CM', 'LCM'], ['RWB', 'RCM'], ['LWB', 'LCM'], ['RCM', 'RST'], ['CM', 'RST'], ['CM', 'LST'], ['LCM', 'LST'], ['RST', 'LST']] },
-    { id: '4-4-2-rombo', name: '4-4-2 Rombo', pos: [{role: 'GK', x: 4, y: 50}, {role: 'RB', x: 14, y: 15}, {role: 'RCB', x: 12, y: 35}, {role: 'LCB', x: 12, y: 65}, {role: 'LB', x: 14, y: 85}, {role: 'CDM', x: 22, y: 50}, {role: 'RM', x: 28, y: 25}, {role: 'LM', x: 28, y: 75}, {role: 'CAM', x: 36, y: 50}, {role: 'RST', x: 44, y: 35}, {role: 'LST', x: 44, y: 65}], links: [['GK', 'RCB'], ['GK', 'LCB'], ['RB', 'RCB'], ['RCB', 'LCB'], ['LCB', 'LB'], ['RCB', 'CDM'], ['LCB', 'CDM'], ['RB', 'RM'], ['LB', 'LM'], ['CDM', 'RM'], ['CDM', 'LM'], ['RM', 'CAM'], ['LM', 'CAM'], ['CAM', 'RST'], ['CAM', 'LST'], ['RST', 'LST'], ['RM', 'RST'], ['LM', 'LST']] },
-    { id: '3-4-3', name: '3-4-3 Ofensivo', pos: [{role: 'GK', x: 4, y: 50}, {role: 'RCB', x: 12, y: 25}, {role: 'CB', x: 10, y: 50}, {role: 'LCB', x: 12, y: 75}, {role: 'RM', x: 26, y: 15}, {role: 'RCM', x: 24, y: 35}, {role: 'LCM', x: 24, y: 65}, {role: 'LM', x: 26, y: 85}, {role: 'RW', x: 40, y: 20}, {role: 'ST', x: 44, y: 50}, {role: 'LW', x: 40, y: 80}], links: [['GK', 'RCB'], ['GK', 'CB'], ['GK', 'LCB'], ['RCB', 'CB'], ['CB', 'LCB'], ['RCB', 'RM'], ['RCB', 'RCM'], ['CB', 'RCM'], ['CB', 'LCM'], ['LCB', 'LCM'], ['LCB', 'LM'], ['RM', 'RCM'], ['RCM', 'LCM'], ['LCM', 'LM'], ['RM', 'RW'], ['RCM', 'RW'], ['RCM', 'ST'], ['LCM', 'ST'], ['LCM', 'LW'], ['LM', 'LW'], ['RW', 'ST'], ['ST', 'LW']] },
-    { id: '4-1-4-1', name: '4-1-4-1 Posesión', pos: [{role: 'GK', x: 4, y: 50}, {role: 'RB', x: 14, y: 15}, {role: 'RCB', x: 12, y: 35}, {role: 'LCB', x: 12, y: 65}, {role: 'LB', x: 14, y: 85}, {role: 'CDM', x: 22, y: 50}, {role: 'RM', x: 32, y: 15}, {role: 'RCM', x: 30, y: 35}, {role: 'LCM', x: 30, y: 65}, {role: 'LM', x: 32, y: 85}, {role: 'ST', x: 45, y: 50}], links: [['GK', 'RCB'], ['GK', 'LCB'], ['RB', 'RCB'], ['RCB', 'LCB'], ['LCB', 'LB'], ['RCB', 'CDM'], ['LCB', 'CDM'], ['RB', 'RM'], ['CDM', 'RCM'], ['CDM', 'LCM'], ['LB', 'LM'], ['RM', 'RCM'], ['RCM', 'LCM'], ['LCM', 'LM'], ['RM', 'ST'], ['RCM', 'ST'], ['LCM', 'ST'], ['LM', 'ST']] }
+    { id: '4-4-2', name: '4-4-2 Clásico', pos: [{role: 'GK', x: 4, y: 50}, {role: 'LB', x: 14, y: 15}, {role: 'LCB', x: 12, y: 35}, {role: 'RCB', x: 12, y: 65}, {role: 'RB', x: 14, y: 85}, {role: 'LM', x: 30, y: 15}, {role: 'LCM', x: 26, y: 35}, {role: 'RCM', x: 26, y: 65}, {role: 'RM', x: 30, y: 85}, {role: 'LST', x: 44, y: 35}, {role: 'RST', x: 44, y: 65}], links: [['GK', 'LCB'], ['GK', 'RCB'], ['LB', 'LCB'], ['LCB', 'RCB'], ['RCB', 'RB'], ['LB', 'LM'], ['LCB', 'LCM'], ['RCB', 'RCM'], ['RB', 'RM'], ['LM', 'LCM'], ['LCM', 'RCM'], ['RCM', 'RM'], ['LCM', 'LST'], ['RCM', 'RST'], ['LM', 'LST'], ['RM', 'RST'], ['LST', 'RST']] },
+    { id: '4-3-3', name: '4-3-3 Ofensivo', pos: [{role: 'GK', x: 4, y: 50}, {role: 'LB', x: 14, y: 15}, {role: 'LCB', x: 12, y: 35}, {role: 'RCB', x: 12, y: 65}, {role: 'RB', x: 14, y: 85}, {role: 'CDM', x: 24, y: 50}, {role: 'LCM', x: 30, y: 25}, {role: 'RCM', x: 30, y: 75}, {role: 'LW', x: 40, y: 15}, {role: 'ST', x: 44, y: 50}, {role: 'RW', x: 40, y: 85}], links: [['GK', 'LCB'], ['GK', 'RCB'], ['LB', 'LCB'], ['LCB', 'RCB'], ['RCB', 'RB'], ['LCB', 'CDM'], ['RCB', 'CDM'], ['LB', 'LCM'], ['RB', 'RCM'], ['CDM', 'LCM'], ['CDM', 'RCM'], ['LCM', 'LW'], ['RCM', 'RW'], ['LCM', 'ST'], ['RCM', 'ST'], ['LW', 'ST'], ['RW', 'ST']] },
+    { id: '4-2-3-1', name: '4-2-3-1 Moderno', pos: [{role: 'GK', x: 4, y: 50}, {role: 'LB', x: 14, y: 15}, {role: 'LCB', x: 12, y: 35}, {role: 'RCB', x: 12, y: 65}, {role: 'RB', x: 14, y: 85}, {role: 'LDM', x: 24, y: 35}, {role: 'RDM', x: 24, y: 65}, {role: 'LM', x: 34, y: 20}, {role: 'CAM', x: 36, y: 50}, {role: 'RM', x: 34, y: 80}, {role: 'ST', x: 45, y: 50}], links: [['GK', 'LCB'], ['GK', 'RCB'], ['LB', 'LCB'], ['LCB', 'RCB'], ['RCB', 'RB'], ['LCB', 'LDM'], ['RCB', 'RDM'], ['LB', 'LDM'], ['RB', 'RDM'], ['LDM', 'RDM'], ['LDM', 'LM'], ['LDM', 'CAM'], ['RDM', 'CAM'], ['RDM', 'RM'], ['LM', 'CAM'], ['RM', 'CAM'], ['LM', 'ST'], ['CAM', 'ST'], ['RM', 'ST']] },
+    { id: '3-5-2', name: '3-5-2 Carrileros', pos: [{role: 'GK', x: 4, y: 50}, {role: 'LCB', x: 12, y: 25}, {role: 'CB', x: 10, y: 50}, {role: 'RCB', x: 12, y: 75}, {role: 'LWB', x: 26, y: 12}, {role: 'CDM', x: 24, y: 50}, {role: 'LCM', x: 30, y: 30}, {role: 'RCM', x: 30, y: 70}, {role: 'RWB', x: 26, y: 88}, {role: 'LST', x: 44, y: 35}, {role: 'RST', x: 44, y: 65}], links: [['GK', 'LCB'], ['GK', 'CB'], ['GK', 'RCB'], ['LCB', 'CB'], ['CB', 'RCB'], ['LCB', 'LWB'], ['LCB', 'LCM'], ['CB', 'CDM'], ['RCB', 'RCM'], ['RCB', 'RWB'], ['CDM', 'LCM'], ['CDM', 'RCM'], ['LWB', 'LCM'], ['RWB', 'RCM'], ['LCM', 'LST'], ['RCM', 'RST'], ['LST', 'RST'], ['LCM', 'RST'], ['RCM', 'LST']] },
+    { id: '5-3-2', name: '5-3-2 Defensivo', pos: [{role: 'GK', x: 4, y: 50}, {role: 'LWB', x: 15, y: 12}, {role: 'LCB', x: 12, y: 30}, {role: 'CB', x: 10, y: 50}, {role: 'RCB', x: 12, y: 70}, {role: 'RWB', x: 15, y: 88}, {role: 'LCM', x: 28, y: 25}, {role: 'CM', x: 26, y: 50}, {role: 'RCM', x: 28, y: 75}, {role: 'LST', x: 44, y: 35}, {role: 'RST', x: 44, y: 65}], links: [['GK', 'LCB'], ['GK', 'CB'], ['GK', 'RCB'], ['LWB', 'LCB'], ['LCB', 'CB'], ['CB', 'RCB'], ['RCB', 'RWB'], ['LCB', 'LCM'], ['CB', 'CM'], ['RCB', 'RCM'], ['LCM', 'CM'], ['CM', 'RCM'], ['LWB', 'LCM'], ['RWB', 'RCM'], ['LCM', 'LST'], ['CM', 'LST'], ['CM', 'RST'], ['RCM', 'RST'], ['LST', 'RST']] },
+    { id: '4-4-2-rombo', name: '4-4-2 Rombo', pos: [{role: 'GK', x: 4, y: 50}, {role: 'LB', x: 14, y: 15}, {role: 'LCB', x: 12, y: 35}, {role: 'RCB', x: 12, y: 65}, {role: 'RB', x: 14, y: 85}, {role: 'CDM', x: 22, y: 50}, {role: 'LM', x: 28, y: 25}, {role: 'RM', x: 28, y: 75}, {role: 'CAM', x: 36, y: 50}, {role: 'LST', x: 44, y: 35}, {role: 'RST', x: 44, y: 65}], links: [['GK', 'LCB'], ['GK', 'RCB'], ['LB', 'LCB'], ['LCB', 'RCB'], ['RCB', 'RB'], ['LCB', 'CDM'], ['RCB', 'CDM'], ['LB', 'LM'], ['RB', 'RM'], ['CDM', 'LM'], ['CDM', 'RM'], ['LM', 'CAM'], ['RM', 'CAM'], ['CAM', 'LST'], ['CAM', 'RST'], ['LST', 'RST'], ['LM', 'LST'], ['RM', 'RST']] },
+    { id: '3-4-3', name: '3-4-3 Ofensivo', pos: [{role: 'GK', x: 4, y: 50}, {role: 'LCB', x: 12, y: 25}, {role: 'CB', x: 10, y: 50}, {role: 'RCB', x: 12, y: 75}, {role: 'LM', x: 26, y: 15}, {role: 'LCM', x: 24, y: 35}, {role: 'RCM', x: 24, y: 65}, {role: 'RM', x: 26, y: 85}, {role: 'LW', x: 40, y: 20}, {role: 'ST', x: 44, y: 50}, {role: 'RW', x: 40, y: 80}], links: [['GK', 'LCB'], ['GK', 'CB'], ['GK', 'RCB'], ['LCB', 'CB'], ['CB', 'RCB'], ['LCB', 'LM'], ['LCB', 'LCM'], ['CB', 'LCM'], ['CB', 'RCM'], ['RCB', 'RCM'], ['RCB', 'RM'], ['LM', 'LCM'], ['LCM', 'RCM'], ['RCM', 'RM'], ['LM', 'LW'], ['LCM', 'LW'], ['LCM', 'ST'], ['RCM', 'ST'], ['RCM', 'RW'], ['RM', 'RW'], ['LW', 'ST'], ['ST', 'RW']] },
+    { id: '4-1-4-1', name: '4-1-4-1 Posesión', pos: [{role: 'GK', x: 4, y: 50}, {role: 'LB', x: 14, y: 15}, {role: 'LCB', x: 12, y: 35}, {role: 'RCB', x: 12, y: 65}, {role: 'RB', x: 14, y: 85}, {role: 'CDM', x: 22, y: 50}, {role: 'LM', x: 32, y: 15}, {role: 'LCM', x: 30, y: 35}, {role: 'RCM', x: 30, y: 65}, {role: 'RM', x: 32, y: 85}, {role: 'ST', x: 45, y: 50}], links: [['GK', 'LCB'], ['GK', 'RCB'], ['LB', 'LCB'], ['LCB', 'RCB'], ['RCB', 'RB'], ['LCB', 'CDM'], ['RCB', 'CDM'], ['LB', 'LM'], ['CDM', 'LCM'], ['CDM', 'RCM'], ['RB', 'RM'], ['LM', 'LCM'], ['LCM', 'RCM'], ['RCM', 'RM'], ['LM', 'ST'], ['LCM', 'ST'], ['RCM', 'ST'], ['RM', 'ST']] }
   ]
 };
 
@@ -302,15 +302,16 @@ export function TacticalBoard({ players, teamSize, pairMap, fillBestBalance, onC
              const ply = players.find(p => locations[p.player.id] === locId);
              return <PitchSlot key={locId} id={locId} x={coord.x} y={coord.y} player={ply}
                        teamColor1={colorA1} teamColor2={colorA2} teamPattern={patA}
-                       depthX={coord.x} swapSelected={swapSelected} onSwapClick={handleSwapClick} />;
+                       role={coord.role} depthX={coord.x} swapSelected={swapSelected} onSwapClick={handleSwapClick} />;
           })}
           {formationB.pos.map((coord, i) => {
              const locId = `teamB-${i}`;
              const mirroredX = 100 - coord.x;
+             const mirroredY = 100 - coord.y;
              const ply = players.find(p => locations[p.player.id] === locId);
-             return <PitchSlot key={locId} id={locId} x={mirroredX} y={coord.y} player={ply}
+             return <PitchSlot key={locId} id={locId} x={mirroredX} y={mirroredY} player={ply}
                        teamColor1={colorB1} teamColor2={colorB2} teamPattern={patB}
-                       depthX={coord.x} swapSelected={swapSelected} onSwapClick={handleSwapClick} />;
+                       role={coord.role} depthX={coord.x} swapSelected={swapSelected} onSwapClick={handleSwapClick} />;
           })}
 
           {/* Pitch legend */}
@@ -378,19 +379,20 @@ export function TacticalBoard({ players, teamSize, pairMap, fillBestBalance, onC
   );
 }
 
-function PitchSlot({ id, x, y, player, teamColor1, teamColor2, teamPattern, readOnly = false, depthX, swapSelected, onSwapClick }: {
+function PitchSlot({ id, x, y, player, teamColor1, teamColor2, teamPattern, readOnly = false, role, depthX, swapSelected, onSwapClick }: {
   id: string; x: number; y: number; player?: PlayerStats;
   teamColor1: string; teamColor2: string; teamPattern: JerseyPattern;
   readOnly?: boolean;
+  role?: string;
   depthX?: number;
   swapSelected?: string | null;
   onSwapClick?: (id: string) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id, disabled: readOnly });
 
-  // Position label based on depth (original x before mirroring)
-  const posLabel = !player && !readOnly && depthX !== undefined
-    ? depthX <= 10 ? 'GK' : depthX <= 22 ? 'DEF' : depthX <= 35 ? 'MID' : 'FWD'
+  // Position label based on role or depth fallback
+  const posLabel = !player && !readOnly 
+    ? (role || (depthX !== undefined ? (depthX <= 10 ? 'GK' : depthX <= 22 ? 'DEF' : depthX <= 35 ? 'MID' : 'FWD') : null))
     : null;
 
   return (
@@ -483,14 +485,15 @@ export function FinalPitchRenderer({ players, config, isPadel }: { players: Play
          const locId = `teamA-${i}`;
          const ply = players.find(p => config.locations[p.player.id] === locId);
          return <PitchSlot key={locId} id={locId} x={coord.x} y={coord.y} player={ply}
-                   teamColor1={config.colorA1} teamColor2={config.colorA2} teamPattern={config.patA} readOnly={true} />;
+                   teamColor1={config.colorA1} teamColor2={config.colorA2} teamPattern={config.patA} readOnly={true} role={coord.role} />;
       })}
       {formationB.pos.map((coord, i) => {
          const locId = `teamB-${i}`;
          const mirroredX = 100 - coord.x;
+         const mirroredY = 100 - coord.y;
          const ply = players.find(p => config.locations[p.player.id] === locId);
-         return <PitchSlot key={locId} id={locId} x={mirroredX} y={coord.y} player={ply}
-                   teamColor1={config.colorB1} teamColor2={config.colorB2} teamPattern={config.patB} readOnly={true} />;
+         return <PitchSlot key={locId} id={locId} x={mirroredX} y={mirroredY} player={ply}
+                   teamColor1={config.colorB1} teamColor2={config.colorB2} teamPattern={config.patB} readOnly={true} role={coord.role} />;
       })}
     </div>
   );
@@ -509,7 +512,7 @@ function FormationLines({ formation, color, mirrorX = false }: {
   // Creamos un mapa de roles a coordenadas finales
   const roleToPos = new Map<string, {x: number, y: number}>();
   formation.pos.forEach(p => {
-    roleToPos.set(p.role, { x: mirrorX ? 100 - p.x : p.x, y: p.y });
+    roleToPos.set(p.role, { x: mirrorX ? 100 - p.x : p.x, y: mirrorX ? 100 - p.y : p.y });
   });
 
   return (
@@ -542,7 +545,7 @@ function ChemistryLines({ formation, assignments, pairMap, mirrorX = false }: {
 }) {
   if (!formation.links || formation.links.length === 0) return null;
 
-  const pts = formation.pos.map(p => ({ role: p.role, x: mirrorX ? 100 - p.x : p.x, y: p.y }));
+  const pts = formation.pos.map(p => ({ role: p.role, x: mirrorX ? 100 - p.x : p.x, y: mirrorX ? 100 - p.y : p.y }));
   
   const roleToIndex = new Map<string, number>();
   formation.pos.forEach((p, idx) => {
