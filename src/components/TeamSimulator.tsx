@@ -327,42 +327,38 @@ function getNotablePairs(
   return { internal: internal.slice(0, 4), clashes: clashes.slice(0, 4) };
 }
 
-function generateExplanation(
+interface MatchInsightsData {
+  avgA: number;
+  avgB: number;
+  diff: number;
+  chemA: number;
+  chemB: number;
+  topA: PlayerStats | null;
+  topB: PlayerStats | null;
+  winPctA: number;
+  winPctB: number;
+  prediction: string;
+}
+
+function generateMatchInsights(
   teamA: PlayerStats[], teamB: PlayerStats[],
-  pairMap: Map<string, PairStats>, isPadel: boolean, t: any
-): string[] {
-  const avgA   = teamA.reduce((s, p) => s + playerStrength(p), 0) / teamA.length;
-  const avgB   = teamB.reduce((s, p) => s + playerStrength(p), 0) / teamB.length;
+  pairMap: Map<string, PairStats>, isPadel: boolean
+): MatchInsightsData {
+  const avgA   = teamA.length ? teamA.reduce((s, p) => s + playerStrength(p), 0) / teamA.length : 0;
+  const avgB   = teamB.length ? teamB.reduce((s, p) => s + playerStrength(p), 0) / teamB.length : 0;
   const chemA  = teamChemistry(teamA, pairMap);
   const chemB  = teamChemistry(teamB, pairMap);
-  const diff   = Math.abs(avgA - avgB).toFixed(1);
+  const diff   = Math.abs(avgA - avgB);
 
-  const topA = [...teamA].sort((a, b) => playerStrength(b) - playerStrength(a))[0];
-  const topB = [...teamB].sort((a, b) => playerStrength(b) - playerStrength(a))[0];
+  const topA = teamA.length ? [...teamA].sort((a, b) => playerStrength(b) - playerStrength(a))[0] : null;
+  const topB = teamB.length ? [...teamB].sort((a, b) => playerStrength(b) - playerStrength(a))[0] : null;
 
-  const lines: string[] = [];
-
-  lines.push(isPadel ? t('teamSimulator.explanation.introPadel') : t('teamSimulator.explanation.introFootball'));
-  lines.push(isPadel ? t('teamSimulator.explanation.calcPadel') : t('teamSimulator.explanation.calcFootball'));
-  lines.push(t('teamSimulator.explanation.strength').replace('{{avgA}}', avgA.toFixed(1)).replace('{{avgB}}', avgB.toFixed(1)).replace('{{diff}}', diff));
-  lines.push(t('teamSimulator.explanation.chemistry').replace('{{chemA}}', chemA.toFixed(1)).replace('{{chemB}}', chemB.toFixed(1)));
-
-  if (topA) lines.push(t('teamSimulator.explanation.starA').replace('{{name}}', topA.player.name).replace('{{winPct}}', topA.winPercentage.toFixed(1)).replace('{{streak}}', topA.bestStreak.toString()).replace('{{matches}}', topA.matchesPlayed.toString()));
-  if (topB) lines.push(t('teamSimulator.explanation.starB').replace('{{name}}', topB.player.name).replace('{{winPct}}', topB.winPercentage.toFixed(1)).replace('{{streak}}', topB.bestStreak.toString()).replace('{{matches}}', topB.matchesPlayed.toString()));
-
-  const winPctA = teamA.reduce((s, p) => s + p.winPercentage, 0) / teamA.length;
-  const winPctB = teamB.reduce((s, p) => s + p.winPercentage, 0) / teamB.length;
-  const favored = winPctA > winPctB ? 'A' : winPctA < winPctB ? 'B' : null;
-  if (favored) {
-    lines.push(t('teamSimulator.explanation.favored').replace('{{team}}', favored).replace('{{diff}}', Math.abs(winPctA - winPctB).toFixed(1)));
-  } else {
-    lines.push(t('teamSimulator.explanation.tied'));
-  }
-
+  const winPctA = teamA.length ? teamA.reduce((s, p) => s + p.winPercentage, 0) / teamA.length : 0;
+  const winPctB = teamB.length ? teamB.reduce((s, p) => s + p.winPercentage, 0) / teamB.length : 0;
+  
   const prediction = predictScore(teamA, teamB, isPadel);
-  lines.push(`🎯 Predicción (Poisson): ${prediction}`);
 
-  return lines;
+  return { avgA, avgB, diff, chemA, chemB, topA, topB, winPctA, winPctB, prediction };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -407,10 +403,10 @@ export default function TeamSimulator() {
   const pairMap = useMemo(() => computePairwise(Array.from(selectedIds), matches), [selectedIds, matches]);
   const fullPairMap = useMemo(() => computePairwise(players.map(p=>p.id), matches), [players, matches]);
 
-  const explanation = useMemo(() => {
-    if (step !== 'results') return [];
-    return generateExplanation(teamA, teamB, fullPairMap, isPadel, t);
-  }, [step, teamA, teamB, fullPairMap, isPadel, t]);
+  const insights = useMemo(() => {
+    if (step !== 'results') return null;
+    return generateMatchInsights(teamA, teamB, fullPairMap, isPadel);
+  }, [step, teamA, teamB, fullPairMap, isPadel]);
 
   const notablePairs = useMemo(() => {
     if (step !== 'results') return { internal: [], clashes: [] };
@@ -612,12 +608,7 @@ export default function TeamSimulator() {
             </div>
           )}
 
-          <div className={styles.explanationBox}>
-            <h3 className={styles.explanationTitle}>{t('teamSimulator.summaryTitle')}</h3>
-            <ul className={styles.explanationList}>
-              {explanation.map((line, i) => <li key={i} className={styles.explanationItem}>{line}</li>)}
-            </ul>
-          </div>
+          {/* Insights dashboard removed per user request */}
 
           <div className={styles.resetWrapper}>
             <button className={styles.resetBtn} onClick={() => { setStep('selection'); setSelectedIds(new Set()); clearTeams(); }}>
