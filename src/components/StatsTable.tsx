@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import { calculateStats } from '@/lib/stats';
 import styles from './StatsTable.module.css';
 import PlayerReportModal from './PlayerReportModal';
@@ -12,9 +13,13 @@ const PODIO_CLASSES = ['podioGold', 'podioSilver', 'podioBronze'];
 
 
 export default function StatsTable() {
-  const { players, matches, badges } = useAppContext();
+  const { players, matches, badges, togglePlayerBadge } = useAppContext();
+  const { user } = useAuth();
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const { t } = useTranslation();
+
+  const [managingBadgesForId, setManagingBadgesForId] = useState<string | null>(null);
+  const managingBadgesFor = useMemo(() => players.find(p => p.id === managingBadgesForId) || null, [players, managingBadgesForId]);
 
   type SortField = 'name' | 'badge' | 'matchesPlayed' | 'wins' | 'winPercentage' | 'bestStreak' | 'worstStreak' | 'currentStreak';
   const [sortField, setSortField] = useState<SortField | null>(null);
@@ -102,6 +107,17 @@ export default function StatsTable() {
       setSortField(field);
       setSortOrder(field === 'name' || field === 'badge' ? 'asc' : 'desc');
     }
+  };
+
+  const handleToggleBadge = async (badgeId: string) => {
+    if (!managingBadgesForId || !user) return;
+    if (togglePlayerBadge) {
+      await togglePlayerBadge(managingBadgesForId, badgeId, user.id);
+    }
+  };
+
+  const handleCloseBadges = () => {
+    setManagingBadgesForId(null);
   };
 
   const renderSortHeader = (label: string, field: SortField) => (
@@ -257,15 +273,25 @@ export default function StatsTable() {
                     )}
                   </td>
 
-                  {/* Reporte individual */}
+                  {/* Acciones (Reporte e Insignias) */}
                   <td className={styles.td} style={{ textAlign: 'center' }}>
-                    <button
-                      className={styles.reportButton}
-                      onClick={(e) => { e.stopPropagation(); setSelectedPlayerId(s.player.id); }}
-                      title="Ver reporte detallado"
-                    >
-                      {t('statsTable.viewReport')}
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                      <button
+                        className={styles.reportButton}
+                        onClick={(e) => { e.stopPropagation(); setSelectedPlayerId(s.player.id); }}
+                        title="Ver reporte detallado"
+                      >
+                        {t('statsTable.viewReport')}
+                      </button>
+                      <button
+                        className={styles.reportButton}
+                        onClick={(e) => { e.stopPropagation(); setManagingBadgesForId(s.player.id); }}
+                        title="Votar Insignias"
+                        style={{ color: 'var(--warning)', borderColor: 'rgba(245, 158, 11, 0.3)', background: 'rgba(245, 158, 11, 0.08)' }}
+                      >
+                        🏅 Insignias
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );
@@ -279,6 +305,48 @@ export default function StatsTable() {
           playerId={selectedPlayerId}
           onClose={() => setSelectedPlayerId(null)}
         />
+      )}
+
+      {/* ── Badges Modal ── */}
+      {managingBadgesFor && (
+        <div className={styles.badgesModalOverlay} onClick={handleCloseBadges}>
+          <div className={styles.badgesModal} onClick={e => e.stopPropagation()}>
+            <div className={styles.badgesHeader}>
+              <div>
+                <h3 className={styles.badgesTitle}>Insignias</h3>
+                <p className={styles.badgesSubtitle}>{managingBadgesFor.name}</p>
+              </div>
+              <button className={styles.badgesCloseBtn} onClick={handleCloseBadges}>
+                ✕
+              </button>
+            </div>
+
+            <div className={styles.badgesList}>
+              {badges.map(badge => {
+                const badgeVotes = managingBadgesFor.badges?.filter(b => b.badgeId === badge.id) || [];
+                const voteCount = badgeVotes.length;
+                const iVoted = badgeVotes.some(b => b.userId === user?.id);
+
+                return (
+                  <div
+                    key={badge.id}
+                    className={`${styles.badgeItem} ${iVoted ? styles.badgeItemSelected : ''}`}
+                    onClick={() => handleToggleBadge(badge.id)}
+                  >
+                    <span className={styles.badgeIcon}>{badge.icon}</span>
+                    <div className={styles.badgeTextCol}>
+                      <span className={styles.badgeName}>
+                        {badge.label}
+                        {voteCount > 0 && <span className={styles.voteBadge}>{voteCount}</span>}
+                      </span>
+                      <span className={styles.badgeDesc}>{badge.description}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
