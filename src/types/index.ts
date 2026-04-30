@@ -65,6 +65,9 @@ export type PlayerStats = {
   worstTeammate: { players: Player[]; matches: number } | null;
   favoriteVictim: { players: Player[]; winsAgainst: number } | null;
   currentStreak: { type: 'WIN' | 'LOSS' | 'DRAW' | null, count: number };
+  elo: number;
+  recentWinPercentage: number;
+  formScore: number;
 };
 
 export type RelationStats = {
@@ -92,6 +95,9 @@ export type PlayerReport = {
   winPercentage: number;
   bestStreak: number;
   currentStreak: { type: 'WIN' | 'LOSS' | 'DRAW' | null; count: number };
+  elo: number;
+  recentWinPercentage: number;
+  formScore: number;
   // Presencia
   presencePercentage: number; // % de partidos del total en que participó
   totalMatchesInHistory: number;

@@ -99,10 +99,39 @@ function togetherWinPct(map: Map<string, PairStats>, idA: string, idB: string): 
 // ─────────────────────────────────────────────────────────────────────────────
 
 function playerStrength(s: PlayerStats): number {
-  const winScore  = s.winPercentage;
-  const expBonus  = Math.min(s.matchesPlayed / 20, 1) * 10;
-  const streakBonus = s.bestStreak * 1.5;
-  return winScore + expBonus + streakBonus;
+  const eloScore = Math.max(0, ((s.elo - 800) / 800) * 100);
+  const formScore = s.formScore;
+  
+  let badgesPower = 0;
+  if (s.player.badges && Array.isArray(s.player.badges)) {
+    s.player.badges.forEach(() => {
+      badgesPower += 3; // flat bonus for each badge
+    });
+  }
+
+  const finalStrength = (eloScore * 0.50) + (formScore * 0.25) + badgesPower;
+  return finalStrength;
+}
+
+function predictScore(teamA: PlayerStats[], teamB: PlayerStats[], isPadel: boolean): string {
+  if (teamA.length === 0 || teamB.length === 0) return '';
+  const eloA = teamA.reduce((s, p) => s + p.elo, 0) / teamA.length;
+  const eloB = teamB.reduce((s, p) => s + p.elo, 0) / teamB.length;
+  const diff = eloA - eloB;
+  
+  if (isPadel) {
+    if (diff > 150) return "6-2, 6-3";
+    if (diff > 50) return "6-4, 6-4";
+    if (diff > -50) return "7-6, 4-6, 6-4"; 
+    if (diff > -150) return "4-6, 4-6";
+    return "2-6, 3-6";
+  } else {
+    const totalGoals = 22; // avg total goals ~22
+    const expA = 1 / (1 + Math.pow(10, -diff / 400));
+    let goalsA = Math.round(totalGoals * expA);
+    let goalsB = Math.round(totalGoals * (1 - expA));
+    return `${goalsA} - ${goalsB}`;
+  }
 }
 
 function teamChemistry(team: PlayerStats[], pairMap: Map<string, PairStats>): number {
@@ -127,7 +156,24 @@ function balanceScore(
   const strB = teamB.length ? teamB.reduce((s, p) => s + playerStrength(p), 0) / teamB.length : 0;
   const chemA = teamChemistry(teamA, pairMap);
   const chemB = teamChemistry(teamB, pairMap);
-  return Math.pow(strA - strB, 2) + Math.pow(chemA - chemB, 2) * 0.1;
+
+  const calcNemesis = (team: PlayerStats[]) => {
+    let penalty = 0;
+    for (let i = 0; i < team.length; i++) {
+      for (let j = i + 1; j < team.length; j++) {
+        const p = getPair(pairMap, team[i].player.id, team[j].player.id);
+        if (p && p.togetherTotal >= 2 && p.togetherWinPct < 30) {
+          penalty += 500;
+        }
+      }
+    }
+    return penalty;
+  };
+
+  const nemesisPenaltyA = calcNemesis(teamA);
+  const nemesisPenaltyB = calcNemesis(teamB);
+
+  return Math.pow(strA - strB, 2) + Math.pow(chemA - chemB, 2) * 0.1 + nemesisPenaltyA + nemesisPenaltyB;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -312,6 +358,9 @@ function generateExplanation(
   } else {
     lines.push(t('teamSimulator.explanation.tied'));
   }
+
+  const prediction = predictScore(teamA, teamB, isPadel);
+  lines.push(`🎯 Predicción (Poisson): ${prediction}`);
 
   return lines;
 }

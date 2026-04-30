@@ -168,19 +168,62 @@ export function TacticalBoard({ players, teamSize, pairMap, fillBestBalance, onC
     const { teamA, teamB } = fillBestBalance(lockedA, lockedB, unass, pairMap, teamSize);
     const nextLoc = { ...locations };
     
-    const fillLocs = (team: PlayerStats[], prefix: string) => {
+    const fillLocs = (team: PlayerStats[], prefix: string, formation: Formation) => {
       const existingLocs = new Set(team.map(p => nextLoc[p.player.id]).filter(l => l.startsWith(prefix)));
       const newPlayers = team.filter(p => !nextLoc[p.player.id].startsWith(prefix));
-      let slotIdx = 0;
-      newPlayers.forEach(p => {
-        while (existingLocs.has(`${prefix}-${slotIdx}`)) slotIdx++;
-        nextLoc[p.player.id] = `${prefix}-${slotIdx}`;
-        existingLocs.add(`${prefix}-${slotIdx}`);
+      
+      const getPlayerRolePriority = (p: PlayerStats) => {
+        let def = 0, off = 0;
+        if (p.player.badges && Array.isArray(p.player.badges)) {
+          p.player.badges.forEach(b => {
+             const slug = b.badgeId.toLowerCase();
+             if (['muro', 'defensivo', 'rustico', 'defensa'].some(s => slug.includes(s))) def++;
+             if (['goleador', 'ofensivo', 'mvp', 'crack', 'delantero'].some(s => slug.includes(s))) off++;
+          });
+        }
+        if (def > off) return 'DEF';
+        if (off > def) return 'OFF';
+        return 'MID';
+      };
+
+      const availableSlots = formation.pos.map((pos, idx) => ({ idx, pos })).filter(s => !existingLocs.has(`${prefix}-${s.idx}`));
+      const unassignedPlayers = [...newPlayers].sort((a, b) => getPlayerRolePriority(a) === 'MID' ? 1 : -1);
+      
+      unassignedPlayers.forEach(p => {
+        const rolePref = getPlayerRolePriority(p);
+        let bestSlotIdx = -1;
+        let bestScore = -Infinity;
+        
+        availableSlots.forEach(slot => {
+           let score = 0;
+           // If mirrored (teamB), x coordinates are generally the same in the formation obj, mirrored visually only.
+           // wait, formationA.pos.x is 0-50 for teamA half.
+           // For teamB, it uses formationB.pos which is also 0-50.
+           if (rolePref === 'DEF' && slot.pos.x <= 30) score += 10;
+           else if (rolePref === 'DEF' && slot.pos.x > 30) score -= 10;
+           
+           if (rolePref === 'OFF' && slot.pos.x >= 40) score += 10;
+           else if (rolePref === 'OFF' && slot.pos.x < 40) score -= 10;
+           
+           if (rolePref === 'MID' && slot.pos.x > 25 && slot.pos.x < 45) score += 10;
+           
+           if (score > bestScore) {
+             bestScore = score;
+             bestSlotIdx = slot.idx;
+           }
+        });
+        
+        if (bestSlotIdx !== -1) {
+           nextLoc[p.player.id] = `${prefix}-${bestSlotIdx}`;
+           existingLocs.add(`${prefix}-${bestSlotIdx}`);
+           const slotIndex = availableSlots.findIndex(s => s.idx === bestSlotIdx);
+           if (slotIndex > -1) availableSlots.splice(slotIndex, 1);
+        }
       });
     };
 
-    fillLocs(teamA, 'teamA');
-    fillLocs(teamB, 'teamB');
+    fillLocs(teamA, 'teamA', formationA);
+    fillLocs(teamB, 'teamB', formationB);
     setLocations(nextLoc);
   };
 

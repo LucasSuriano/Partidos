@@ -16,6 +16,9 @@ export function calculateStats(players: Player[], matches: Match[]): PlayerStats
       worstTeammate: null,
       favoriteVictim: null,
       currentStreak: { type: null, count: 0 },
+      elo: 1200,
+      recentWinPercentage: 0,
+      formScore: 0,
     };
   });
 
@@ -23,12 +26,14 @@ export function calculateStats(players: Player[], matches: Match[]): PlayerStats
   const teammateLosses: Record<string, Record<string, number>> = {};
   const opponentWins: Record<string, Record<string, number>> = {};
   const currentStreaks: Record<string, { type: 'WIN' | 'LOSS' | 'DRAW' | null, count: number }> = {};
+  const recentResults: Record<string, boolean[]> = {};
 
   players.forEach(p => {
     teammateWins[p.id] = {};
     teammateLosses[p.id] = {};
     opponentWins[p.id] = {};
     currentStreaks[p.id] = { type: null, count: 0 };
+    recentResults[p.id] = [];
   });
 
   const sortedMatches = [...matches].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -38,10 +43,31 @@ export function calculateStats(players: Player[], matches: Match[]): PlayerStats
     const teamB = match.teamB;
     const result = match.result;
 
-    const processTeam = (team: string[], isWin: boolean, isLoss: boolean, isDraw: boolean, opponents: string[]) => {
+    // Elo calculation
+    const avgEloA = teamA.length > 0 ? teamA.reduce((sum, id) => sum + (statsMap[id]?.elo || 1200), 0) / teamA.length : 1200;
+    const avgEloB = teamB.length > 0 ? teamB.reduce((sum, id) => sum + (statsMap[id]?.elo || 1200), 0) / teamB.length : 1200;
+    
+    const expectedA = 1 / (1 + Math.pow(10, (avgEloB - avgEloA) / 400));
+    const expectedB = 1 / (1 + Math.pow(10, (avgEloA - avgEloB) / 400));
+    
+    let actualA = 0.5, actualB = 0.5;
+    if (result === 'A_WIN') { actualA = 1; actualB = 0; }
+    else if (result === 'B_WIN') { actualA = 0; actualB = 1; }
+    
+    const K = 32;
+    const deltaA = K * (actualA - expectedA);
+    const deltaB = K * (actualB - expectedB);
+
+    const processTeam = (team: string[], isWin: boolean, isLoss: boolean, isDraw: boolean, opponents: string[], deltaElo: number) => {
       team.forEach(playerId => {
         if (!statsMap[playerId]) return;
         statsMap[playerId].matchesPlayed += 1;
+        statsMap[playerId].elo += deltaElo;
+
+        recentResults[playerId].push(isWin);
+        if (recentResults[playerId].length > 10) {
+          recentResults[playerId].shift();
+        }
         if (isWin) statsMap[playerId].wins += 1;
         if (isLoss) statsMap[playerId].losses += 1;
         if (isDraw) statsMap[playerId].draws += 1;
@@ -81,8 +107,8 @@ export function calculateStats(players: Player[], matches: Match[]): PlayerStats
     const teamBWins = result === 'B_WIN';
     const isDraw = result === 'DRAW';
 
-    processTeam(teamA, teamAWins, teamBWins, isDraw, teamB);
-    processTeam(teamB, teamBWins, teamAWins, isDraw, teamA);
+    processTeam(teamA, teamAWins, teamBWins, isDraw, teamB, deltaA);
+    processTeam(teamB, teamBWins, teamAWins, isDraw, teamA, deltaB);
   });
 
   const getTopPlayers = (counts: Record<string, number>): { players: Player[], count: number } | null => {
@@ -106,10 +132,16 @@ export function calculateStats(players: Player[], matches: Match[]): PlayerStats
     const totalResolved = s.wins + s.losses + s.draws;
     const winPct = totalResolved > 0 ? (s.wins / totalResolved) * 100 : 0;
 
+    const recRes = recentResults[p.id];
+    const recWinPct = recRes.length > 0 ? (recRes.filter(w => w).length / recRes.length) * 100 : 0;
+    const formScore = recWinPct;
+
     return {
       player: p,
       ...s,
       winPercentage: winPct,
+      recentWinPercentage: recWinPct,
+      formScore: formScore,
       bestTeammate: bestT ? { players: bestT.players, matches: bestT.count } : null,
       worstTeammate: worstT ? { players: worstT.players, matches: worstT.count } : null,
       favoriteVictim: favVic ? { players: favVic.players, winsAgainst: favVic.count } : null,
@@ -231,6 +263,7 @@ export function getPlayerReport(playerId: string, players: Player[], matches: Ma
   const winPercentage = matchesPlayed > 0 ? (pWins / matchesPlayed) * 100 : 0;
 
   const allStats = calculateStats(players, matches);
+  const playerStatObj = allStats.find(s => s.player.id === playerId);
   const rank = allStats.findIndex(s => s.player.id === playerId) + 1;
   const presencePercentage = matches.length > 0 ? (matchesPlayed / matches.length) * 100 : 0;
 
@@ -249,6 +282,9 @@ export function getPlayerReport(playerId: string, players: Player[], matches: Ma
     winPercentage,
     bestStreak: pBestStreak,
     currentStreak: { type: streak.type, count: streak.count },
+    elo: playerStatObj?.elo || 1200,
+    recentWinPercentage: playerStatObj?.recentWinPercentage || 0,
+    formScore: playerStatObj?.formScore || 0,
     presencePercentage,
     totalMatchesInHistory: matches.length,
     rank,

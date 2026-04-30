@@ -33,7 +33,7 @@ export default function PlayerManager() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  
+
   const [managingBadgesForId, setManagingBadgesForId] = useState<string | null>(null);
   const managingBadgesFor = useMemo(() => players.find(p => p.id === managingBadgesForId) || null, [players, managingBadgesForId]);
 
@@ -216,7 +216,7 @@ export default function PlayerManager() {
                         style={{
                           background: activity === 'high' ? 'var(--accent-primary)'
                             : activity === 'mid' ? 'var(--warning)'
-                            : 'var(--text-secondary)'
+                              : 'var(--text-secondary)'
                         }}
                       />
                     </div>
@@ -240,7 +240,7 @@ export default function PlayerManager() {
                               width: `${winPct}%`,
                               background: winPct >= 60 ? 'var(--accent-primary)'
                                 : winPct >= 40 ? 'var(--warning)'
-                                : 'var(--danger)'
+                                  : 'var(--danger)'
                             }}
                           />
                         </div>
@@ -260,9 +260,9 @@ export default function PlayerManager() {
                         </svg>
                       </button>
                     )}
-                    <button 
-                      onClick={() => setManagingBadgesForId(player.id)} 
-                      className={styles.badgeBtn} 
+                    <button
+                      onClick={() => setManagingBadgesForId(player.id)}
+                      className={styles.badgeBtn}
                       title={t('playerManager.voteBadges')}
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -313,7 +313,7 @@ export default function PlayerManager() {
                 ✕
               </button>
             </div>
-            
+
             <div className={styles.badgesList}>
               {badges.map(badge => {
                 const badgeVotes = managingBadgesFor.badges?.filter(b => b.badgeId === badge.id) || [];
@@ -321,7 +321,7 @@ export default function PlayerManager() {
                 const iVoted = badgeVotes.some(b => b.userId === user?.id);
 
                 return (
-                  <div 
+                  <div
                     key={badge.id}
                     className={`${styles.badgeItem} ${iVoted ? styles.badgeItemSelected : ''}`}
                     onClick={() => handleToggleBadge(badge.id)}
