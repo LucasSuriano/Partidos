@@ -195,7 +195,9 @@
       "togetherDetail": "{{wins}}/{{total}} together ({{pct}}%)",
       "nemesisTitleWin": "⚔️ Historically Dominates",
       "nemesisTitleLoss": "⚔️ Unbalanced Duel",
-      "nemesisDetail": "{{nameA}} wins {{pct}}% of matches vs {{nameB}} ({{total}} P)"
+      "nemesisDetail": "{{nameA}} wins {{pct}}% of matches vs {{nameB}} ({{total}} P)",
+      "evenTitle": "⚔️ Even Duel",
+      "evenDetail": "{{nameA}} and {{nameB}} are evenly matched ({{total}} P)"
     },
     "explanation": {
       "introPadel": "🎯 The simulation ordered players by skill level and sought the perfect balance by analyzing historical matchups and pairings.",

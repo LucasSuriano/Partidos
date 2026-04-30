@@ -270,7 +270,7 @@ function fillBestBalance(
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface NotablePair {
-  nameA: string; nameB: string; type: 'synergy' | 'rivalry' | 'nemesis';
+  nameA: string; nameB: string; type: 'synergy' | 'rivalry' | 'nemesis' | 'even';
   label: string; detail: string; pct: number; games: number;
 }
 
@@ -319,12 +319,20 @@ function getNotablePairs(
           detail: t('teamSimulator.pairs.nemesisDetail').replace('{{nameA}}', aWins ? pa.player.name : pb.player.name).replace('{{pct}}', (aWins ? aWinPct : 100 - aWinPct).toFixed(0)).replace('{{nameB}}', aWins ? pb.player.name : pa.player.name).replace('{{total}}', p.vsTotal.toString()),
           pct: Math.max(aWinPct, 100 - aWinPct), games: p.vsTotal,
         });
+      } else if (p.vsTotal >= 3 && Math.abs(aWinPct - 50) <= 15) {
+        clashes.push({
+          nameA: pa.player.name, nameB: pb.player.name,
+          type: 'even',
+          label: t('teamSimulator.pairs.evenTitle'),
+          detail: t('teamSimulator.pairs.evenDetail').replace('{{nameA}}', pa.player.name).replace('{{nameB}}', pb.player.name).replace('{{total}}', p.vsTotal.toString()),
+          pct: 50, games: p.vsTotal,
+        });
       }
     });
   });
   clashes.sort((a, b) => b.pct - a.pct);
 
-  return { internal: internal.slice(0, 4), clashes: clashes.slice(0, 4) };
+  return { internal: internal.slice(0, 6), clashes: clashes.slice(0, 6) };
 }
 
 interface MatchInsightsData {
@@ -689,14 +697,15 @@ function TeamCard({ label, color, dotColor, players, pairMap }: { label: string;
 function PairCard({ pair }: { pair: NotablePair }) {
   const isSynergy  = pair.type === 'synergy';
   const isClash    = pair.type === 'nemesis';
+  const isWarning  = pair.type === 'rivalry' || pair.type === 'even';
   const barColor   = isSynergy ? 'var(--accent-primary)' : isClash ? 'var(--danger)' : 'var(--warning)';
-  const barWidth   = isSynergy ? pair.pct : isClash ? pair.pct : (100 - pair.pct);
+  const barWidth   = isSynergy ? pair.pct : isClash ? pair.pct : (pair.type === 'even' ? 50 : (100 - pair.pct));
   return (
     <div className={`${styles.pairCard} ${isSynergy ? styles.pairSynergy : isClash ? styles.pairNemesis : styles.pairWarning}`}>
       <div className={styles.pairLabel}>{pair.label}</div>
       <div className={styles.pairNames}>
         <span className={styles.pairNameA}>{pair.nameA}</span>
-        <span className={styles.pairVs}>{isClash ? '⚔️' : '+'}</span>
+        <span className={styles.pairVs}>{isClash || pair.type === 'even' ? '⚔️' : '+'}</span>
         <span className={styles.pairNameB}>{pair.nameB}</span>
       </div>
       <div className={styles.pairDetail}>{pair.detail}</div>

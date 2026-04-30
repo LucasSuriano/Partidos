@@ -195,7 +195,9 @@
       "togetherDetail": "{{wins}}/{{total}} juntos ({{pct}}%)",
       "nemesisTitleWin": "⚔️ Domina históricamente",
       "nemesisTitleLoss": "⚔️ Duelo desequilibrado",
-      "nemesisDetail": "{{nameA}} gana {{pct}}% de cruces vs {{nameB}} ({{total}} PJ)"
+      "nemesisDetail": "{{nameA}} gana {{pct}}% de cruces vs {{nameB}} ({{total}} PJ)",
+      "evenTitle": "⚔️ Duelo parejo",
+      "evenDetail": "{{nameA}} y {{nameB}} están igualados ({{total}} PJ)"
     },
     "explanation": {
       "introPadel": "🎯 La simulación ordenó a los jugadores por nivel de juego y buscó el equilibrio perfecto analizando cruces y duplas históricas.",
