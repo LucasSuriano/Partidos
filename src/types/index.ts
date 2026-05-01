@@ -90,6 +90,7 @@ export type PlayerStats = {
   elo: number;
   recentWinPercentage: number;
   formScore: number;
+  mvps: number;
 };
 
 export type RelationStats = {
@@ -129,4 +130,5 @@ export type PlayerReport = {
   // Como Equipo A vs Equipo B
   teamARecord: { wins: number; losses: number; draws: number; total: number };
   teamBRecord: { wins: number; losses: number; draws: number; total: number };
+  mvps: number;
 };

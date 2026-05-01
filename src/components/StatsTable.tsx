@@ -71,7 +71,7 @@ export default function StatsTable() {
   useEffect(() => { fetchStats(matches.length); }, [fetchStats, matches.length]);
   // ──────────────────────────────────────────────────────────────────────────
 
-  type SortField = 'name' | 'badge' | 'matchesPlayed' | 'wins' | 'winPercentage' | 'bestStreak' | 'worstStreak' | 'currentStreak';
+  type SortField = 'name' | 'badge' | 'matchesPlayed' | 'mvps' | 'wins' | 'winPercentage' | 'bestStreak' | 'worstStreak' | 'currentStreak';
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
@@ -123,6 +123,7 @@ export default function StatsTable() {
         case 'name': valA = a.player.name.toLowerCase(); valB = b.player.name.toLowerCase(); break;
         case 'badge': valA = a.badgeLabel.toLowerCase(); valB = b.badgeLabel.toLowerCase(); break;
         case 'matchesPlayed': valA = a.matchesPlayed; valB = b.matchesPlayed; break;
+        case 'mvps': valA = a.mvps; valB = b.mvps; break;
         case 'wins': valA = a.wins; valB = b.wins; break;
         case 'winPercentage': valA = a.winPercentage; valB = b.winPercentage; break;
         case 'bestStreak': valA = a.bestStreak; valB = b.bestStreak; break;
@@ -237,6 +238,7 @@ export default function StatsTable() {
               {renderSortHeader(t('statsTable.headers.player'), 'name')}
               {renderSortHeader(t('statsTable.headers.badge'), 'badge')}
               {renderSortHeader(t('statsTable.headers.played'), 'matchesPlayed')}
+              {renderSortHeader(t('statsTable.headers.mvps'), 'mvps')}
               {renderSortHeader(t('statsTable.headers.wld'), 'wins')}
               {renderSortHeader(t('statsTable.headers.winPct'), 'winPercentage')}
               {renderSortHeader(t('statsTable.headers.bestStreak'), 'bestStreak')}
@@ -296,6 +298,15 @@ export default function StatsTable() {
                         }}
                       />
                     </div>
+                  </td>
+
+                  {/* MVPs */}
+                  <td className={styles.td} style={{ textAlign: 'center' }}>
+                    {s.mvps > 0 ? (
+                      <span style={{ color: '#fbbf24', fontWeight: 'bold' }}>{s.mvps} ⭐</span>
+                    ) : (
+                      <span style={{ color: 'var(--text-secondary)' }}>-</span>
+                    )}
                   </td>
 
                   {/* G - E - P */}

@@ -16,9 +16,9 @@ export function calculateStats(players: Player[], matches: Match[]): PlayerStats
       worstTeammate: null,
       favoriteVictim: null,
       currentStreak: { type: null, count: 0 },
-      elo: 1200,
       recentWinPercentage: 0,
       formScore: 0,
+      mvps: 0,
     };
   });
 
@@ -57,6 +57,10 @@ export function calculateStats(players: Player[], matches: Match[]): PlayerStats
     const K = 32;
     const deltaA = K * (actualA - expectedA);
     const deltaB = K * (actualB - expectedB);
+
+    if (match.metadata?.mvp_id && statsMap[match.metadata.mvp_id]) {
+      statsMap[match.metadata.mvp_id].mvps += 1;
+    }
 
     const processTeam = (team: string[], isWin: boolean, isLoss: boolean, isDraw: boolean, opponents: string[], deltaElo: number) => {
       team.forEach(playerId => {
@@ -291,5 +295,6 @@ export function getPlayerReport(playerId: string, players: Player[], matches: Ma
     totalPlayers: players.length,
     teamARecord,
     teamBRecord,
+    mvps: playerStatObj?.mvps || 0,
   };
 }

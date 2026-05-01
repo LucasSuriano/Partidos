@@ -189,6 +189,13 @@ export default function PlayerReportModal({ playerId, onClose }: PlayerReportMod
           </div>
           <div className={styles.kpiDivider} />
           <div className={styles.kpiItem}>
+            <span className={styles.kpiLabel}>MVPs</span>
+            <span className={styles.kpiValue} style={{ color: '#fbbf24' }}>
+              {report.mvps}
+            </span>
+          </div>
+          <div className={styles.kpiDivider} />
+          <div className={styles.kpiItem}>
             <span className={styles.kpiLabel}>{t('reportModal.kpi.bestStreak')}</span>
             <span className={styles.kpiValue} style={{ color: 'var(--accent-primary)' }}>
               {report.bestStreak > 0 ? report.bestStreak : '-'}
