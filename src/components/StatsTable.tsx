@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
-import { calculateStats } from '@/lib/stats';
+import { useTournament } from '@/context/TournamentContext';
+import type { PlayerStats } from '@/types';
 import styles from './StatsTable.module.css';
 import PlayerReportModal from './PlayerReportModal';
 import { useTranslation } from 'react-i18next';
@@ -13,7 +14,7 @@ const PODIO_CLASSES = ['podioGold', 'podioSilver', 'podioBronze'];
 
 
 export default function StatsTable() {
-  const { players, matches, badges, togglePlayerBadge } = useAppContext();
+  const { players, matches, badges, togglePlayerBadge, activeTournamentId } = useAppContext();
   const { user } = useAuth();
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const { t } = useTranslation();
@@ -21,11 +22,35 @@ export default function StatsTable() {
   const [managingBadgesForId, setManagingBadgesForId] = useState<string | null>(null);
   const managingBadgesFor = useMemo(() => players.find(p => p.id === managingBadgesForId) || null, [players, managingBadgesForId]);
 
+  // ── Stats desde el servidor ────────────────────────────────────────────────
+  const [stats, setStats] = useState<PlayerStats[]>([]);
+  const [statsLoading, setStatsLoading] = useState(false);
+
+  const fetchStats = useCallback(async () => {
+    if (!activeTournamentId) { setStats([]); return; }
+    setStatsLoading(true);
+    try {
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
+      const res = await fetch(`${API_BASE}/api/stats?tournamentId=${activeTournamentId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setStats(data);
+      }
+    } catch (e) {
+      console.error('Error fetching stats:', e);
+    } finally {
+      setStatsLoading(false);
+    }
+  }, [activeTournamentId]);
+
+  // Re-fetch stats cuando cambia el torneo o se registra un partido nuevo
+  useEffect(() => { fetchStats(); }, [fetchStats]);
+  useEffect(() => { fetchStats(); }, [matches.length, fetchStats]);
+  // ──────────────────────────────────────────────────────────────────────────
+
   type SortField = 'name' | 'badge' | 'matchesPlayed' | 'wins' | 'winPercentage' | 'bestStreak' | 'worstStreak' | 'currentStreak';
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-
-  const stats = useMemo(() => calculateStats(players, matches), [players, matches]);
 
   const enrichedStats = useMemo(() => {
     return stats.map((s, index) => {
@@ -136,6 +161,14 @@ export default function StatsTable() {
       <div className={`${styles.container} glass-panel ${styles.emptyState}`}>
         <h2>{t('statsTable.emptyState.title')}</h2>
         <p>{t('statsTable.emptyState.desc')}</p>
+      </div>
+    );
+  }
+
+  if (statsLoading && stats.length === 0) {
+    return (
+      <div className={`${styles.container} glass-panel ${styles.emptyState}`}>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>⏳ Cargando estadísticas...</p>
       </div>
     );
   }

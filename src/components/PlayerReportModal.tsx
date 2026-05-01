@@ -1,10 +1,9 @@
 "use client";
 
-import { useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
-import { getPlayerReport } from '@/lib/stats';
 import styles from './PlayerReportModal.module.css';
-import { RelationStats } from '@/types';
+import type { RelationStats, PlayerReport } from '@/types';
 import { useTranslation } from 'react-i18next';
 
 interface PlayerReportModalProps {
@@ -13,13 +12,31 @@ interface PlayerReportModalProps {
 }
 
 export default function PlayerReportModal({ playerId, onClose }: PlayerReportModalProps) {
-  const { players, matches, badges } = useAppContext();
+  const { badges, activeTournamentId } = useAppContext();
   const { t } = useTranslation();
 
-  const report = useMemo(() => {
-    try { return getPlayerReport(playerId, players, matches); }
-    catch (e) { console.error(e); return null; }
-  }, [playerId, players, matches]);
+  const [report, setReport] = useState<PlayerReport | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!activeTournamentId || !playerId) return;
+    setLoading(true);
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
+    fetch(`${API_BASE}/api/stats/report?tournamentId=${activeTournamentId}&playerId=${playerId}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { setReport(data); })
+      .catch(e => console.error('Error fetching report:', e))
+      .finally(() => setLoading(false));
+  }, [playerId, activeTournamentId]);
+
+  if (loading) return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.modal} onClick={e => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '200px' }}>
+        <p style={{ color: 'var(--text-secondary)' }}>⏳ Cargando reporte...</p>
+      </div>
+    </div>
+  );
+
 
   if (!report) return null;
 

@@ -96,9 +96,15 @@ export default function MatchHistory() {
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 
-  // Agrupar por mes
+  // Paginación UI: empieza mostrando 30, crece de a 30 con "Cargar más"
+  const PAGE_SIZE = 30;
+  const [displayCount, setDisplayCount] = useState(PAGE_SIZE);
+  const visibleMatches = sortedMatches.slice(0, displayCount);
+  const hasMore = displayCount < sortedMatches.length;
+
+  // Agrupar por mes — solo los partidos visibles
   const groupedMatches: { monthLabel: string; entries: typeof sortedMatches }[] = [];
-  sortedMatches.forEach(match => {
+  visibleMatches.forEach(match => {
     const label = getMonthKey(match.date);
     const last = groupedMatches[groupedMatches.length - 1];
     if (last && last.monthLabel === label) {
@@ -359,6 +365,31 @@ export default function MatchHistory() {
           })}
         </div>
       ))}
+      {hasMore && (
+        <div style={{ textAlign: 'center', padding: '2rem 0 1rem' }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '0.75rem' }}>
+            Mostrando {visibleMatches.length} de {sortedMatches.length} partidos
+          </p>
+          <button
+            onClick={() => setDisplayCount(c => c + PAGE_SIZE)}
+            style={{
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '12px',
+              color: 'var(--text-primary)',
+              padding: '0.6rem 1.8rem',
+              fontSize: '0.9rem',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              fontWeight: 600,
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.1)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+          >
+            ↓ Cargar más partidos
+          </button>
+        </div>
+      )}
     </div>
   );
 }
