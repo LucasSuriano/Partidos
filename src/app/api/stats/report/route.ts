@@ -7,7 +7,7 @@
  */
 import { NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase-server';
-import { verifyApiAuth } from '@/lib/auth-api';
+import { verifyApiAuth, verifyTournamentAccess } from '@/lib/auth-api';
 import { getPlayerReport } from '@/lib/stats';
 import type { Match, Player, MatchResult } from '@/types';
 
@@ -24,6 +24,12 @@ export async function GET(request: Request) {
 
   if (!tournamentId || !playerId) {
     return NextResponse.json({ error: 'tournamentId y playerId son requeridos' }, { status: 400 });
+  }
+
+  // ── Verificación de Permisos sobre el Torneo ──────────────────────────────
+  const hasAccess = await verifyTournamentAccess(auth.userId, tournamentId);
+  if (!hasAccess) {
+    return NextResponse.json({ error: 'No tienes acceso a este torneo' }, { status: 403 });
   }
 
   const supabase = createServiceClient();

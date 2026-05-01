@@ -8,6 +8,7 @@
  */
 import 'server-only';
 import jwt from 'jsonwebtoken';
+import { createServiceClient } from './supabase-server';
 
 interface AuthPayload {
   userId: string;
@@ -52,4 +53,35 @@ function verifyToken(token: string, secret: string): AuthPayload | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * Verifica si un usuario tiene acceso a un torneo específico.
+ * Tiene acceso si:
+ * 1. Su rol es 'superadmin' en la tabla users.
+ * 2. Es el owner_id en la tabla tournaments.
+ * 3. Existe un registro en user_tournaments con su user_id y el tournament_id.
+ */
+export async function verifyTournamentAccess(userId: string, tournamentId: string): Promise<boolean> {
+  const supabase = createServiceClient();
+
+  // 1. Check if user is superadmin
+  const { data: userData } = await supabase.from('users').select('role').eq('id', userId).single();
+  if (userData?.role === 'superadmin') return true;
+
+  // 2. Check if user is owner of the tournament
+  const { data: tournamentData } = await supabase.from('tournaments').select('owner_id').eq('id', tournamentId).single();
+  if (tournamentData?.owner_id === userId) return true;
+
+  // 3. Check if user is a member of the tournament
+  const { data: memberData } = await supabase
+    .from('user_tournaments')
+    .select('tournament_id')
+    .eq('user_id', userId)
+    .eq('tournament_id', tournamentId)
+    .maybeSingle();
+    
+  if (memberData) return true;
+
+  return false;
 }
