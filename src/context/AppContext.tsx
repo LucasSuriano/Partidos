@@ -85,18 +85,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode; tournamentId: st
         .eq('tournament_id', tournamentId)
         .order('date', { ascending: false });
       if (matchesError) console.error("Error loading matches:", matchesError);
-      if (matchesData) {
-        const formattedMatches: Match[] = matchesData.map(m => ({
-          id: m.id,
-          date: m.date,
-          teamA: m.team_a,
-          teamB: m.team_b,
-          result: m.result as MatchResult,
-          scoreA: m.score_a,
-          scoreB: m.score_b,
-          metadata: m.metadata
-        }));
+
+      if (matchesData && matchesData.length > 0) {
+        // Fetch pivot table to reconstruct teams
+        const matchIds = matchesData.map(m => m.id);
+        const { data: pivotData, error: pivotError } = await supabase
+          .from('match_players')
+          .select('match_id, player_id, team')
+          .in('match_id', matchIds);
+
+        if (pivotError) console.error('match_players fetch error:', pivotError.message);
+
+        const formattedMatches: Match[] = matchesData.map(m => {
+          const teamA = pivotData
+            ? pivotData.filter(p => p.match_id === m.id && p.team === 'A').map(p => p.player_id)
+            : [];
+          const teamB = pivotData
+            ? pivotData.filter(p => p.match_id === m.id && p.team === 'B').map(p => p.player_id)
+            : [];
+
+          return {
+            id: m.id,
+            date: m.date,
+            teamA,
+            teamB,
+            result: m.result as MatchResult,
+            scoreA: m.score_a,
+            scoreB: m.score_b,
+            metadata: m.metadata
+          };
+        });
         setMatches(formattedMatches);
+      } else if (matchesData) {
+        setMatches([]);
       }
       setIsLoaded(true);
     };
@@ -147,11 +168,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode; tournamentId: st
     const newMatch: Match = { id: crypto.randomUUID(), date, teamA, teamB, result, scoreA, scoreB, metadata };
     setMatches(prev => [...prev, newMatch]);
 
+    // 1. Insert into matches
     const { error } = await supabase.from('matches').insert([{
       id: newMatch.id,
       date: newMatch.date,
-      team_a: newMatch.teamA,
-      team_b: newMatch.teamB,
       result: newMatch.result,
       score_a: newMatch.scoreA,
       score_b: newMatch.scoreB,
@@ -162,6 +182,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode; tournamentId: st
     if (error) {
       console.error("Supabase insert error:", error);
       alert("Error al guardar el partido en la base de datos: " + error.message);
+      return;
+    }
+
+    // 2. Dual-write into match_players pivot table
+    const pivotRows = [
+      ...teamA.map(pid => ({ match_id: newMatch.id, player_id: pid, team: 'A' })),
+      ...teamB.map(pid => ({ match_id: newMatch.id, player_id: pid, team: 'B' })),
+    ];
+    const { error: pivotError } = await supabase.from('match_players').insert(pivotRows);
+    if (pivotError) {
+      console.warn('match_players insert warning (non-critical):', pivotError.message);
     }
   };
 
