@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Player, Match, MatchResult, Badge } from '../types';
+import { Player, Match, MatchResult, Badge, MatchMetadata } from '../types';
 import { supabase } from '../lib/supabase';
 
 interface AppContextProps {
@@ -13,9 +13,9 @@ interface AppContextProps {
   removePlayer: (id: string) => Promise<void>;
   updatePlayer: (id: string, newName: string) => Promise<void>;
   togglePlayerBadge: (playerId: string, badgeId: string, userId: string) => Promise<void>;
-  addMatch: (date: string, teamA: string[], teamB: string[], result: MatchResult, scoreA?: number, scoreB?: number, metadata?: any) => Promise<void>;
+  addMatch: (date: string, teamA: string[], teamB: string[], result: MatchResult, scoreA?: number, scoreB?: number, metadata?: MatchMetadata) => Promise<void>;
   removeMatch: (id: string) => Promise<void>;
-  updateMatchResult: (id: string, result: MatchResult, scoreA?: number, scoreB?: number, date?: string, metadata?: any) => Promise<void>;
+  updateMatchResult: (id: string, result: MatchResult, scoreA?: number, scoreB?: number, date?: string, metadata?: MatchMetadata) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextProps | undefined>(undefined);
@@ -142,7 +142,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode; tournamentId: st
     }
   };
 
-  const addMatch = async (date: string, teamA: string[], teamB: string[], result: MatchResult, scoreA?: number, scoreB?: number, metadata?: any) => {
+  const addMatch = async (date: string, teamA: string[], teamB: string[], result: MatchResult, scoreA?: number, scoreB?: number, metadata?: MatchMetadata) => {
     if (!tournamentId) return;
     const newMatch: Match = { id: crypto.randomUUID(), date, teamA, teamB, result, scoreA, scoreB, metadata };
     setMatches(prev => [...prev, newMatch]);
@@ -170,7 +170,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode; tournamentId: st
     await supabase.from('matches').delete().eq('id', id);
   };
 
-  const updateMatchResult = async (id: string, result: MatchResult, scoreA?: number, scoreB?: number, date?: string, metadata?: any) => {
+  const updateMatchResult = async (id: string, result: MatchResult, scoreA?: number, scoreB?: number, date?: string, metadata?: MatchMetadata) => {
     setMatches(prev => prev.map(m => m.id === id ? { ...m, result, scoreA, scoreB, date: date ?? m.date, metadata: metadata ?? m.metadata } : m));
 
     const { error } = await supabase.from('matches').update({

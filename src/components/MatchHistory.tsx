@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { useTournament } from '@/context/TournamentContext';
-import { Match, MatchResult } from '@/types';
+import { Match, MatchResult, MatchMetadata } from '@/types';
 import styles from './MatchHistory.module.css';
 import DatePicker from './DatePicker';
 import CustomSelect from './CustomSelect';
@@ -50,7 +50,7 @@ export default function MatchHistory() {
     }
 
     const currentMatch = matches.find(m => m.id === editingMatchId);
-    const newMetadata = {
+    const newMetadata: MatchMetadata = {
       ...currentMatch?.metadata,
       video_url: editVideoUrl || null,
       mvp_id: editMvpId || null
@@ -302,9 +302,9 @@ export default function MatchHistory() {
                               <div className={styles.scoreSeparator} />
                               <div className={styles.scoreBox}>{match.scoreB}</div>
                             </div>
-                            {match.metadata?.sets && match.metadata.sets.length > 0 && (
+                            {match.metadata?.sport === 'padel' && match.metadata.sets.length > 0 && (
                               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                                {match.metadata.sets.map((setInfo: any, sIdx: number) => (
+                                {match.metadata.sets.map((setInfo, sIdx) => (
                                   <div key={sIdx} style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px', color: 'rgba(255,255,255,0.8)' }}>
                                     {setInfo.scoreA}-{setInfo.scoreB}
                                   </div>

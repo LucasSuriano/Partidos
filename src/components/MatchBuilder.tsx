@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
-import { Player, MatchResult } from '@/types';
+import { Player, MatchResult, MatchMetadata, PadelMetadata, FootballMetadata } from '@/types';
 import styles from './MatchBuilder.module.css';
 import DatePicker from './DatePicker';
 import CustomSelect from './CustomSelect';
@@ -181,10 +181,7 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
     let finalResult = result;
     let finalScoreA: number | undefined = parseInt(scoreA, 10);
     let finalScoreB: number | undefined = parseInt(scoreB, 10);
-    let metadata: any = {
-      video_url: videoUrl || null,
-      mvp_id: mvpId || null
-    };
+    let metadata: MatchMetadata;
 
     if (isPadel) {
       let setsA = 0;
@@ -205,12 +202,22 @@ export default function MatchBuilder({ onComplete }: { onComplete: () => void })
       
       if (setsA > setsB) finalResult = 'A_WIN';
       else if (setsB > setsA) finalResult = 'B_WIN';
-      else if (validSets.length > 0) finalResult = 'DRAW'; // Fallback
+      else if (validSets.length > 0) finalResult = 'DRAW';
 
-      metadata = {
-        ...metadata,
+      const padelMeta: PadelMetadata = {
+        sport: 'padel',
+        video_url: videoUrl || null,
+        mvp_id: mvpId || null,
         sets: validSets.map(s => ({ scoreA: parseInt(s.scoreA, 10), scoreB: parseInt(s.scoreB, 10) }))
       };
+      metadata = padelMeta;
+    } else {
+      const footballMeta: FootballMetadata = {
+        sport: 'football',
+        video_url: videoUrl || null,
+        mvp_id: mvpId || null,
+      };
+      metadata = footballMeta;
     }
 
     if (teamA.length !== teamSize || teamB.length !== teamSize || !matchDate || !finalResult) return;

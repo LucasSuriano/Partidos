@@ -37,6 +37,32 @@ export type Role = 'superadmin' | 'user';
 
 export type MatchResult = 'A_WIN' | 'B_WIN' | 'DRAW';
 
+// ─── Match metadata: discriminated union por deporte ───────────────────────
+/** Campos comunes a todos los deportes */
+type MatchMetadataBase = {
+  video_url?: string | null;
+  mvp_id?: string | null;
+};
+
+/** Metadata para torneos de fútbol (y otros deportes sin sets) */
+export type FootballMetadata = MatchMetadataBase & {
+  sport?: 'football';
+};
+
+/** Metadata para torneos de pádel (incluye detalle de sets) */
+export type PadelMetadata = MatchMetadataBase & {
+  sport: 'padel';
+  sets: { scoreA: number; scoreB: number }[];
+};
+
+/**
+ * Tipo unificado de metadata para un Match.
+ * Usar `metadata.sport` para discriminar entre deportes.
+ * Para compatibilidad con datos históricos sin `sport`, ambos tipos lo tienen opcional.
+ */
+export type MatchMetadata = FootballMetadata | PadelMetadata;
+// ───────────────────────────────────────────────────────────────────────────
+
 export type Match = {
   id: string;
   date: string; // ISO string
@@ -45,11 +71,7 @@ export type Match = {
   result: MatchResult;
   scoreA?: number | null;
   scoreB?: number | null;
-  metadata?: {
-    sets?: { scoreA: number; scoreB: number }[];
-    video_url?: string | null;
-    mvp_id?: string | null;
-  } | null;
+  metadata?: MatchMetadata | null;
 };
 
 export type PlayerStats = {
