@@ -32,19 +32,22 @@ export default function StatsTable() {
   const fetchStats = useCallback(async (matchCount: number) => {
     if (!activeTournamentId) { setStats([]); return; }
     const key = `${activeTournamentId}:${matchCount}`;
-    if (key === lastFetchKey.current) return; // ya tenemos estos datos
+    if (key === lastFetchKey.current) return;
     lastFetchKey.current = key;
     setStatsLoading(true);
     try {
       const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
-      const res = await fetch(`${API_BASE}/api/stats?tournamentId=${activeTournamentId}`);
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') ?? '' : '';
+      const res = await fetch(`${API_BASE}/api/stats?tournamentId=${activeTournamentId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (res.ok) {
         const data = await res.json();
         setStats(data);
       }
     } catch (e) {
       console.error('Error fetching stats:', e);
-      lastFetchKey.current = ''; // permite reintentar
+      lastFetchKey.current = '';
     } finally {
       setStatsLoading(false);
     }

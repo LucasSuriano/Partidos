@@ -22,7 +22,10 @@ export default function PlayerReportModal({ playerId, onClose }: PlayerReportMod
     if (!activeTournamentId || !playerId) return;
     setLoading(true);
     const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
-    fetch(`${API_BASE}/api/stats/report?tournamentId=${activeTournamentId}&playerId=${playerId}`)
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') ?? '' : '';
+    fetch(`${API_BASE}/api/stats/report?tournamentId=${activeTournamentId}&playerId=${playerId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
       .then(r => r.ok ? r.json() : null)
       .then(data => { setReport(data); })
       .catch(e => console.error('Error fetching report:', e))

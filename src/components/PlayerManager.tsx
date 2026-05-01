@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { useTournament } from '@/context/TournamentContext';
-import { calculateStats } from '@/lib/stats';
 import styles from './PlayerManager.module.css';
 import { useTranslation } from 'react-i18next';
 
@@ -38,8 +37,27 @@ export default function PlayerManager() {
   const [managingBadgesForId, setManagingBadgesForId] = useState<string | null>(null);
   const managingBadgesFor = useMemo(() => players.find(p => p.id === managingBadgesForId) || null, [players, managingBadgesForId]);
 
-  const stats = useMemo(() => calculateStats(players, matches), [players, matches]);
-  const maxMatches = useMemo(() => Math.max(...stats.map(s => s.matchesPlayed), 1), [stats]);
+  // Cálculo liviano: solo lo que necesita este componente (matchesPlayed, wins, losses, %)
+  // Evita correr el motor de stats completo (Elo, rachas, relaciones) solo para mostrar las tarjetas
+  const playerStatsMap = useMemo(() => {
+    const map = new Map<string, { matchesPlayed: number; wins: number; losses: number; winPercentage: number }>();
+    players.forEach(p => {
+      const pm = matches.filter(m => m.teamA.includes(p.id) || m.teamB.includes(p.id));
+      const wins = pm.filter(m =>
+        (m.result === 'A_WIN' && m.teamA.includes(p.id)) ||
+        (m.result === 'B_WIN' && m.teamB.includes(p.id))
+      ).length;
+      const losses = pm.filter(m =>
+        (m.result === 'B_WIN' && m.teamA.includes(p.id)) ||
+        (m.result === 'A_WIN' && m.teamB.includes(p.id))
+      ).length;
+      const mp = pm.length;
+      map.set(p.id, { matchesPlayed: mp, wins, losses, winPercentage: mp > 0 ? (wins / mp) * 100 : 0 });
+    });
+    return map;
+  }, [players, matches]);
+
+  const maxMatches = useMemo(() => Math.max(...Array.from(playerStatsMap.values()).map(s => s.matchesPlayed), 1), [playerStatsMap]);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -159,7 +177,7 @@ export default function PlayerManager() {
       {/* ── Player grid ── */}
       <div className={styles.playerList}>
         {filtered.map((player, i) => {
-          const playerStats = stats.find(s => s.player.id === player.id);
+          const playerStats = playerStatsMap.get(player.id);
           const matchCount = playerStats?.matchesPlayed ?? 0;
           const winPct = playerStats?.winPercentage ?? 0;
           const hasMatches = matchCount > 0;
@@ -233,8 +251,8 @@ export default function PlayerManager() {
                             {winPct.toFixed(0)}%
                           </span>
                           <span>·</span>
-                          <span style={{ color: 'var(--accent-primary)' }}>{playerStats?.wins}V</span>
-                          <span style={{ color: 'var(--danger)' }}>{playerStats?.losses}D</span>
+                          <span style={{ color: 'var(--accent-primary)' }}>{(playerStats?.wins ?? 0)}V</span>
+                          <span style={{ color: 'var(--danger)' }}>{(playerStats?.losses ?? 0)}D</span>
                         </div>
                         <div className={styles.winBar}>
                           <div

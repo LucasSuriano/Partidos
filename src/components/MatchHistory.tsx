@@ -25,6 +25,7 @@ export default function MatchHistory() {
   const [editDate, setEditDate] = useState<string>('');
   const [editVideoUrl, setEditVideoUrl] = useState<string>('');
   const [editMvpId, setEditMvpId] = useState<string>('');
+  const [playerSearch, setPlayerSearch] = useState('');
 
   const handleEditClick = (match: Match) => {
     setEditingMatchId(match.id);
@@ -96,13 +97,23 @@ export default function MatchHistory() {
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 
+  // Filtro por nombre de jugador — usa getPlayers() igual que el render
+  const filteredMatches = playerSearch.trim()
+    ? sortedMatches.filter(m => {
+        const allNames = [...getPlayers(m.teamA), ...getPlayers(m.teamB)]
+          .join(' ')
+          .toLowerCase();
+        return allNames.includes(playerSearch.toLowerCase());
+      })
+    : sortedMatches;
+
   // Paginación UI: empieza mostrando 30, crece de a 30 con "Cargar más"
   const PAGE_SIZE = 30;
   const [displayCount, setDisplayCount] = useState(PAGE_SIZE);
-  // Resetear al principio cuando se agrega un partido nuevo
-  useEffect(() => { setDisplayCount(PAGE_SIZE); }, [matches.length]);
-  const visibleMatches = sortedMatches.slice(0, displayCount);
-  const hasMore = displayCount < sortedMatches.length;
+  // Resetear al principio cuando se agrega un partido nuevo o cambia la búsqueda
+  useEffect(() => { setDisplayCount(PAGE_SIZE); }, [matches.length, playerSearch]);
+  const visibleMatches = filteredMatches.slice(0, displayCount);
+  const hasMore = displayCount < filteredMatches.length;
 
   // Agrupar por mes — solo los partidos visibles
   const groupedMatches: { monthLabel: string; entries: typeof sortedMatches }[] = [];
@@ -133,6 +144,44 @@ export default function MatchHistory() {
 
   return (
     <div className={styles.container}>
+
+      {/* ── Búsqueda por jugador ── */}
+      {matches.length > 5 && (
+        <div style={{ marginBottom: '1rem', position: 'relative', maxWidth: '360px' }}>
+          <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', opacity: 0.5 }}>🔍</span>
+          <input
+            type="text"
+            value={playerSearch}
+            onChange={e => setPlayerSearch(e.target.value)}
+            placeholder="Buscar por jugador..."
+            style={{
+              width: '100%',
+              padding: '0.55rem 2.4rem',
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '10px',
+              color: 'var(--text-primary)',
+              fontSize: '0.9rem',
+              outline: 'none',
+              boxSizing: 'border-box',
+            }}
+          />
+          {playerSearch && (
+            <button
+              onClick={() => setPlayerSearch('')}
+              style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '1rem', lineHeight: 1 }}
+            >✕</button>
+          )}
+        </div>
+      )}
+
+      {/* Sin resultados de búsqueda */}
+      {playerSearch && filteredMatches.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
+          <p>No se encontraron partidos con <strong style={{ color: 'var(--text-primary)' }}>{playerSearch}</strong></p>
+        </div>
+      )}
+
       {groupedMatches.map(({ monthLabel, entries }) => (
         <div key={monthLabel} className={styles.monthGroup}>
           {/* ── Separador de mes ── */}

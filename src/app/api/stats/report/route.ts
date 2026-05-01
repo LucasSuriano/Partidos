@@ -2,15 +2,22 @@
  * GET /api/stats/report?tournamentId=xxx&playerId=yyy
  *
  * Genera el reporte detallado de un jugador específico.
- * Corre server-side para evitar el doble cálculo que ocurría en el cliente
- * (getPlayerReport llamaba a calculateStats internamente).
+ * - Requiere JWT válido (Authorization: Bearer o cookie auth_token)
+ * - Queries paralelas con Promise.all para reducir latencia ~50%
  */
 import { NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase-server';
+import { verifyApiAuth } from '@/lib/auth-api';
 import { getPlayerReport } from '@/lib/stats';
 import type { Match, Player, MatchResult } from '@/types';
 
 export async function GET(request: Request) {
+  // ── Auth ─────────────────────────────────────────────────────────────────
+  const auth = verifyApiAuth(request);
+  if (!auth) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+
   const { searchParams } = new URL(request.url);
   const tournamentId = searchParams.get('tournamentId');
   const playerId = searchParams.get('playerId');
@@ -21,44 +28,46 @@ export async function GET(request: Request) {
 
   const supabase = createServiceClient();
 
-  // 1. Fetch players
-  const { data: playersData, error: playersError } = await supabase
-    .from('players')
-    .select('id, name')
-    .eq('tournament_id', tournamentId);
+  // ── Queries paralelas: players + votes + matches al mismo tiempo ──────────
+  const [playersResult, votesResult, matchesResult] = await Promise.all([
+    supabase
+      .from('players')
+      .select('id, name')
+      .eq('tournament_id', tournamentId),
+    supabase
+      .from('player_badges')
+      .select('player_id, badge_id, user_id')
+      .eq('tournament_id', tournamentId),
+    supabase
+      .from('matches')
+      .select('id, date, result, score_a, score_b, metadata')
+      .eq('tournament_id', tournamentId)
+      .order('date', { ascending: true }),
+  ]);
 
-  if (playersError || !playersData) {
+  if (playersResult.error || !playersResult.data) {
     return NextResponse.json({ error: 'Error cargando jugadores' }, { status: 500 });
   }
+  if (matchesResult.error || !matchesResult.data) {
+    return NextResponse.json({ error: 'Error cargando partidos' }, { status: 500 });
+  }
 
-  // 2. Fetch badges
-  const { data: votesData } = await supabase
-    .from('player_badges')
-    .select('player_id, badge_id, user_id')
-    .eq('tournament_id', tournamentId);
+  const playersData = playersResult.data;
+  const votesData = votesResult.data ?? [];
+  const matchesData = matchesResult.data;
 
+  // ── Construir players ────────────────────────────────────────────────────
   const players: Player[] = playersData.map(p => ({
     id: p.id,
     name: p.name,
     badges: votesData
-      ? votesData.filter(v => v.player_id === p.id).map(v => ({ badgeId: v.badge_id, userId: v.user_id }))
-      : [],
+      .filter(v => v.player_id === p.id)
+      .map(v => ({ badgeId: v.badge_id, userId: v.user_id })),
   }));
 
-  // 3. Fetch ALL matches
-  const { data: matchesData, error: matchesError } = await supabase
-    .from('matches')
-    .select('id, date, result, score_a, score_b, metadata')
-    .eq('tournament_id', tournamentId)
-    .order('date', { ascending: true });
-
-  if (matchesError || !matchesData) {
-    return NextResponse.json({ error: 'Error cargando partidos' }, { status: 500 });
-  }
-
-  // 4. Fetch pivot
-  const matchIds = matchesData.map(m => m.id);
+  // ── Fetch pivot ──────────────────────────────────────────────────────────
   let matches: Match[] = [];
+  const matchIds = matchesData.map(m => m.id);
 
   if (matchIds.length > 0) {
     const { data: pivotData } = await supabase
@@ -78,7 +87,7 @@ export async function GET(request: Request) {
     }));
   }
 
-  // 5. Generar reporte del jugador
+  // ── Generar reporte ──────────────────────────────────────────────────────
   try {
     const report = getPlayerReport(playerId, players, matches);
     return NextResponse.json(report, {
@@ -86,7 +95,7 @@ export async function GET(request: Request) {
         'Cache-Control': 'private, max-age=30, stale-while-revalidate=60',
       },
     });
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: 'Jugador no encontrado' }, { status: 404 });
   }
 }

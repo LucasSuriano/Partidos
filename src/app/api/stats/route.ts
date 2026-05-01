@@ -2,15 +2,23 @@
  * GET /api/stats?tournamentId=xxx
  *
  * Calcula las estadísticas completas de todos los jugadores de un torneo.
- * Corre server-side con service_role (bypasea RLS) para acceder a TODOS
- * los partidos sin paginación, liberando al cliente de la computación O(n×m).
+ * - Requiere JWT válido (Authorization: Bearer o cookie auth_token)
+ * - Corre server-side con service_role para acceder a TODOS los partidos
+ * - Queries paralelas con Promise.all para reducir latencia ~50%
  */
 import { NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase-server';
+import { verifyApiAuth } from '@/lib/auth-api';
 import { calculateStats } from '@/lib/stats';
 import type { Match, Player, MatchResult } from '@/types';
 
 export async function GET(request: Request) {
+  // ── Auth ─────────────────────────────────────────────────────────────────
+  const auth = verifyApiAuth(request);
+  if (!auth) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+
   const { searchParams } = new URL(request.url);
   const tournamentId = searchParams.get('tournamentId');
 
@@ -20,44 +28,46 @@ export async function GET(request: Request) {
 
   const supabase = createServiceClient();
 
-  // 1. Fetch players
-  const { data: playersData, error: playersError } = await supabase
-    .from('players')
-    .select('id, name')
-    .eq('tournament_id', tournamentId);
+  // ── Queries paralelas: players + votes + matches al mismo tiempo ──────────
+  const [playersResult, votesResult, matchesResult] = await Promise.all([
+    supabase
+      .from('players')
+      .select('id, name')
+      .eq('tournament_id', tournamentId),
+    supabase
+      .from('player_badges')
+      .select('player_id, badge_id, user_id')
+      .eq('tournament_id', tournamentId),
+    supabase
+      .from('matches')
+      .select('id, date, result, score_a, score_b, metadata')
+      .eq('tournament_id', tournamentId)
+      .order('date', { ascending: true }),
+  ]);
 
-  if (playersError || !playersData) {
+  if (playersResult.error || !playersResult.data) {
     return NextResponse.json({ error: 'Error cargando jugadores' }, { status: 500 });
   }
+  if (matchesResult.error || !matchesResult.data) {
+    return NextResponse.json({ error: 'Error cargando partidos' }, { status: 500 });
+  }
 
-  // 2. Fetch player badges (votes)
-  const { data: votesData } = await supabase
-    .from('player_badges')
-    .select('player_id, badge_id, user_id')
-    .eq('tournament_id', tournamentId);
+  const playersData = playersResult.data;
+  const votesData = votesResult.data ?? [];
+  const matchesData = matchesResult.data;
 
+  // ── Construir players ────────────────────────────────────────────────────
   const players: Player[] = playersData.map(p => ({
     id: p.id,
     name: p.name,
     badges: votesData
-      ? votesData.filter(v => v.player_id === p.id).map(v => ({ badgeId: v.badge_id, userId: v.user_id }))
-      : [],
+      .filter(v => v.player_id === p.id)
+      .map(v => ({ badgeId: v.badge_id, userId: v.user_id })),
   }));
 
-  // 3. Fetch ALL matches (sin límite — corre en servidor)
-  const { data: matchesData, error: matchesError } = await supabase
-    .from('matches')
-    .select('id, date, result, score_a, score_b, metadata')
-    .eq('tournament_id', tournamentId)
-    .order('date', { ascending: true });
-
-  if (matchesError || !matchesData) {
-    return NextResponse.json({ error: 'Error cargando partidos' }, { status: 500 });
-  }
-
-  // 4. Fetch pivot match_players para reconstruir equipos
-  const matchIds = matchesData.map(m => m.id);
+  // ── Fetch pivot (depende de los IDs de matches) ──────────────────────────
   let matches: Match[] = [];
+  const matchIds = matchesData.map(m => m.id);
 
   if (matchIds.length > 0) {
     const { data: pivotData, error: pivotError } = await supabase
@@ -79,12 +89,11 @@ export async function GET(request: Request) {
     }));
   }
 
-  // 5. Calcular estadísticas — corre en el servidor, no en el browser
+  // ── Calcular estadísticas ────────────────────────────────────────────────
   const stats = calculateStats(players, matches);
 
   return NextResponse.json(stats, {
     headers: {
-      // Cache por 30 segundos: stats se actualizan al registrar un partido
       'Cache-Control': 'private, max-age=30, stale-while-revalidate=60',
     },
   });
