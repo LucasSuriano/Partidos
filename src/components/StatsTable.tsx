@@ -25,6 +25,7 @@ export default function StatsTable() {
   // ── Stats desde el servidor ────────────────────────────────────────────────
   const [stats, setStats] = useState<PlayerStats[]>([]);
   const [statsLoading, setStatsLoading] = useState(false);
+  const [statsError, setStatsError] = useState(false);
 
   // Cache: evita refetch si el torneo y la cantidad de partidos no cambiaron
   const lastFetchKey = useRef<string>('');
@@ -35,6 +36,7 @@ export default function StatsTable() {
     if (key === lastFetchKey.current) return;
     lastFetchKey.current = key;
     setStatsLoading(true);
+    setStatsError(false);
     try {
       const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
       const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') ?? '' : '';
@@ -44,14 +46,26 @@ export default function StatsTable() {
       if (res.ok) {
         const data = await res.json();
         setStats(data);
+        setStatsError(false);
+      } else {
+        console.error('Stats fetch failed:', res.status);
+        lastFetchKey.current = ''; // permite reintentar
+        setStatsError(true);
       }
     } catch (e) {
       console.error('Error fetching stats:', e);
       lastFetchKey.current = '';
+      setStatsError(true);
     } finally {
       setStatsLoading(false);
     }
   }, [activeTournamentId]);
+
+  const retryStats = useCallback(() => {
+    lastFetchKey.current = '';
+    setStatsError(false);
+    fetchStats(matches.length);
+  }, [fetchStats, matches.length]);
 
   // Un solo useEffect: se dispara cuando cambia el torneo o la cantidad de partidos
   useEffect(() => { fetchStats(matches.length); }, [fetchStats, matches.length]);
@@ -178,6 +192,38 @@ export default function StatsTable() {
     return (
       <div className={`${styles.container} glass-panel ${styles.emptyState}`}>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>⏳ Cargando estadísticas...</p>
+      </div>
+    );
+  }
+
+  if (statsError && stats.length === 0) {
+    return (
+      <div className={`${styles.container} glass-panel ${styles.emptyState}`}>
+        <p style={{ fontSize: '2rem', margin: 0 }}>⚠️</p>
+        <p style={{ color: 'var(--text-primary)', fontWeight: 600, margin: '0.5rem 0 0.25rem' }}>
+          No se pudieron cargar las estadísticas
+        </p>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', margin: '0 0 1.25rem' }}>
+          Verificá tu conexión e intentá de nuevo.
+        </p>
+        <button
+          onClick={retryStats}
+          style={{
+            padding: '0.55rem 1.5rem',
+            borderRadius: '10px',
+            border: '1px solid rgba(99,102,241,0.4)',
+            background: 'rgba(99,102,241,0.1)',
+            color: 'var(--text-primary)',
+            cursor: 'pointer',
+            fontSize: '0.9rem',
+            fontWeight: 600,
+            transition: 'background 0.2s',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.2)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.1)')}
+        >
+          🔄 Reintentar
+        </button>
       </div>
     );
   }

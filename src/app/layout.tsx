@@ -10,6 +10,10 @@ const inter = Inter({
 import { AuthProvider } from "@/context/AuthContext";
 import { TournamentProvider } from "@/context/TournamentContext";
 import I18nProvider from "@/components/I18nProvider";
+import { validateEnvVars } from "@/lib/env-check";
+
+// Valida variables de entorno al arrancar el servidor
+validateEnvVars();
 
 export const viewport: Viewport = {
   themeColor: "#101729",
