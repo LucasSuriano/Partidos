@@ -16,6 +16,7 @@ export function calculateStats(players: Player[], matches: Match[]): PlayerStats
       worstTeammate: null,
       favoriteVictim: null,
       currentStreak: { type: null, count: 0 },
+      elo: 1200,
       recentWinPercentage: 0,
       formScore: 0,
       mvps: 0,
