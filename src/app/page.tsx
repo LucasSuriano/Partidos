@@ -14,6 +14,7 @@ import UserMenu from '@/components/UserMenu';
 import { useAuth } from '@/context/AuthContext';
 import { useTournament } from '@/context/TournamentContext';
 import { AppProvider } from '@/context/AppContext';
+import { ToastProvider } from '@/context/ToastContext';
 import Login from '@/components/Login';
 import Brand from '@/components/Brand';
 import { useTranslation } from 'react-i18next';
@@ -59,7 +60,8 @@ function MainApp() {
   ];
 
   return (
-    <AppProvider tournamentId={activeTournament?.id ?? null} tournamentTypeId={activeTournament?.type_id ?? null}>
+    <ToastProvider>
+      <AppProvider tournamentId={activeTournament?.id ?? null} tournamentTypeId={activeTournament?.type_id ?? null}>
       <div className={styles.pageRoot}>
         {/* ── Sticky header ── */}
         <header className={styles.header}>
@@ -124,7 +126,8 @@ function MainApp() {
           {view === 'USERS'     && isAdmin && <TournamentUsers />}
         </main>
       </div>
-    </AppProvider>
+      </AppProvider>
+    </ToastProvider>
   );
 }
 

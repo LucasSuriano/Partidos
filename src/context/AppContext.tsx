@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Player, Match, MatchResult, Badge, MatchMetadata } from '../types';
 import { supabase } from '../lib/supabase';
+import { useToast } from './ToastContext';
 
 interface AppContextProps {
   players: Player[];
@@ -25,6 +26,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode; tournamentId: st
   const [matches, setMatches] = useState<Match[]>([]);
   const [badges, setBadges] = useState<Badge[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (!tournamentId) {
@@ -135,15 +137,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode; tournamentId: st
       .insert([{ ...newPlayer, tournament_id: tournamentId }]);
     if (error) {
       console.error('Error al agregar jugador:', error.message);
+      showToast('No se pudo agregar el jugador. Intentá de nuevo.', 'error');
       return;
     }
     setPlayers(prev => [...prev, newPlayer]);
+    showToast(`${newPlayer.name} fue agregado correctamente.`, 'success');
   };
 
   const removePlayer = async (id: string) => {
     const { error } = await supabase.from('players').delete().eq('id', id);
     if (error) {
       console.error('Error al eliminar jugador:', error.message);
+      showToast('No se pudo eliminar el jugador. Intentá de nuevo.', 'error');
       return;
     }
     setPlayers(prev => prev.filter(p => p.id !== id));
@@ -156,6 +161,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode; tournamentId: st
       .eq('id', id);
     if (error) {
       console.error('Error al actualizar jugador:', error.message);
+      showToast('No se pudo actualizar el nombre. Intentá de nuevo.', 'error');
       return;
     }
     setPlayers(prev => prev.map(p => p.id === id ? { ...p, name: newName } : p));
@@ -184,7 +190,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode; tournamentId: st
 
     if (error) {
       console.error('Error al actualizar badge:', error.message);
-      setPlayers(previousPlayers); // ← rollback
+      showToast('No se pudo actualizar la insignia.', 'error');
+      setPlayers(previousPlayers);
     }
   };
 
@@ -211,11 +218,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode; tournamentId: st
 
     if (error) {
       console.error('Error al guardar el partido:', error.message);
-      setMatches(previousMatches); // ← rollback
+      showToast('No se pudo guardar el partido. Los cambios fueron revertidos.', 'error');
+      setMatches(previousMatches);
       return;
     }
 
-    // 2. Insert en match_players (el partido principal ya fue guardado)
+    // 2. Insert en match_players
     const pivotRows = [
       ...teamA.map(pid => ({ match_id: newMatch.id, player_id: pid, team: 'A' })),
       ...teamB.map(pid => ({ match_id: newMatch.id, player_id: pid, team: 'B' })),
@@ -224,6 +232,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode; tournamentId: st
     if (pivotError) {
       console.warn('match_players insert warning (non-critical):', pivotError.message);
     }
+    showToast('Partido registrado correctamente.', 'success');
   };
 
   const removeMatch = async (id: string) => {
@@ -233,7 +242,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode; tournamentId: st
     const { error } = await supabase.from('matches').delete().eq('id', id);
     if (error) {
       console.error('Error al eliminar el partido:', error.message);
-      setMatches(previousMatches); // ← rollback
+      showToast('No se pudo eliminar el partido. Los cambios fueron revertidos.', 'error');
+      setMatches(previousMatches);
     }
   };
 
@@ -254,7 +264,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode; tournamentId: st
 
     if (error) {
       console.error('Error al actualizar el partido:', error.message);
-      setMatches(previousMatches); // ← rollback
+      showToast('No se pudo actualizar el partido. Los cambios fueron revertidos.', 'error');
+      setMatches(previousMatches);
     }
   };
 
