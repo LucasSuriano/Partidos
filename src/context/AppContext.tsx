@@ -125,22 +125,43 @@ export const AppProvider: React.FC<{ children: React.ReactNode; tournamentId: st
     loadData();
   }, [tournamentId]);
 
+  // ── Jugadores: esperan confirmación antes de actualizar la UI ──────────────────
+
   const addPlayer = async (name: string) => {
     if (!tournamentId) return;
     const newPlayer: Player = { id: crypto.randomUUID(), name };
+    const { error } = await supabase
+      .from('players')
+      .insert([{ ...newPlayer, tournament_id: tournamentId }]);
+    if (error) {
+      console.error('Error al agregar jugador:', error.message);
+      return;
+    }
     setPlayers(prev => [...prev, newPlayer]);
-    await supabase.from('players').insert([{ ...newPlayer, tournament_id: tournamentId }]);
   };
 
   const removePlayer = async (id: string) => {
+    const { error } = await supabase.from('players').delete().eq('id', id);
+    if (error) {
+      console.error('Error al eliminar jugador:', error.message);
+      return;
+    }
     setPlayers(prev => prev.filter(p => p.id !== id));
-    await supabase.from('players').delete().eq('id', id);
   };
 
   const updatePlayer = async (id: string, newName: string) => {
+    const { error } = await supabase
+      .from('players')
+      .update({ name: newName })
+      .eq('id', id);
+    if (error) {
+      console.error('Error al actualizar jugador:', error.message);
+      return;
+    }
     setPlayers(prev => prev.map(p => p.id === id ? { ...p, name: newName } : p));
-    await supabase.from('players').update({ name: newName }).eq('id', id);
   };
+
+  // ── Badges: optimistic update + rollback ─────────────────────────────────
 
   const togglePlayerBadge = async (playerId: string, badgeId: string, userId: string) => {
     if (!tournamentId) return;
@@ -149,23 +170,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode; tournamentId: st
 
     const existingBadges = player.badges || [];
     const hasVoted = existingBadges.some(b => b.badgeId === badgeId && b.userId === userId);
-
     const newBadges = hasVoted
       ? existingBadges.filter(b => !(b.badgeId === badgeId && b.userId === userId))
       : [...existingBadges, { badgeId, userId }];
 
+    // Guardar estado anterior para rollback
+    const previousPlayers = players;
     setPlayers(prev => prev.map(p => p.id === playerId ? { ...p, badges: newBadges } : p));
 
-    if (hasVoted) {
-      await supabase.from('player_badges').delete().match({ player_id: playerId, badge_id: badgeId, user_id: userId, tournament_id: tournamentId });
-    } else {
-      await supabase.from('player_badges').insert([{ player_id: playerId, badge_id: badgeId, user_id: userId, tournament_id: tournamentId }]);
+    const { error } = hasVoted
+      ? await supabase.from('player_badges').delete().match({ player_id: playerId, badge_id: badgeId, user_id: userId, tournament_id: tournamentId })
+      : await supabase.from('player_badges').insert([{ player_id: playerId, badge_id: badgeId, user_id: userId, tournament_id: tournamentId }]);
+
+    if (error) {
+      console.error('Error al actualizar badge:', error.message);
+      setPlayers(previousPlayers); // ← rollback
     }
   };
+
+  // ── Partidos: optimistic update + rollback ─────────────────────────────
 
   const addMatch = async (date: string, teamA: string[], teamB: string[], result: MatchResult, scoreA?: number, scoreB?: number, metadata?: MatchMetadata) => {
     if (!tournamentId) return;
     const newMatch: Match = { id: crypto.randomUUID(), date, teamA, teamB, result, scoreA, scoreB, metadata };
+
+    // Guardar estado anterior para rollback
+    const previousMatches = matches;
     setMatches(prev => [...prev, newMatch]);
 
     // 1. Insert into matches
@@ -180,12 +210,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode; tournamentId: st
     }]);
 
     if (error) {
-      console.error("Supabase insert error:", error);
-      alert("Error al guardar el partido en la base de datos: " + error.message);
+      console.error('Error al guardar el partido:', error.message);
+      setMatches(previousMatches); // ← rollback
       return;
     }
 
-    // 2. Dual-write into match_players pivot table
+    // 2. Insert en match_players (el partido principal ya fue guardado)
     const pivotRows = [
       ...teamA.map(pid => ({ match_id: newMatch.id, player_id: pid, team: 'A' })),
       ...teamB.map(pid => ({ match_id: newMatch.id, player_id: pid, team: 'B' })),
@@ -197,12 +227,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode; tournamentId: st
   };
 
   const removeMatch = async (id: string) => {
+    const previousMatches = matches;
     setMatches(prev => prev.filter(m => m.id !== id));
-    await supabase.from('matches').delete().eq('id', id);
+
+    const { error } = await supabase.from('matches').delete().eq('id', id);
+    if (error) {
+      console.error('Error al eliminar el partido:', error.message);
+      setMatches(previousMatches); // ← rollback
+    }
   };
 
   const updateMatchResult = async (id: string, result: MatchResult, scoreA?: number, scoreB?: number, date?: string, metadata?: MatchMetadata) => {
-    setMatches(prev => prev.map(m => m.id === id ? { ...m, result, scoreA, scoreB, date: date ?? m.date, metadata: metadata ?? m.metadata } : m));
+    const previousMatches = matches;
+    setMatches(prev => prev.map(m => m.id === id
+      ? { ...m, result, scoreA, scoreB, date: date ?? m.date, metadata: metadata ?? m.metadata }
+      : m
+    ));
 
     const { error } = await supabase.from('matches').update({
       result,
@@ -213,8 +253,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode; tournamentId: st
     }).eq('id', id);
 
     if (error) {
-      console.error("Supabase update error:", error);
-      alert("Error al actualizar los goles en la base de datos: " + error.message);
+      console.error('Error al actualizar el partido:', error.message);
+      setMatches(previousMatches); // ← rollback
     }
   };
 
