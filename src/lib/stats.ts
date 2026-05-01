@@ -231,7 +231,7 @@ export function getPlayerReport(playerId: string, players: Player[], matches: Ma
     });
   });
 
-  const formatStats = (statsMap: Record<string, any>): RelationStats[] => {
+  const formatStats = (statsMap: Record<string, { total: number; wins: number; losses: number; draws: number }>): RelationStats[] => {
     return Object.entries(statsMap)
       .map(([id, s]) => {
         const p = players.find(player => player.id === id)!;

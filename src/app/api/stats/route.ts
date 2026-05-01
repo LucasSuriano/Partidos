@@ -9,6 +9,7 @@
 import { NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase-server';
 import { verifyApiAuth, verifyTournamentAccess } from '@/lib/auth-api';
+import { applyRateLimit } from '@/lib/rate-limit';
 import { calculateStats } from '@/lib/stats';
 import type { Match, Player, MatchResult } from '@/types';
 
@@ -17,6 +18,23 @@ export async function GET(request: Request) {
   const auth = verifyApiAuth(request);
   if (!auth) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+
+  // ── Rate Limiting ────────────────────────────────────────────────────────
+  // Permitimos 60 request por minuto por usuario
+  const { success, remaining, resetAt } = applyRateLimit(`stats_${auth.userId}`, 60, 60_000);
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Demasiadas peticiones. Intenta de nuevo en unos segundos.' },
+      { 
+        status: 429,
+        headers: {
+          'X-RateLimit-Limit': '60',
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': resetAt.toString()
+        }
+      }
+    );
   }
 
   const { searchParams } = new URL(request.url);
@@ -101,6 +119,9 @@ export async function GET(request: Request) {
   return NextResponse.json(stats, {
     headers: {
       'Cache-Control': 'private, max-age=30, stale-while-revalidate=60',
+      'X-RateLimit-Limit': '60',
+      'X-RateLimit-Remaining': remaining.toString(),
+      'X-RateLimit-Reset': resetAt.toString()
     },
   });
 }
