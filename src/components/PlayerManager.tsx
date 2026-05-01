@@ -33,6 +33,7 @@ export default function PlayerManager() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [managingBadgesForId, setManagingBadgesForId] = useState<string | null>(null);
   const managingBadgesFor = useMemo(() => players.find(p => p.id === managingBadgesForId) || null, [players, managingBadgesForId]);
@@ -40,12 +41,13 @@ export default function PlayerManager() {
   const stats = useMemo(() => calculateStats(players, matches), [players, matches]);
   const maxMatches = useMemo(() => Math.max(...stats.map(s => s.matchesPlayed), 1), [stats]);
 
-  const handleAdd = (e: React.FormEvent) => {
+  const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (name.trim()) {
-      addPlayer(name.trim());
-      setName('');
-    }
+    if (!name.trim() || isSubmitting) return;
+    setIsSubmitting(true);
+    await addPlayer(name.trim());
+    setName('');
+    setIsSubmitting(false);
   };
 
   const handleStartEdit = (player: { id: string; name: string }) => {
@@ -55,10 +57,11 @@ export default function PlayerManager() {
   };
 
   const handleSaveEdit = async (id: string) => {
-    if (editName.trim()) {
-      await updatePlayer(id, editName.trim());
-      setEditingId(null);
-    }
+    if (!editName.trim() || isSubmitting) return;
+    setIsSubmitting(true);
+    await updatePlayer(id, editName.trim());
+    setIsSubmitting(false);
+    setEditingId(null);
   };
 
   const handleCancelEdit = () => { setEditingId(null); setEditName(''); };
@@ -130,8 +133,8 @@ export default function PlayerManager() {
             placeholder={t('playerManager.namePlaceholder')}
             className={styles.input}
           />
-          <button type="submit" disabled={!name.trim()} className={styles.btn}>
-            {t('playerManager.add')}
+          <button type="submit" disabled={!name.trim() || isSubmitting} className={styles.btn}>
+            {isSubmitting ? 'Agregando...' : t('playerManager.add')}
           </button>
         </form>
       )}
@@ -182,7 +185,7 @@ export default function PlayerManager() {
                     onKeyDown={(e) => { if (e.key === 'Enter') handleSaveEdit(player.id); if (e.key === 'Escape') handleCancelEdit(); }}
                   />
                   <div className={styles.editActions}>
-                    <button onClick={() => handleSaveEdit(player.id)} className={styles.saveBtn} title={t('playerManager.save')}>✓</button>
+                    <button onClick={() => handleSaveEdit(player.id)} className={styles.saveBtn} disabled={isSubmitting} title={t('playerManager.save')}>✓</button>
                     <button onClick={handleCancelEdit} className={styles.cancelBtn} title={t('playerManager.cancel')}>✕</button>
                   </div>
                 </div>

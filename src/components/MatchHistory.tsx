@@ -99,6 +99,8 @@ export default function MatchHistory() {
   // Paginación UI: empieza mostrando 30, crece de a 30 con "Cargar más"
   const PAGE_SIZE = 30;
   const [displayCount, setDisplayCount] = useState(PAGE_SIZE);
+  // Resetear al principio cuando se agrega un partido nuevo
+  useEffect(() => { setDisplayCount(PAGE_SIZE); }, [matches.length]);
   const visibleMatches = sortedMatches.slice(0, displayCount);
   const hasMore = displayCount < sortedMatches.length;
 

@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import styles from './page.module.css';
 import StatsTable from '@/components/StatsTable';
 import MatchBuilder from '@/components/MatchBuilder';
 import PlayerManager from '@/components/PlayerManager';
 import MatchHistory from '@/components/MatchHistory';
-import TeamSimulator from '@/components/TeamSimulator';
 import TournamentSelector from '@/components/TournamentSelector';
 import TournamentUsers from '@/components/TournamentUsers';
 import TournamentSettings from '@/components/TournamentSettings';
@@ -15,9 +15,16 @@ import { useAuth } from '@/context/AuthContext';
 import { useTournament } from '@/context/TournamentContext';
 import { AppProvider } from '@/context/AppContext';
 import { ToastProvider } from '@/context/ToastContext';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import Login from '@/components/Login';
 import Brand from '@/components/Brand';
 import { useTranslation } from 'react-i18next';
+
+// Lazy-load componentes pesados: solo se descargan cuando el usuario los abre
+const TeamSimulator = dynamic(() => import('@/components/TeamSimulator'), {
+  loading: () => <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>⏳ Cargando simulador...</div>,
+  ssr: false,
+});
 
 const BASE_NAV_ITEMS = [
   { id: 'STATS',      label: '📊 Estadísticas' },
@@ -117,13 +124,15 @@ function MainApp() {
 
         {/* ── Main content ── */}
         <main className={styles.mainContent}>
-          {view === 'STATS'     && <StatsTable />}
-          {view === 'HISTORY'   && <MatchHistory />}
-          {view === 'SIMULATOR' && <TeamSimulator />}
-          {view === 'NEW_MATCH' && isAdmin && <MatchBuilder onComplete={() => setView('STATS')} />}
-          {view === 'PLAYERS'   && <PlayerManager />}
-          {view === 'CONFIG'    && isAdmin && <TournamentSettings />}
-          {view === 'USERS'     && isAdmin && <TournamentUsers />}
+          <ErrorBoundary>
+            {view === 'STATS'     && <StatsTable />}
+            {view === 'HISTORY'   && <MatchHistory />}
+            {view === 'SIMULATOR' && <TeamSimulator />}
+            {view === 'NEW_MATCH' && isAdmin && <MatchBuilder onComplete={() => setView('STATS')} />}
+            {view === 'PLAYERS'   && <PlayerManager />}
+            {view === 'CONFIG'    && isAdmin && <TournamentSettings />}
+            {view === 'USERS'     && isAdmin && <TournamentUsers />}
+          </ErrorBoundary>
         </main>
       </div>
       </AppProvider>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { useTournament } from '@/context/TournamentContext';
@@ -26,8 +26,14 @@ export default function StatsTable() {
   const [stats, setStats] = useState<PlayerStats[]>([]);
   const [statsLoading, setStatsLoading] = useState(false);
 
-  const fetchStats = useCallback(async () => {
+  // Cache: evita refetch si el torneo y la cantidad de partidos no cambiaron
+  const lastFetchKey = useRef<string>('');
+
+  const fetchStats = useCallback(async (matchCount: number) => {
     if (!activeTournamentId) { setStats([]); return; }
+    const key = `${activeTournamentId}:${matchCount}`;
+    if (key === lastFetchKey.current) return; // ya tenemos estos datos
+    lastFetchKey.current = key;
     setStatsLoading(true);
     try {
       const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
@@ -38,14 +44,14 @@ export default function StatsTable() {
       }
     } catch (e) {
       console.error('Error fetching stats:', e);
+      lastFetchKey.current = ''; // permite reintentar
     } finally {
       setStatsLoading(false);
     }
   }, [activeTournamentId]);
 
-  // Re-fetch stats cuando cambia el torneo o se registra un partido nuevo
-  useEffect(() => { fetchStats(); }, [fetchStats]);
-  useEffect(() => { fetchStats(); }, [matches.length, fetchStats]);
+  // Un solo useEffect: se dispara cuando cambia el torneo o la cantidad de partidos
+  useEffect(() => { fetchStats(matches.length); }, [fetchStats, matches.length]);
   // ──────────────────────────────────────────────────────────────────────────
 
   type SortField = 'name' | 'badge' | 'matchesPlayed' | 'wins' | 'winPercentage' | 'bestStreak' | 'worstStreak' | 'currentStreak';
