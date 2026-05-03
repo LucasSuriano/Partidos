@@ -221,13 +221,13 @@
 
 /* ── Mobile: hide secondary columns ── */
 @media (max-width: 640px) {
-  /* Hide: Mejor Racha (5), Peor Racha (6), Racha Actual (7) */
-  .table th:nth-child(5),
-  .table td:nth-child(5),
-  .table th:nth-child(6),
-  .table td:nth-child(6),
+  /* Hide: Mejor Racha (7), Peor Racha (8), Racha Actual (9) */
   .table th:nth-child(7),
-  .table td:nth-child(7) {
+  .table td:nth-child(7),
+  .table th:nth-child(8),
+  .table td:nth-child(8),
+  .table th:nth-child(9),
+  .table td:nth-child(9) {
     display: none;
   }
 
