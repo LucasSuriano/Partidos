@@ -14,9 +14,11 @@ import { calculateStats } from '@/lib/stats';
 import type { Match, Player, MatchResult } from '@/types';
 
 export async function GET(request: Request) {
+  console.log('--- API /api/stats CALLED ---');
   // ── Auth ─────────────────────────────────────────────────────────────────
   const auth = verifyApiAuth(request);
   if (!auth) {
+    console.log('Auth failed');
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
 
@@ -24,6 +26,7 @@ export async function GET(request: Request) {
   // Permitimos 60 request por minuto por usuario
   const { success, remaining, resetAt } = applyRateLimit(`stats_${auth.userId}`, 60, 60_000);
   if (!success) {
+    console.log('Rate limit exceeded');
     return NextResponse.json(
       { error: 'Demasiadas peticiones. Intenta de nuevo en unos segundos.' },
       { 
@@ -41,15 +44,18 @@ export async function GET(request: Request) {
   const tournamentId = searchParams.get('tournamentId');
 
   if (!tournamentId) {
+    console.log('Missing tournamentId');
     return NextResponse.json({ error: 'tournamentId requerido' }, { status: 400 });
   }
 
   // ── Verificación de Permisos sobre el Torneo ──────────────────────────────
   const hasAccess = await verifyTournamentAccess(auth.userId, tournamentId);
   if (!hasAccess) {
+    console.log('Access denied to tournament');
     return NextResponse.json({ error: 'No tienes acceso a este torneo' }, { status: 403 });
   }
 
+  console.log('Fetching data from Supabase...');
   const supabase = createServiceClient();
 
   // ── Queries paralelas: players + votes + matches al mismo tiempo ──────────
@@ -70,12 +76,15 @@ export async function GET(request: Request) {
   ]);
 
   if (playersResult.error || !playersResult.data) {
+    console.log('Error loading players:', playersResult.error);
     return NextResponse.json({ error: 'Error cargando jugadores' }, { status: 500 });
   }
   if (matchesResult.error || !matchesResult.data) {
+    console.log('Error loading matches:', matchesResult.error);
     return NextResponse.json({ error: 'Error cargando partidos' }, { status: 500 });
   }
 
+  console.log('Processing data...');
   const playersData = playersResult.data;
   const votesData = votesResult.data ?? [];
   const matchesData = matchesResult.data;
@@ -113,9 +122,11 @@ export async function GET(request: Request) {
     }));
   }
 
+  console.log('Calculating stats...');
   // ── Calcular estadísticas ────────────────────────────────────────────────
   const stats = calculateStats(players, matches);
 
+  console.log('Returning success response!');
   return NextResponse.json(stats, {
     headers: {
       'Cache-Control': 'private, max-age=30, stale-while-revalidate=60',
