@@ -313,8 +313,11 @@
     "noPermission": "You do not have permission to view this section.",
     "options": {
       "football5": "5-a-side (5v5)",
+      "football6": "6-a-side (6v6)",
       "football7": "7-a-side (7v7)",
       "football8": "8-a-side (8v8)",
+      "football9": "9-a-side (9v9)",
+      "football10": "10-a-side (10v10)",
       "football11": "11-a-side (11v11)"
     },
     "padel": {

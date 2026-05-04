@@ -5,8 +5,11 @@ import { useTranslation } from 'react-i18next';
 
 const FOOTBALL_OPTIONS = [
   { value: 5, label: 'Fútbol 5 (5v5)' },
+  { value: 6, label: 'Fútbol 6 (6v6)' },
   { value: 7, label: 'Fútbol 7 (7v7)' },
   { value: 8, label: 'Fútbol 8 (8v8)' },
+  { value: 9, label: 'Fútbol 9 (9v9)' },
+  { value: 10, label: 'Fútbol 10 (10v10)' },
   { value: 11, label: 'Fútbol 11 (11v11)' }
 ];
 
