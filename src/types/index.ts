@@ -21,6 +21,8 @@ export type Player = {
   id: string;
   name: string;
   badges?: PlayerBadgeVote[];
+  tier?: string | null;
+  position?: string | null;
 };
 
 export type Badge = {

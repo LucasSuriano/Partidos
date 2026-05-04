@@ -109,7 +109,18 @@ function playerStrength(s: PlayerStats): number {
     });
   }
 
-  const finalStrength = (eloScore * 0.50) + (formScore * 0.25) + badgesPower;
+  let tierPower = 0;
+  if (s.player.tier) {
+    switch(s.player.tier) {
+      case 'S': tierPower = 100; break;
+      case 'A': tierPower = 80; break;
+      case 'B': tierPower = 60; break;
+      case 'C': tierPower = 40; break;
+      case 'D': tierPower = 20; break;
+    }
+  }
+
+  const finalStrength = (eloScore * 0.50) + (formScore * 0.25) + badgesPower + tierPower;
   return finalStrength;
 }
 
@@ -173,7 +184,12 @@ function balanceScore(
   const nemesisPenaltyA = calcNemesis(teamA);
   const nemesisPenaltyB = calcNemesis(teamB);
 
-  return Math.pow(strA - strB, 2) + Math.pow(chemA - chemB, 2) * 0.1 + nemesisPenaltyA + nemesisPenaltyB;
+  const arqA = teamA.filter(p => p.player.position === 'Arquero').length;
+  const arqB = teamB.filter(p => p.player.position === 'Arquero').length;
+  const posPenaltyA = arqA > 1 ? 100000 : 0;
+  const posPenaltyB = arqB > 1 ? 100000 : 0;
+
+  return Math.pow(strA - strB, 2) + Math.pow(chemA - chemB, 2) * 0.1 + nemesisPenaltyA + nemesisPenaltyB + posPenaltyA + posPenaltyB;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

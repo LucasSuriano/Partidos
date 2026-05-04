@@ -12,7 +12,7 @@ interface AppContextProps {
   activeTournamentId: string | null;
   addPlayer: (name: string) => Promise<void>;
   removePlayer: (id: string) => Promise<void>;
-  updatePlayer: (id: string, newName: string) => Promise<void>;
+  updatePlayer: (id: string, updates: Partial<Player>) => Promise<void>;
   togglePlayerBadge: (playerId: string, badgeId: string, userId: string) => Promise<void>;
   addMatch: (date: string, teamA: string[], teamB: string[], result: MatchResult, scoreA?: number, scoreB?: number, metadata?: MatchMetadata) => Promise<void>;
   removeMatch: (id: string) => Promise<void>;
@@ -74,7 +74,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode; tournamentId: st
           return {
             id: p.id,
             name: p.name,
-            badges: pVotes
+            badges: pVotes,
+            tier: p.tier,
+            position: p.position
           };
         });
         setPlayers(formattedPlayers);
@@ -154,17 +156,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode; tournamentId: st
     setPlayers(prev => prev.filter(p => p.id !== id));
   };
 
-  const updatePlayer = async (id: string, newName: string) => {
+  const updatePlayer = async (id: string, updates: Partial<Player>) => {
+    const dbUpdates: any = {};
+    if (updates.name !== undefined) dbUpdates.name = updates.name;
+    if (updates.tier !== undefined) dbUpdates.tier = updates.tier;
+    if (updates.position !== undefined) dbUpdates.position = updates.position;
+
     const { error } = await supabase
       .from('players')
-      .update({ name: newName })
+      .update(dbUpdates)
       .eq('id', id);
     if (error) {
       console.error('Error al actualizar jugador:', error.message);
-      showToast('No se pudo actualizar el nombre. Intentá de nuevo.', 'error');
+      showToast('No se pudo actualizar el jugador. Intentá de nuevo.', 'error');
       return;
     }
-    setPlayers(prev => prev.map(p => p.id === id ? { ...p, name: newName } : p));
+    setPlayers(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
   };
 
   // ── Badges: optimistic update + rollback ─────────────────────────────────

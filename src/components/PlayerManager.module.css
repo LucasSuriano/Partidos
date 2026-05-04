@@ -348,6 +348,11 @@
   width: 100%;
 }
 
+.editInput option {
+  background-color: #0f172a;
+  color: var(--text-primary);
+}
+
 .editActions {
   display: flex;
   gap: 0.4rem;

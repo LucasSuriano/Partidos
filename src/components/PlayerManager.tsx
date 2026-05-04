@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { useTournament } from '@/context/TournamentContext';
+import { Player } from '@/types';
 import styles from './PlayerManager.module.css';
 import { useTranslation } from 'react-i18next';
 
@@ -31,6 +32,8 @@ export default function PlayerManager() {
   const [search, setSearch] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
+  const [editTier, setEditTier] = useState<string>('');
+  const [editPosition, setEditPosition] = useState<string>('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -68,21 +71,23 @@ export default function PlayerManager() {
     setIsSubmitting(false);
   };
 
-  const handleStartEdit = (player: { id: string; name: string }) => {
+  const handleStartEdit = (player: Player) => {
     setEditingId(player.id);
     setEditName(player.name);
+    setEditTier(player.tier || '');
+    setEditPosition(player.position || '');
     setConfirmDeleteId(null);
   };
 
   const handleSaveEdit = async (id: string) => {
     if (!editName.trim() || isSubmitting) return;
     setIsSubmitting(true);
-    await updatePlayer(id, editName.trim());
+    await updatePlayer(id, { name: editName.trim(), tier: editTier || null, position: editPosition || null });
     setIsSubmitting(false);
     setEditingId(null);
   };
 
-  const handleCancelEdit = () => { setEditingId(null); setEditName(''); };
+  const handleCancelEdit = () => { setEditingId(null); setEditName(''); setEditTier(''); setEditPosition(''); };
 
   const handleDeleteClick = (id: string) => {
     const hasMatches = matches.some(m => m.teamA.includes(id) || m.teamB.includes(id));
@@ -193,19 +198,41 @@ export default function PlayerManager() {
             >
               {editingId === player.id ? (
                 /* ── Edit mode ── */
-                <div className={styles.editWrapper}>
-                  <input
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className={styles.editInput}
-                    autoFocus
-                    onKeyDown={(e) => { if (e.key === 'Enter') handleSaveEdit(player.id); if (e.key === 'Escape') handleCancelEdit(); }}
-                  />
-                  <div className={styles.editActions}>
-                    <button onClick={() => handleSaveEdit(player.id)} className={styles.saveBtn} disabled={isSubmitting} title={t('playerManager.save')}>✓</button>
-                    <button onClick={handleCancelEdit} className={styles.cancelBtn} title={t('playerManager.cancel')}>✕</button>
+                <div className={styles.editWrapper} style={{flexDirection: 'column', gap: '8px', alignItems: 'flex-start'}}>
+                  <div style={{display: 'flex', gap: '8px', width: '100%'}}>
+                    <input
+                      type="text"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      className={styles.editInput}
+                      style={{flex: 1}}
+                      autoFocus
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleSaveEdit(player.id); if (e.key === 'Escape') handleCancelEdit(); }}
+                    />
+                    <div className={styles.editActions}>
+                      <button onClick={() => handleSaveEdit(player.id)} className={styles.saveBtn} disabled={isSubmitting} title={t('playerManager.save')}>✓</button>
+                      <button onClick={handleCancelEdit} className={styles.cancelBtn} title={t('playerManager.cancel')}>✕</button>
+                    </div>
                   </div>
+                  {isAdmin && (
+                    <div style={{display: 'flex', gap: '8px', width: '100%'}}>
+                      <select value={editPosition} onChange={(e) => setEditPosition(e.target.value)} className={styles.editInput} style={{flex: 1, padding: '4px'}}>
+                        <option value="">Sin Posición</option>
+                        <option value="Arquero">Arquero</option>
+                        <option value="Defensor">Defensor</option>
+                        <option value="Mediocampista">Mediocampista</option>
+                        <option value="Delantero">Delantero</option>
+                      </select>
+                      <select value={editTier} onChange={(e) => setEditTier(e.target.value)} className={styles.editInput} style={{flex: 1, padding: '4px'}}>
+                        <option value="">Sin Tier</option>
+                        <option value="S">Tier S</option>
+                        <option value="A">Tier A</option>
+                        <option value="B">Tier B</option>
+                        <option value="C">Tier C</option>
+                        <option value="D">Tier D</option>
+                      </select>
+                    </div>
+                  )}
                 </div>
               ) : isConfirming ? (
                 /* ── Confirm delete mode ── */
@@ -241,6 +268,20 @@ export default function PlayerManager() {
                         }}
                       />
                     </div>
+                    {(player.position || (isAdmin && player.tier)) && (
+                      <div style={{ display: 'flex', gap: '4px', marginTop: '2px', flexWrap: 'wrap' }}>
+                        {player.position && (
+                          <span style={{ fontSize: '0.7rem', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px', color: '#94a3b8' }}>
+                            {player.position}
+                          </span>
+                        )}
+                        {isAdmin && player.tier && (
+                          <span style={{ fontSize: '0.7rem', background: 'var(--accent-primary)', padding: '2px 6px', borderRadius: '4px', color: '#0f172a', fontWeight: 'bold' }}>
+                            Tier {player.tier}
+                          </span>
+                        )}
+                      </div>
+                    )}
 
                     {hasMatches ? (
                       <>

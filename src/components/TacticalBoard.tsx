@@ -193,6 +193,11 @@ export function TacticalBoard({ players, teamSize, pairMap, fillBestBalance, onC
       const newPlayers = team.filter(p => !nextLoc[p.player.id].startsWith(prefix));
       
       const getPlayerRolePriority = (p: PlayerStats) => {
+        if (p.player.position === 'Arquero') return 'GK';
+        if (p.player.position === 'Defensor') return 'DEF';
+        if (p.player.position === 'Delantero') return 'OFF';
+        if (p.player.position === 'Mediocampista') return 'MID';
+
         let def = 0, off = 0;
         if (p.player.badges && Array.isArray(p.player.badges)) {
           p.player.badges.forEach(b => {
@@ -216,16 +221,17 @@ export function TacticalBoard({ players, teamSize, pairMap, fillBestBalance, onC
         
         availableSlots.forEach(slot => {
            let score = 0;
-           // If mirrored (teamB), x coordinates are generally the same in the formation obj, mirrored visually only.
-           // wait, formationA.pos.x is 0-50 for teamA half.
-           // For teamB, it uses formationB.pos which is also 0-50.
-           if (rolePref === 'DEF' && slot.pos.x <= 30) score += 10;
-           else if (rolePref === 'DEF' && slot.pos.x > 30) score -= 10;
+           
+           if (rolePref === 'GK' && slot.pos.x <= 10) score += 20;
+           else if (rolePref === 'GK' && slot.pos.x > 10) score -= 20;
+
+           if (rolePref === 'DEF' && slot.pos.x > 10 && slot.pos.x <= 30) score += 10;
+           else if (rolePref === 'DEF' && (slot.pos.x <= 10 || slot.pos.x > 30)) score -= 10;
            
            if (rolePref === 'OFF' && slot.pos.x >= 40) score += 10;
            else if (rolePref === 'OFF' && slot.pos.x < 40) score -= 10;
            
-           if (rolePref === 'MID' && slot.pos.x > 25 && slot.pos.x < 45) score += 10;
+           if (rolePref === 'MID' && slot.pos.x > 20 && slot.pos.x < 40) score += 10;
            
            if (score > bestScore) {
              bestScore = score;
