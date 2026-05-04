@@ -314,6 +314,7 @@
     "options": {
       "football5": "5-a-side (5v5)",
       "football7": "7-a-side (7v7)",
+      "football8": "8-a-side (8v8)",
       "football11": "11-a-side (11v11)"
     },
     "padel": {
