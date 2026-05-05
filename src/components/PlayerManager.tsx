@@ -21,6 +21,25 @@ function getInitials(name: string): string {
   return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 }
 
+function TierBadge({ tier, style }: { tier: string, style?: React.CSSProperties }) {
+  let tierClass = '';
+  let icon = '';
+  switch (tier) {
+    case 'S': tierClass = styles.tierS; icon = '⭐'; break;
+    case 'A': tierClass = styles.tierA; icon = '⚡'; break;
+    case 'B': tierClass = styles.tierB; icon = '🛡️'; break;
+    case 'C': tierClass = styles.tierC; icon = '⚔️'; break;
+    case 'D': tierClass = styles.tierD; icon = '🔧'; break;
+    default: tierClass = ''; icon = ''; break;
+  }
+  return (
+    <span className={`${styles.tierBadge} ${tierClass}`} style={style}>
+      {icon && <span>{icon}</span>}
+      {tier}
+    </span>
+  );
+}
+
 export default function PlayerManager() {
   const { players, matches, badges, addPlayer, removePlayer, updatePlayer, togglePlayerBadge } = useAppContext();
   const { user } = useAuth();
@@ -246,6 +265,18 @@ export default function PlayerManager() {
               ) : (
                 /* ── Normal view ── */
                 <>
+                  {isAdmin && player.tier && (
+                    <div style={{ 
+                      position: 'absolute', 
+                      top: 0, 
+                      left: 0, 
+                      zIndex: 10
+                    }}>
+                      <div style={{ transform: 'scale(0.85)', transformOrigin: 'top left' }}>
+                        <TierBadge tier={player.tier} style={{ borderRadius: '16px 0 10px 0', borderTop: 'none', borderLeft: 'none' }} />
+                      </div>
+                    </div>
+                  )}
                   {/* Avatar */}
                   <div
                     className={styles.avatar}
@@ -268,18 +299,11 @@ export default function PlayerManager() {
                         }}
                       />
                     </div>
-                    {(player.position || (isAdmin && player.tier)) && (
+                    {player.position && (
                       <div style={{ display: 'flex', gap: '4px', marginTop: '2px', flexWrap: 'wrap' }}>
-                        {player.position && (
-                          <span style={{ fontSize: '0.7rem', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px', color: '#94a3b8' }}>
-                            {player.position}
-                          </span>
-                        )}
-                        {isAdmin && player.tier && (
-                          <span style={{ fontSize: '0.7rem', background: 'var(--accent-primary)', padding: '2px 6px', borderRadius: '4px', color: '#0f172a', fontWeight: 'bold' }}>
-                            Tier {player.tier}
-                          </span>
-                        )}
+                        <span style={{ fontSize: '0.7rem', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px', color: '#94a3b8' }}>
+                          {player.position}
+                        </span>
                       </div>
                     )}
 
