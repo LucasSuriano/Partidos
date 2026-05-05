@@ -11,6 +11,7 @@ import { PlayerStats } from '@/types';
 import styles from './TacticalBoard.module.css';
 import { JerseySVG, JerseyPattern } from './JerseySVG';
 import { useTranslation } from 'react-i18next';
+import { useTournament } from '@/context/TournamentContext';
 
 interface PairStats {
   idA: string; idB: string;
@@ -103,6 +104,9 @@ function getFormationsForSize(size: number): Formation[] {
 
 export function TacticalBoard({ players, teamSize, pairMap, fillBestBalance, onComplete, onBack, isPadel }: TacticalBoardProps) {
   const { t } = useTranslation();
+  const { isAdminOfActiveTournament } = useTournament();
+  const isAdmin = isAdminOfActiveTournament;
+  const [showTier, setShowTier] = useState(true);
   const formations = getFormationsForSize(teamSize);
   
   const [fmtA, setFmtA] = useState(formations[0].id);
@@ -272,7 +276,24 @@ export function TacticalBoard({ players, teamSize, pairMap, fillBestBalance, onC
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <button onClick={onBack} className={styles.backBtn}>{t('teamSimulator.back')}</button>
           
-          <div style={{ display: 'flex', gap: '1rem' }}>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+             {isAdmin && (
+               <button
+                 onClick={() => setShowTier(prev => !prev)}
+                 title={showTier ? 'Ocultar tiers' : 'Mostrar tiers'}
+                 style={{
+                   display: 'flex', alignItems: 'center', gap: '0.4rem',
+                   background: showTier ? 'rgba(168,85,247,0.15)' : 'rgba(255,255,255,0.05)',
+                   border: `1px solid ${showTier ? 'rgba(168,85,247,0.5)' : 'rgba(255,255,255,0.1)'}`,
+                   color: showTier ? '#c084fc' : '#64748b',
+                   borderRadius: '8px', padding: '6px 12px', cursor: 'pointer',
+                   fontSize: '0.8rem', fontWeight: 700, transition: 'all 0.2s'
+                 }}
+               >
+                 <span style={{ fontSize: '0.9rem' }}>⭐</span>
+                 {showTier ? 'Tier ON' : 'Tier OFF'}
+               </button>
+             )}
              {!isComplete && (
                <button onClick={handleAiCompletion} className={styles.aiBtn}>{t('tacticalBoard.aiFill')}</button>
              )}
@@ -371,7 +392,8 @@ export function TacticalBoard({ players, teamSize, pairMap, fillBestBalance, onC
              const ply = players.find(p => locations[p.player.id] === locId);
              return <PitchSlot key={locId} id={locId} x={coord.x} y={coord.y} player={ply}
                        teamColor1={colorA1} teamColor2={colorA2} teamPattern={patA}
-                       role={coord.role} depthX={coord.x} swapSelected={swapSelected} onSwapClick={handleSwapClick} />;
+                       role={coord.role} depthX={coord.x} swapSelected={swapSelected} onSwapClick={handleSwapClick}
+                       showTier={isAdmin && showTier} />;
           })}
           {formationB.pos.map((coord, i) => {
              const locId = `teamB-${i}`;
@@ -380,7 +402,8 @@ export function TacticalBoard({ players, teamSize, pairMap, fillBestBalance, onC
              const ply = players.find(p => locations[p.player.id] === locId);
              return <PitchSlot key={locId} id={locId} x={mirroredX} y={mirroredY} player={ply}
                        teamColor1={colorB1} teamColor2={colorB2} teamPattern={patB}
-                       role={coord.role} depthX={coord.x} swapSelected={swapSelected} onSwapClick={handleSwapClick} />;
+                       role={coord.role} depthX={coord.x} swapSelected={swapSelected} onSwapClick={handleSwapClick}
+                       showTier={isAdmin && showTier} />;
           })}
 
           {/* Pitch legend */}
@@ -411,7 +434,7 @@ export function TacticalBoard({ players, teamSize, pairMap, fillBestBalance, onC
            <div className={styles.benchTitle}>{t('tacticalBoard.pool').replace('{{count}}', poolPlayers.length.toString())}</div>
            <div className={styles.benchGrid}>
              {poolPlayers.map(p => (
-               <DraggableBenchCard key={p.player.id} player={p} />
+               <DraggableBenchCard key={p.player.id} player={p} showTier={isAdmin && showTier} />
              ))}
              {poolPlayers.length === 0 && <span style={{ color: '#64748b', fontSize: '0.9rem' }}>{t('tacticalBoard.allAssigned')}</span>}
            </div>
@@ -448,7 +471,7 @@ export function TacticalBoard({ players, teamSize, pairMap, fillBestBalance, onC
   );
 }
 
-function PitchSlot({ id, x, y, player, teamColor1, teamColor2, teamPattern, readOnly = false, role, depthX, swapSelected, onSwapClick }: {
+function PitchSlot({ id, x, y, player, teamColor1, teamColor2, teamPattern, readOnly = false, role, depthX, swapSelected, onSwapClick, showTier = false }: {
   id: string; x: number; y: number; player?: PlayerStats;
   teamColor1: string; teamColor2: string; teamPattern: JerseyPattern;
   readOnly?: boolean;
@@ -456,6 +479,7 @@ function PitchSlot({ id, x, y, player, teamColor1, teamColor2, teamPattern, read
   depthX?: number;
   swapSelected?: string | null;
   onSwapClick?: (id: string) => void;
+  showTier?: boolean;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id, disabled: readOnly });
 
@@ -469,7 +493,7 @@ function PitchSlot({ id, x, y, player, teamColor1, teamColor2, teamPattern, read
       {player ? (
          <DraggableToken player={player} c1={teamColor1} c2={teamColor2} pat={teamPattern} readOnly={readOnly}
            isSwapSelected={swapSelected === player.player.id}
-           onSwapClick={onSwapClick} />
+           onSwapClick={onSwapClick} showTier={showTier} />
       ) : (
          posLabel
            ? <span className={styles.slotPosLabel}>{posLabel}</span>
@@ -479,13 +503,20 @@ function PitchSlot({ id, x, y, player, teamColor1, teamColor2, teamPattern, read
   );
 }
 
-function DraggableToken({ player, c1, c2, pat, readOnly = false, isSwapSelected = false, onSwapClick }: {
+const TIER_CLASS: Record<string, string> = {
+  S: 'tierS', A: 'tierA', B: 'tierB', C: 'tierC', D: 'tierD'
+};
+
+function DraggableToken({ player, c1, c2, pat, readOnly = false, isSwapSelected = false, onSwapClick, showTier = false }: {
   player: PlayerStats; c1: string; c2: string; pat: JerseyPattern;
   readOnly?: boolean; isSwapSelected?: boolean;
   onSwapClick?: (id: string) => void;
+  showTier?: boolean;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: player.player.id, disabled: readOnly });
   const ratingColor = player.winPercentage >= 60 ? '#10b981' : player.winPercentage >= 40 ? '#f59e0b' : '#ef4444';
+  const tier = player.player.tier;
+  const tierCls = tier ? TIER_CLASS[tier] : null;
 
   const handleClick = (e: React.MouseEvent) => {
     if (!readOnly && onSwapClick) { e.stopPropagation(); onSwapClick(player.player.id); }
@@ -505,6 +536,9 @@ function DraggableToken({ player, c1, c2, pat, readOnly = false, isSwapSelected 
       )}
       <JerseySVG primaryColor={c1} secondaryColor={c2} pattern={pat} width={48} height={48} />
       <div className={styles.jerseyLabel}>
+        {showTier && tier && tierCls && (
+          <span className={`${styles.tierBadge} ${styles[tierCls]}`}>{tier}</span>
+        )}
         <span className={styles.jerseyName}>{player.player.name}</span>
         <span className={styles.jerseyStat} style={{ color: ratingColor }}>{player.winPercentage.toFixed(0)}</span>
       </div>
@@ -795,11 +829,17 @@ function DroppablePool({ id, children }: { id: string; children: React.ReactNode
   );
 }
 
-function DraggableBenchCard({ player }: { player: PlayerStats }) {
+function DraggableBenchCard({ player, showTier = false }: { player: PlayerStats; showTier?: boolean }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: player.player.id });
+  const tier = player.player.tier;
+  const tierCls = tier ? TIER_CLASS[tier] : null;
+  const hasTierTab = showTier && tier && tierCls;
   return (
     <div ref={setNodeRef} {...listeners} {...attributes} className={`${styles.benchCardWrapper} ${isDragging ? styles.benchCardDragging : ''}`}>
-      <div className={styles.benchCard}>
+      <div className={styles.benchCard} style={{ paddingLeft: hasTierTab ? '30px' : undefined }}>
+        {hasTierTab && (
+          <span className={`${styles.benchTierTab} ${styles[tierCls!]}`}>{tier}</span>
+        )}
         <span>{player.player.name}</span>
         <span className={styles.benchCardStat}>{player.winPercentage.toFixed(0)}%</span>
       </div>
