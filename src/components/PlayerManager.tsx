@@ -49,6 +49,8 @@ export default function PlayerManager() {
 
   const [name, setName] = useState('');
   const [search, setSearch] = useState('');
+  const [filterPosition, setFilterPosition] = useState('');
+  const [filterTier, setFilterTier] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [editTier, setEditTier] = useState<string>('');
@@ -138,9 +140,12 @@ export default function PlayerManager() {
     return a.name.localeCompare(b.name);
   });
 
-  const filtered = sortedPlayers.filter(p =>
-    p.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = sortedPlayers.filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
+    const matchesPosition = filterPosition ? p.position === filterPosition : true;
+    const matchesTier = filterTier ? p.tier === filterTier : true;
+    return matchesSearch && matchesPosition && matchesTier;
+  });
 
   const activePlayers = players.filter(p =>
     matches.some(m => m.teamA.includes(p.id) || m.teamB.includes(p.id))
@@ -181,19 +186,46 @@ export default function PlayerManager() {
         </form>
       )}
 
-      {/* ── Search ── */}
-      {players.length > 4 && (
-        <div className={styles.searchWrapper}>
-          <span className={styles.searchIcon}>🔍</span>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={t('playerManager.searchPlaceholder')}
-            className={styles.searchInput}
-          />
-          {search && (
-            <button className={styles.searchClear} onClick={() => setSearch('')}>✕</button>
+      {/* ── Search & Filters ── */}
+      {(players.length > 4 || filterPosition || filterTier) && (
+        <div className={styles.filtersContainer}>
+          <div className={styles.searchWrapper}>
+            <span className={styles.searchIcon}>🔍</span>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t('playerManager.searchPlaceholder')}
+              className={styles.searchInput}
+            />
+            {search && (
+              <button className={styles.searchClear} onClick={() => setSearch('')}>✕</button>
+            )}
+          </div>
+          <select
+            value={filterPosition}
+            onChange={(e) => setFilterPosition(e.target.value)}
+            className={styles.filterSelect}
+          >
+            <option value="">Todas las pos.</option>
+            <option value="Arquero">Arquero</option>
+            <option value="Defensa">Defensa</option>
+            <option value="Mediocampista">Mediocampista</option>
+            <option value="Delantero">Delantero</option>
+          </select>
+          {isAdmin && (
+            <select
+              value={filterTier}
+              onChange={(e) => setFilterTier(e.target.value)}
+              className={styles.filterSelect}
+            >
+              <option value="">Todos los tiers</option>
+              <option value="S">Tier S</option>
+              <option value="A">Tier A</option>
+              <option value="B">Tier B</option>
+              <option value="C">Tier C</option>
+              <option value="D">Tier D</option>
+            </select>
           )}
         </div>
       )}
