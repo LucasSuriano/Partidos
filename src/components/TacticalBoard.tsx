@@ -536,11 +536,13 @@ function DraggableToken({ player, c1, c2, pat, readOnly = false, isSwapSelected 
       )}
       <JerseySVG primaryColor={c1} secondaryColor={c2} pattern={pat} width={48} height={48} />
       <div className={styles.jerseyLabel}>
-        {showTier && tier && tierCls && (
-          <span className={`${styles.tierBadge} ${styles[tierCls]}`}>{tier}</span>
-        )}
         <span className={styles.jerseyName}>{player.player.name}</span>
-        <span className={styles.jerseyStat} style={{ color: ratingColor }}>{player.winPercentage.toFixed(0)}</span>
+        <div className={styles.jerseySub}>
+          {showTier && tier && tierCls && (
+            <span className={`${styles.tierBadge} ${styles[tierCls]}`}>{tier}</span>
+          )}
+          <span className={styles.jerseyStat} style={{ color: ratingColor }}>{player.winPercentage.toFixed(0)}%</span>
+        </div>
       </div>
     </div>
   );
@@ -555,7 +557,7 @@ export function FinalPitchRenderer({ players, config, isPadel }: { players: Play
   const formationB = formations.find(f => f.id === config.fmtB) || formations[0];
 
   return (
-    <div className={`${styles.pitchWrapper} ${isPadel ? styles.padelCourtWrapper : ''}`} style={{ maxWidth: '800px', marginBottom: '2rem' }}>
+    <div className={`${styles.pitchWrapper} ${isPadel ? styles.padelCourtWrapper : ''}`} style={{ marginBottom: '2rem' }}>
       {!isPadel && <div className={styles.grassTexture} />}
 
       {isPadel ? (
@@ -757,7 +759,7 @@ function ComparisonPanel({ formedA, formedB, teamSize, colorA, colorB }: {
   const stronger = avgA > avgB ? 'A' : 'B';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', maxWidth: '900px', margin: '0 auto', width: '100%', gap: '0.4rem' }}>
+    <div className={styles.comparisonWrapper}>
       <div className={styles.comparisonPanel}>
         {/* Team A */}
         <div className={styles.compSide}>
